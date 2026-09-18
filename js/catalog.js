@@ -459,11 +459,13 @@ function selectPackToPlay(packId) {
 
         // Set game data
         if (typeof window.setGameData === 'function') {
-            window.setGameData(pack.rounds);
+            const roundsData = Array.isArray(pack.rounds) ? pack.rounds : [pack.rounds];
+            window.setGameData(roundsData);
         } else {
-            localStorage.setItem('jeopardy_pack', JSON.stringify(pack.rounds));
+            const roundsData = Array.isArray(pack.rounds) ? pack.rounds : [pack.rounds];
+            localStorage.setItem('jeopardy_pack', JSON.stringify(roundsData));
             const editor = document.getElementById('json-editor');
-            if (editor) editor.value = JSON.stringify(pack.rounds, null, 4);
+            if (editor) editor.value = JSON.stringify(roundsData, null, 4);
         }
 
         if (typeof currentRoundIndex !== 'undefined') {

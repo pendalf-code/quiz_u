@@ -7,9 +7,31 @@
     let savedThinkingTime = 0;
     let answerCountdownInterval = null;
 
-    let gameData = JSON.parse(localStorage.getItem('jeopardy_pack'));
-    if (!gameData || (gameData[0]?.themes?.[0]?.name === "Гейминг и Мемы" && gameData[0]?.themes?.[0]?.questions?.[0]?.a === "Among Us")) {
-        gameData = (typeof AVAILABLE_PACKS !== 'undefined' && AVAILABLE_PACKS.length > 0) ? AVAILABLE_PACKS[0].rounds : [];
+    function normalizeGameData(data) {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (typeof data === 'object') {
+            if (Array.isArray(data.rounds)) return data.rounds;
+            if (data.themes) return [data];
+            return [data];
+        }
+        return [];
+    }
+    window.normalizeGameData = normalizeGameData;
+
+    let rawSavedPack = null;
+    try {
+        rawSavedPack = JSON.parse(localStorage.getItem('jeopardy_pack'));
+    } catch (e) {
+        console.warn("Could not parse saved jeopardy_pack", e);
+    }
+    let gameData = normalizeGameData(rawSavedPack);
+    if (!gameData || gameData.length === 0 || (gameData[0]?.themes?.[0]?.name === "Гейминг и Мемы" && gameData[0]?.themes?.[0]?.questions?.[0]?.a === "Among Us")) {
+        const defaultPackRounds = (typeof AVAILABLE_PACKS !== 'undefined' && AVAILABLE_PACKS.length > 0) ? AVAILABLE_PACKS[0].rounds : null;
+        gameData = normalizeGameData(defaultPackRounds);
+        try {
+            localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+        } catch (e) {}
     }
     let currentRoundIndex = 0, currentCost = 0, timerInterval = null, timeLeft = 30, isReadingTime = true;
     let currentThemeIdx = 0, currentQuestionIdx = 0;
@@ -845,7 +867,7 @@
         try {
             const state = JSON.parse(localStorage.getItem('quiz_save_state'));
             teams = state.teams;
-            gameData = state.gameData;
+            gameData = normalizeGameData(state.gameData);
             currentRoundIndex = state.currentRoundIndex;
             currentTurnTeamIdx = state.currentTurnTeamIdx || 0;
             gameStats = state.gameStats || {};
@@ -1045,10 +1067,13 @@
         window.getGameData = function () {
             return gameData;
         };
-        if (newGameData && Array.isArray(newGameData)) {
-            gameData = JSON.parse(JSON.stringify(newGameData));
+        const normalized = normalizeGameData(newGameData);
+        if (normalized && normalized.length > 0) {
+            gameData = JSON.parse(JSON.stringify(normalized));
             window.gameData = gameData;
-            localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+            try {
+                localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+            } catch (e) {}
             const editor = document.getElementById('json-editor');
             if (editor) editor.value = JSON.stringify(gameData, null, 4);
         }
@@ -1513,7 +1538,8 @@
 
     function applyCustomQuestions() {
         try {
-            gameData = JSON.parse(document.getElementById('json-editor').value);
+            const parsed = JSON.parse(document.getElementById('json-editor').value);
+            gameData = normalizeGameData(parsed);
             localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
             currentRoundIndex = 0;
             teams = [{name: "Команда 1", score: 0}, {name: "Команда 2", score: 0}];
@@ -2945,10 +2971,16 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    function onAppReady() {
         initTheme();
         showSubScreen('sub-menu-main');
         generateStarrySky();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', onAppReady);
+    } else {
+        onAppReady();
+    }
 
     window.addEventListener('resize', generateStarrySky);
