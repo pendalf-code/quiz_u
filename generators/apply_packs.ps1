@@ -3,8 +3,9 @@
     [string]$JsonFile
 )
 
-$packsDataPath = 'C:\Users\user\IdeaProjects\deti\src\packs_data.js'
-$jsonBaseDir = 'C:\Users\user\IdeaProjects\deti\src\паки вопросов'
+$projectRoot = Split-Path -Parent $PSScriptRoot
+$packsDataPath = Join-Path $projectRoot "js\packs_data.js"
+$jsonBaseDir = Join-Path $projectRoot "паки вопросов"
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
 $rawPacks = [System.IO.File]::ReadAllText($packsDataPath, [System.Text.Encoding]::UTF8)
