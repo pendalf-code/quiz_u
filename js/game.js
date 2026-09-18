@@ -898,6 +898,21 @@
     document.getElementById('setting-thinking-time').value = configThinkingTime;
     document.getElementById('setting-answer-time').value = configAnswerTime;
 
+    function resolveMediaPath(url) {
+        if (!url || typeof url !== 'string') return url;
+        const trimmed = url.trim();
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+            return trimmed;
+        }
+        if (trimmed.startsWith('assets/')) {
+            return trimmed;
+        }
+        if (/^(music|video|q_img|a_img)\//.test(trimmed)) {
+            return 'assets/' + trimmed;
+        }
+        return trimmed;
+    }
+
     function stopQuestionAudio() {
         const audioElement = document.getElementById('modal-question-audio');
         if (audioElement) {
@@ -957,7 +972,7 @@
                 iframeContainer.style.display = 'block';
                 return true;
             } else {
-                videoElem.src = url;
+                videoElem.src = resolveMediaPath(url);
                 videoElem.style.display = 'block';
                 videoElem.play().catch(e => {
                 });
@@ -1122,11 +1137,11 @@
             qData.img = "data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='400' style='background:%234c3799; border-radius:20px;'><text x='50%' y='50%' fill='%23fdd835' font-size='40' font-weight='bold' font-family='sans-serif' text-anchor='middle' dominant-baseline='middle'>ОФФЛАЙН КАРТИНКА</text></svg>";
         }
         if (mediaType === 'video') {
-            qData.video = "test_video.mp4";
+            qData.video = "assets/video/mov_bbb.mp4";
             qData.q += " (Убедитесь, что файл test_video.mp4 лежит в одной папке с игрой)";
         }
         if (mediaType === 'audio') {
-            qData.audio = "test_audio.mp3";
+            qData.audio = "assets/music/viper.mp3";
             qData.q += " (Убедитесь, что файл test_audio.mp3 лежит в одной папке с игрой)";
         }
 
@@ -1789,7 +1804,7 @@
             if (imgElement) {
                 imgElement.classList.remove('img-error');
                 if (question.img && typeof question.img === 'string' && question.img.trim().length > 0) {
-                    imgElement.src = question.img.trim();
+                    imgElement.src = resolveMediaPath(question.img.trim());
                     imgElement.style.display = 'block';
                 } else {
                     imgElement.src = "";
@@ -1802,7 +1817,7 @@
             if (question.audio && typeof question.audio === 'string' && question.audio.trim().length > 0) {
                 if (audioElement) {
                     audioElement.style.display = 'block';
-                    audioElement.src = question.audio.trim();
+                    audioElement.src = resolveMediaPath(question.audio.trim());
                     audioElement.play().catch(e => {
                     });
                 }
@@ -2138,7 +2153,7 @@
         if (imgElement) {
             imgElement.classList.remove('img-error');
             if (question && question.img && typeof question.img === 'string' && question.img.trim().length > 0) {
-                imgElement.src = question.img.trim();
+                imgElement.src = resolveMediaPath(question.img.trim());
                 imgElement.style.display = 'block';
             } else {
                 imgElement.style.display = 'none';
@@ -2150,7 +2165,7 @@
         if (question && question.audio && typeof question.audio === 'string' && question.audio.trim().length > 0) {
             if (audioElement) {
                 audioElement.style.display = 'block';
-                audioElement.src = question.audio.trim();
+                audioElement.src = resolveMediaPath(question.audio.trim());
                 audioElement.play().catch(e => {
                 });
             }
@@ -2442,7 +2457,7 @@
         if (ansImgElement) {
             ansImgElement.classList.remove('img-error');
             if (currentQuestionObj && currentQuestionObj.answer_img && typeof currentQuestionObj.answer_img === 'string' && currentQuestionObj.answer_img.trim().length > 0) {
-                ansImgElement.src = currentQuestionObj.answer_img.trim();
+                ansImgElement.src = resolveMediaPath(currentQuestionObj.answer_img.trim());
                 ansImgElement.style.display = 'block';
             } else {
                 ansImgElement.src = "";

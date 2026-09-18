@@ -83,7 +83,7 @@ window.AVAILABLE_PACKS = [
                                                                     "a":  "«Бременские музыканты»",
                                                                     "cost":  300,
                                                                     "type":  "normal",
-                                                                    "audio":  "music/bremen.mp3"
+                                                                    "audio":  "assets/music/bremen.mp3"
                                                                 },
                                                                 {
                                                                     "q":  "Кто пел на солнышке песенку: «Я на солнышке лежу, я на солнышко гляжу»?",
