@@ -93,8 +93,8 @@
                                              "type":  "normal"
                                          },
                                          {
-                                             "q":  "Какая фраза диктора звучит при победе спецназа: «Counter-terrorists...»?",
-                                             "a":  "Win",
+                                             "q":  "Какая фраза диктора звучит при победе спецназа?",
+                                             "a":  "«Counter-terrorists Win!»",
                                              "cost":  400,
                                              "type":  "normal"
                                          },

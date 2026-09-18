@@ -58,7 +58,7 @@
                                              "type":  "normal"
                                          },
                                          {
-                                             "q":  "Какая песня The Prodigy объявляет о начале пожара: «I\u0027m the trouble starter, punkin\u0027 instigator... I\u0027m the...»?",
+                                             "q":  "Какая песня The Prodigy объявляет о начале пожара?",
                                              "a":  "Firestarter",
                                              "cost":  400,
                                              "type":  "normal"
