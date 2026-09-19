@@ -1,4 +1,4 @@
-const { describe, it } = require('node:test');
+﻿const { describe, it } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
@@ -20,6 +20,7 @@ describe('Navigation & DOM Integrity Tests', () => {
       'sub-menu-settings',
       'sub-menu-dev',
       'team-setup-container',
+      'sub-menu-first-turn',
       'game-board'
     ];
 

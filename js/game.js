@@ -1052,7 +1052,7 @@
 
     function showSubScreen(screenId) {
         stopFireworks();
-        ['sub-menu-main', 'sub-menu-prepare-choice', 'sub-menu-packs-catalog', 'sub-menu-editor', 'sub-menu-settings', 'sub-menu-dev', 'team-setup-container'].forEach(id => {
+        ['sub-menu-main', 'sub-menu-prepare-choice', 'sub-menu-packs-catalog', 'sub-menu-editor', 'sub-menu-settings', 'sub-menu-dev', 'team-setup-container', 'sub-menu-first-turn'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
@@ -1490,35 +1490,33 @@
         }
 
         teams = tempTeams.map(t => ({name: t.name, score: 0}));
-        const actionsBlock = document.querySelector('#team-setup-container .setup-actions');
-        if (actionsBlock) actionsBlock.style.display = 'none';
 
-        const setupHeader = document.querySelector('#team-setup-container h3');
-        if (setupHeader) {
-            setupHeader.textContent = "🎯 Выберите команду для первого хода";
-            setupHeader.style.color = "var(--gold-accent)";
-            setupHeader.style.textAlign = "center";
-        }
+        // Render first turn selection screen
+        const firstTurnContainer = document.getElementById('first-turn-teams-list');
+        if (firstTurnContainer) {
+            firstTurnContainer.innerHTML = '';
 
-        const inputsContainer = document.getElementById('team-inputs');
-        if (inputsContainer) {
-            inputsContainer.innerHTML = '';
-            inputsContainer.style.gridTemplateColumns = '1fr';
-            inputsContainer.style.maxWidth = '500px';
-            inputsContainer.style.margin = '30px auto';
+            const randomBtn = document.createElement('button');
+            randomBtn.className = 'btn btn-check';
+            randomBtn.style.background = 'linear-gradient(135deg, #a26bff, #6c5ce7)';
+            randomBtn.style.color = '#ffffff';
+            randomBtn.innerHTML = '🎲 Случайный выбор';
+            randomBtn.onclick = () => {
+                const randomIdx = Math.floor(Math.random() * teams.length);
+                finalizeGameStartWithFirstTurn(randomIdx);
+            };
+            firstTurnContainer.appendChild(randomBtn);
+
             teams.forEach((team, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'btn btn-check';
-                btn.style.width = '100%';
-                btn.style.marginBottom = '10px';
-                btn.style.fontSize = '20px';
-                btn.style.padding = '16px 20px';
-                btn.style.borderRadius = '16px';
                 btn.textContent = '👉 Первыми ходят: "' + team.name + '"';
                 btn.onclick = () => finalizeGameStartWithFirstTurn(idx);
-                inputsContainer.appendChild(btn);
+                firstTurnContainer.appendChild(btn);
             });
         }
+
+        showSubScreen('sub-menu-first-turn');
     }
 
     function finalizeGameStartWithFirstTurn(chosenTeamIdx) {
@@ -1545,17 +1543,6 @@
             panel.innerHTML = '';
         }
         if (title) title.style.display = 'block';
-
-        const actionsBlock = document.querySelector('#team-setup-container .setup-actions'),
-            setupHeader = document.querySelector('#team-setup-container h3'),
-            inputsContainer = document.getElementById('team-inputs');
-        if (actionsBlock) actionsBlock.style.display = 'flex';
-        if (setupHeader) setupHeader.textContent = "⭐ Настройка команд перед игрой";
-        if (inputsContainer) {
-            inputsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(240px, 1fr))';
-            inputsContainer.style.maxWidth = '';
-            inputsContainer.style.margin = '30px 0 40px 0';
-        }
 
         updateTurnDisplay();
         updateTeamsPanel();

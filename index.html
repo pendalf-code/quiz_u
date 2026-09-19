@@ -634,6 +634,20 @@
                 </div>
             </div>
 
+            <div id="sub-menu-first-turn" style="display: none; width: 100%;">
+                <h3>🎯 Кто ходит первым?</h3>
+                <div class="menu-subtitle" style="font-size: 19px; margin-top: 10px; margin-bottom: 25px;">Выберите команду, которая начнет игру первым ходом:</div>
+
+                <div id="first-turn-teams-list" class="team-setup-actions-vertical" style="margin-top: 20px; margin-bottom: 30px;">
+                    <!-- Dynamic team buttons will be rendered here -->
+                </div>
+
+                <div class="setup-actions" style="justify-content: center; gap: 16px; margin-top: 25px; margin-bottom: 20px;">
+                    <button class="btn btn-check" onclick="showSubScreen('team-setup-container')">⬅️ Назад к настройке команд</button>
+                    <button class="btn btn-close-modal" onclick="backToMainMenu()">🏠 В главное меню</button>
+                </div>
+            </div>
+
         </div>
 
         <div class="game-header" id="game-header-block" style="display: none;">
