@@ -2582,7 +2582,7 @@
         closeSystemModal();
         stopQuestionAudio();
         currentRoundIndex++;
-        currentTurnTeamIdx = 0;
+        currentTurnTeamIdx = (currentTurnTeamIdx + 1) % teams.length;
         if (currentRoundIndex >= gameData.length) {
             hideGameLayout();
             showWinnerCelebration();
@@ -2603,7 +2603,7 @@
             currentRoundIndex++;
             if (currentRoundIndex < gameData.length) {
                 showSystemModal("🏁 РАУНД ЗАВЕРШЕН", "Все вопросы раунда разыграны!");
-                currentTurnTeamIdx = 0;
+                currentTurnTeamIdx = (currentTurnTeamIdx + 1) % teams.length;
                 initBoard();
                 saveGameState();
             } else {
