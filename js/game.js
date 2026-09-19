@@ -1057,6 +1057,11 @@
             if (el) el.style.display = 'none';
         });
 
+        // Ensure in-game teams display and title are completely hidden when navigating any menu sub-screen
+        const teamsWrapper = document.getElementById('teams-block-wrapper');
+        if (teamsWrapper) teamsWrapper.style.display = 'none';
+        const teamsPanel = document.getElementById('main-teams-panel');
+        if (teamsPanel) teamsPanel.style.display = 'none';
         const teamsTitle = document.getElementById('teams-block-title');
         if (teamsTitle) teamsTitle.style.display = 'none';
 
@@ -1519,6 +1524,8 @@
         const skipBtn = document.getElementById('btn-skip-round');
         if (skipBtn) skipBtn.style.display = (currentRoundIndex < gameData.length - 1) ? 'inline-block' : 'none';
 
+        const teamsWrapper = document.getElementById('teams-block-wrapper');
+        if (teamsWrapper) teamsWrapper.style.display = 'block';
         const panel = document.getElementById('main-teams-panel'), title = document.getElementById('teams-block-title');
         if (panel) {
             panel.style.display = 'flex';

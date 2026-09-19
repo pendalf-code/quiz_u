@@ -81,8 +81,12 @@ window.addEventListener('keydown', (e) => {
 
 function handleCatalogFiltersChanged() {
     const searchInput = document.getElementById('catalog-search-input');
+    const clearBtn = document.getElementById('catalog-search-clear');
     if (searchInput) {
         currentCatalogSearch = searchInput.value.trim().toLowerCase();
+        if (clearBtn) {
+            clearBtn.classList.toggle('is-visible', searchInput.value.trim().length > 0);
+        }
     }
     const catSelect = document.getElementById('catalog-category-select');
     if (catSelect) {
@@ -99,8 +103,13 @@ function handleCatalogFiltersChanged() {
 
 function clearCatalogSearch() {
     const searchInput = document.getElementById('catalog-search-input');
+    const clearBtn = document.getElementById('catalog-search-clear');
     if (searchInput) {
         searchInput.value = '';
+        searchInput.focus();
+    }
+    if (clearBtn) {
+        clearBtn.classList.remove('is-visible');
     }
     currentCatalogSearch = '';
     currentCatalogPage = 1;

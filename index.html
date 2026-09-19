@@ -120,7 +120,7 @@
 
                         <div class="prepare-card-features">
 
-                            <span class="choice-feat-chip">📂 Загрузка с ПК</span>
+                            <span class="choice-feat-chip">📁 Загрузка с ПК</span>
 
                             <span class="choice-feat-chip">✏️ Редактор вопросов</span>
 
@@ -348,21 +348,29 @@
                 </div>
 
 
-                <!-- Cards Grid -->
+                <!-- Catalog Packs Cards Grid -->
 
-                <div id="catalog-packs-grid" class="catalog-packs-grid"></div>
+                <div class="catalog-packs-grid" id="catalog-packs-grid">
+
+                    <!-- Injected dynamically by catalog.js -->
+
+                </div>
 
 
-                <!-- Bottom Back Buttons -->
+                <!-- Secondary Action Links -->
 
                 <div class="catalog-footer-actions">
 
-                    <button class="btn btn-check" onclick="showSubScreen('sub-menu-prepare-choice')"
-                            style="font-size: 16px; padding: 12px 26px;">⬅️ Назад к выбору
+                    <button class="btn btn-check" onclick="openCustomPackEditor()">
+
+                        ✏️ Создать или загрузить свой пак вопросов
+
                     </button>
 
-                    <button class="btn btn-close-modal" onclick="backToMainMenu()"
-                            style="font-size: 16px; padding: 12px 26px;">🏠 В главное меню
+                    <button class="btn btn-close-modal" onclick="backToMainMenu()">
+
+                        🏠 В главное меню
+
                     </button>
 
                 </div>
@@ -370,130 +378,178 @@
             </div>
 
 
+            <!-- Sub-screen: Редактор / Загрузка своих вопросов -->
+
             <div id="sub-menu-editor" style="display: none; width: 100%;">
-                <h3>🛠️ Редактор вопросов викторины</h3>
-                <textarea id="json-editor"></textarea>
-                <div class="file-controls"
-                     style="margin-top:20px; display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
-                    <button class="btn btn-success" onclick="applyCustomQuestions()">Запустить эту игру</button>
-                    <button class="btn btn-check" onclick="downloadPack()">Сохранить на ПК (.json)</button>
-                    <input type="file" id="upload-file" style="display:none" onchange="uploadPack(event)">
-                    <button class="btn btn-danger" onclick="document.getElementById('upload-file').click()">Открыть файл
-                        с ПК
+
+                <div class="catalog-header-bar">
+
+                    <div class="catalog-title-group">
+
+                        <h2 class="catalog-main-title">✏️ Редактор и загрузка паков</h2>
+
+                        <div class="catalog-main-subtitle">Загрузите файл вопросов с компьютера (.json) или настройте
+                            структуру вручную
+                        </div>
+
+                    </div>
+
+                    <button class="btn btn-close-modal catalog-top-back-btn"
+                            onclick="showSubScreen('sub-menu-prepare-choice')">⬅️ Назад к выбору
                     </button>
-                    <button class="btn btn-check" onclick="showSubScreen('sub-menu-prepare-choice')" style="margin: 0;">⬅️ Назад к выбору</button>
-                    <button class="btn btn-close-modal" onclick="backToMainMenu()" style="margin: 0;">🏠 В главное меню</button>
+
                 </div>
+
+
+                <div class="editor-file-actions-box">
+
+                    <div class="editor-action-col">
+
+                        <label class="btn btn-check editor-upload-btn" for="json-file-input">
+
+                            📁 Выбрать .JSON файл на компьютере
+
+                        </label>
+
+                        <input type="file" id="json-file-input" accept=".json" onchange="loadCustomQuestionsFile(event)"
+                               style="display: none;">
+
+                        <span class="editor-action-hint">Файл автоматически проверится и загрузится в игру</span>
+
+                    </div>
+
+                    <div class="editor-action-col">
+
+                        <button class="btn btn-check editor-export-btn" onclick="exportCurrentQuestions()">
+
+                            💾 Скачать текущий пак (.JSON)
+
+                        </button>
+
+                        <span class="editor-action-hint">Сохранить текущие вопросы в файл для повторного использования</span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="editor-code-container">
+
+                    <div class="editor-code-header">
+
+                        <span class="editor-code-label">🛠️ Исходный код пакета (JSON):</span>
+
+                        <span class="editor-code-note">Вы можете вносить любые правки прямо в текст</span>
+
+                    </div>
+
+                    <textarea id="json-editor" class="editor-textarea" spellcheck="false"
+                              placeholder="Загрузите файл или вставьте JSON структуру игры..."></textarea>
+
+                </div>
+
+
+                <div class="editor-bottom-bar">
+
+                    <button class="btn btn-success editor-apply-btn" onclick="applyCustomQuestions()">
+
+                        ✅ Применить и перейти к выбору команд
+
+                    </button>
+
+                    <button class="btn btn-close-modal" onclick="showSubScreen('sub-menu-prepare-choice')">
+
+                        ⬅️ Назад к выбору
+
+                    </button>
+
+                    <button class="btn btn-close-modal" onclick="backToMainMenu()">
+
+                        🏠 В главное меню
+
+                    </button>
+
+                </div>
+
             </div>
 
             <div id="sub-menu-settings" style="display: none; width: 100%;">
-                <h3>⚙️ Настройки викторины</h3>
-
-                <div style="max-width: 520px; margin: 30px auto 35px auto; display: flex; flex-direction: column; gap: 18px; text-align: left;">
-                    <div class="settings-row-box">
-                        <label class="settings-label">⏱️ Время на чтение вопроса:</label>
-                        <input type="number" id="setting-reading-time" class="setting-input-field" value="7" min="0"
-                               style="width: 100px; text-align: center; margin: 0; padding: 10px; border-radius: 8px; border: 2px solid var(--purple-medium); font-size: 16px; font-weight: bold; color: var(--purple-dark);">
-                    </div>
-
-                    <div class="settings-row-box">
-                        <label class="settings-label">🔥 Время на обсуждение:</label>
-                        <input type="number" id="setting-thinking-time" class="setting-input-field" value="30" min="1"
-                               style="width: 100px; text-align: center; margin: 0; padding: 10px; border-radius: 8px; border: 2px solid var(--purple-medium); font-size: 16px; font-weight: bold; color: var(--purple-dark);">
-                    </div>
-
-                    <div class="settings-row-box">
-                        <label class="settings-label">🎙️ Время на ответ команды:</label>
-                        <input type="number" id="setting-answer-time" class="setting-input-field" value="5" min="1"
-                               style="width: 100px; text-align: center; margin: 0; padding: 10px; border-radius: 8px; border: 2px solid var(--purple-medium); font-size: 16px; font-weight: bold; color: var(--purple-dark);">
-                    </div>
-
-                    <div class="settings-group-box">
-                        <label class="settings-group-title">🎲 Особые типы вопросов в игре:</label>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <label class="settings-checkbox-label">
-                                <input type="checkbox" id="setting-type-cat" checked
-                                       style="width: 20px; height: 20px; accent-color: var(--gold-accent);"> 🐱 Разрешить
-                                «Кот в мешке»
-                            </label>
-                            <label class="settings-checkbox-label">
-                                <input type="checkbox" id="setting-type-auction" checked
-                                       style="width: 20px; height: 20px; accent-color: var(--gold-accent);"> 💰 Разрешить
-                                «Аукцион (для всех)»
-                            </label>
-                            <label class="settings-checkbox-label">
-                                <input type="checkbox" id="setting-type-auction-leader" checked
-                                       style="width: 20px; height: 20px; accent-color: var(--gold-accent);"> 🔨 Разрешить
-                                «Аукцион (только лидеру)»
-                            </label>
-                        </div>
-                    </div>
+                <h3>⚙️ Настройки игры</h3>
+                <div class="setup-group">
+                    <label>Время на чтение вопроса (сек):</label>
+                    <input type="number" id="cfg-reading-time" value="7" min="0" max="60">
                 </div>
-
-                <div class="setup-actions" style="justify-content: center;">
-                    <button class="btn btn-success" onclick="saveSettings()">💾 Сохранить настройки</button>
-                    <button class="btn btn-close-modal" onclick="backToMainMenu()" style="margin: 0;">⬅️ Назад в главное меню</button>
+                <div class="setup-group">
+                    <label>Время на обсуждение вопроса (сек):</label>
+                    <input type="number" id="cfg-thinking-time" value="30" min="5" max="180">
+                </div>
+                <div class="setup-group">
+                    <label>Время на ответ команды (сек):</label>
+                    <input type="number" id="cfg-answer-time" value="5" min="3" max="60">
+                </div>
+                <div class="setup-actions" style="margin-top: 35px;">
+                    <button class="btn btn-success" onclick="saveGameConfig()">💾 Сохранить</button>
+                    <button class="btn btn-close-modal" onclick="backToMainMenu()">⬅️ Назад в меню</button>
                 </div>
             </div>
 
-            <!-- DEV SANDBOX -->
             <div id="sub-menu-dev" style="display: none; width: 100%;">
-                <h3>🧪 Меню тестирования</h3>
-
-                <div style="display: flex; flex-direction: column; gap: 30px; max-width: 1050px; margin: 30px auto 40px auto;">
+                <h3 style="color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.4);">🧪 Меню тестирования</h3>
+                <div class="dev-grid">
 
                     <div class="dev-card-section">
                         <div class="dev-card-title">
-                            ❓ Логика вопросов
+                            🎯 Типы вопросов
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                             <button class="btn btn-check" onclick="testLaunchQuestion('normal')"
-                                    style="font-size: 18px; padding: 16px 20px;">Обычный
+                                    style="background: #2980b9; color: white;">Обычный вопрос
                             </button>
-                            <button class="btn" onclick="testLaunchQuestion('cat')"
-                                    style="font-size: 18px; padding: 16px 20px; background: #ff9f43; color: var(--purple-dark);">
-                                🐱 Кот в мешке
+                            <button class="btn btn-check" onclick="testLaunchQuestion('secret')"
+                                    style="background: #8e44ad; color: white;">🐱 Кот в мешке
                             </button>
-                            <button class="btn" onclick="testLaunchQuestion('auction')"
-                                    style="font-size: 18px; padding: 16px 20px; background: #f1c40f; color: var(--purple-dark);">
-                                💰 Аукцион (Все)
+                            <button class="btn btn-check" onclick="testLaunchQuestion('auction_all')"
+                                    style="background: #d35400; color: white;">💰 Аукцион (Все)
                             </button>
-                            <button class="btn" onclick="testLaunchQuestion('auction_leader')"
-                                    style="font-size: 18px; padding: 16px 20px; background: #e67e22; color: var(--purple-dark);">
-                                🔨 Аукцион (Лидер)
+                            <button class="btn btn-check" onclick="testLaunchQuestion('auction_leader')"
+                                    style="background: #c0392b; color: white;">🔨 Аукцион (Лидер)
                             </button>
                         </div>
                     </div>
 
                     <div class="dev-card-section">
                         <div class="dev-card-title">
-                            🎬 Медиа-плееры
+                            🎬 Мультимедиа вопросы
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                             <button class="btn btn-check" onclick="testMediaQuestion('image')"
-                                    style="font-size: 18px; padding: 16px 20px;">🖼️ Картинка
+                                    style="background: #16a085; color: white;">🖼️ Картинка
                             </button>
                             <button class="btn btn-check" onclick="testMediaQuestion('video')"
-                                    style="font-size: 18px; padding: 16px 20px;">🎥 Видео (MP4)
+                                    style="background: #27ae60; color: white;">🎥 Локальное видео
+                            </button>
+                            <button class="btn btn-check" onclick="testMediaQuestion('youtube')"
+                                    style="background: #c0392b; color: white;">▶️ YouTube плеер
+                            </button>
+                            <button class="btn btn-check" onclick="testMediaQuestion('vk')"
+                                    style="background: #0077ff; color: white;">🔵 VK Видео плеер
                             </button>
                             <button class="btn btn-check" onclick="testMediaQuestion('audio')"
-                                    style="font-size: 18px; padding: 16px 20px;">🎵 Аудио
+                                    style="background: #f39c12; color: white;">🎵 Аудио вопрос
                             </button>
                         </div>
                     </div>
 
                     <div class="dev-card-section">
                         <div class="dev-card-title">
-                            📊 Экраны и верстка
+                            🏆 Финалы и Победа
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
-                            <button class="btn" onclick="testWinnerScreenMock()"
-                                    style="font-size: 18px; padding: 16px 20px; background: #a29bfe; color: var(--purple-dark);">
-                                🏆 Экран победы
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <button class="btn btn-check" onclick="testLaunchFinalRoundMock()"
+                                    style="background: #9b59b6; color: white;">🌟 Финальный раунд
                             </button>
-                            <button class="btn" onclick="testCssOverflow()"
-                                    style="font-size: 18px; padding: 16px 20px; background: #81ecec; color: var(--purple-dark);">
-                                💥 Тест длинных имен
+                            <button class="btn btn-check" onclick="testWinnerScreenMock()"
+                                    style="background: #f1c40f; color: #2c3e50; font-weight: bold;">🎉 Экран победителя
                             </button>
                         </div>
                     </div>
@@ -578,7 +634,7 @@
 
         <div class="jeopardy-table" id="game-board" style="display: none;"></div>
 
-        <div id="teams-block-wrapper" style="width: 100%; margin-top: 40px; text-align: center;">
+        <div id="teams-block-wrapper" style="display: none; width: 100%; margin-top: 40px; text-align: center;">
             <h2 id="teams-block-title"
                 style="display: none; color: var(--gold-accent); font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);">
                 ⭐ Команды</h2>
@@ -618,78 +674,123 @@
         </div>
 
         <div id="teams-modal-list" style="width: 100%; margin-top: 20px;"></div>
-        <div class="modal-controls" id="modal-buttons-area">
+
+        <div class="modal-actions" id="modal-buttons-area">
             <button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>
         </div>
     </div>
 </div>
 
-<div class="modal" id="turn-order-modal" onclick="onTurnOrderModalBackdropClick(event)">
-    <div class="modal-card turn-modal-card">
-        <div class="turn-modal-header">
-            <div class="turn-modal-title">🔄 ПЕРЕДАЧА ХОДА</div>
-            <div class="turn-modal-subtitle">Выберите команду, которая будет выбирать следующий вопрос:</div>
-        </div>
-
-        <div class="turn-teams-list" id="turn-modal-teams-list"></div>
-
-        <div class="turn-modal-footer">
-            <button class="btn btn-turn-next" onclick="passTurnToNextTeam()">
-                ⏭ Следующая команда по кругу
-            </button>
-            <button class="btn btn-close-modal" onclick="closeTurnOrderModal()" style="margin: 0;">
-                ✖ Закрыть
-            </button>
+<div class="modal" id="system-modal" style="display: none;">
+    <div class="modal-card">
+        <h2 id="system-modal-title" style="color: var(--gold-accent); margin-top: 0; font-size: 28px;">Уведомление</h2>
+        <div id="system-modal-message"
+             style="font-size: 19px; line-height: 1.6; margin: 25px 0; color: #ffffff; white-space: pre-line;"></div>
+        <div class="modal-actions" id="system-modal-buttons">
+            <button class="btn btn-check" onclick="closeSystemModal()">OK</button>
         </div>
     </div>
 </div>
 
-<div id="cat-splash-overlay" class="cat-splash-overlay" style="display: none;" onclick="dismissCatSplash(event)">
-    <div class="cat-splash-content">
-        <div class="cat-splash-title">🐱 КОТ В МЕШКЕ! 🐱</div>
-        <div class="cat-splash-subtitle">Специальный вопрос для команды-соперника</div>
-
+<!-- Special Question: Cat in Bag Fullscreen Splash Overlay -->
+<div id="cat-splash-overlay" class="cat-splash-overlay" onclick="dismissCatSplash(event)" style="display: none;">
+    <div class="cat-splash-content" onclick="dismissCatSplash(event)">
+        <div class="cat-splash-badge">Секретный вопрос!</div>
+        <div class="cat-splash-title">Кот в мешке!</div>
         <div class="cat-splash-anim-wrap">
             <div class="cat-splash-bubble">МЯУ! 🐾</div>
+            <svg class="cat-splash-svg" viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="cat-snout-grad-sp" cx="50%" cy="40%" r="50%">
+                        <stop offset="0%" stop-color="#3d2c1e"/>
+                        <stop offset="100%" stop-color="#1f140a"/>
+                    </radialGradient>
+                    <linearGradient id="cat-bag-grad-sp" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#b45309"/>
+                        <stop offset="50%" stop-color="#92400e"/>
+                        <stop offset="100%" stop-color="#78350f"/>
+                    </linearGradient>
+                </defs>
+                <path d="M 68 85 Q 64 68 56 60 Q 76 66 84 82 Z" fill="#e0a96d" />
+                <path d="M 66 83 Q 63 70 58 63 Q 73 68 80 81 Z" fill="#fda4af" />
+                <path d="M 132 85 Q 136 68 144 60 Q 124 66 116 82 Z" fill="#e0a96d" />
+                <path d="M 134 83 Q 137 70 142 63 Q 127 68 120 81 Z" fill="#fda4af" />
+                <ellipse cx="100" cy="92" rx="38" ry="32" fill="url(#cat-snout-grad-sp)" />
+                <ellipse cx="85" cy="88" rx="8" ry="11" fill="#facc15" />
+                <ellipse cx="86" cy="88" rx="4" ry="9" fill="#1e1b4b" />
+                <circle cx="84" cy="84" r="2.2" fill="#ffffff" />
+                <ellipse cx="115" cy="88" rx="8" ry="11" fill="#facc15" />
+                <ellipse cx="114" cy="88" rx="4" ry="9" fill="#1e1b4b" />
+                <circle cx="113" cy="84" r="2.2" fill="#ffffff" />
+                <polygon points="100,96 95,92 105,92" fill="#fda4af" />
+                <path d="M 95 99 Q 100 102 105 99" stroke="#fda4af" stroke-width="2" fill="none" stroke-linecap="round" />
+                <line x1="62" y1="94" x2="88" y2="96" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
+                <line x1="60" y1="100" x2="88" y2="99" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
+                <line x1="138" y1="94" x2="112" y2="96" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
+                <line x1="140" y1="100" x2="112" y2="99" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
+                <path d="M 52 118 C 45 140 40 185 58 198 C 76 210 124 210 142 198 C 160 185 155 140 148 118 C 142 124 130 128 100 128 C 70 128 58 124 52 118 Z" fill="url(#cat-bag-grad-sp)" />
+                <path d="M 46 114 Q 100 124 154 114 Q 148 106 100 106 Q 52 106 46 114 Z" fill="#d97706" />
+                <ellipse cx="100" cy="113" rx="48" ry="7" fill="#78350f" />
+                <path d="M 78 113 Q 100 119 122 113" stroke="#fef08a" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <circle cx="100" cy="118" r="4.5" fill="#facc15" />
+                <path d="M 97 122 L 91 138" stroke="#fde047" stroke-width="2.5" stroke-linecap="round" />
+                <path d="M 103 122 L 109 138" stroke="#fde047" stroke-width="2.5" stroke-linecap="round" />
+                <ellipse cx="78" cy="116" rx="8" ry="5.5" fill="#e0a96d" />
+                <ellipse cx="122" cy="116" rx="8" ry="5.5" fill="#e0a96d" />
+                <text x="100" y="168" text-anchor="middle" font-size="28" font-weight="900" fill="#fef08a" font-family="sans-serif">?</text>
+            </svg>
         </div>
-
-        <button class="cat-splash-continue-btn" onclick="dismissCatSplash(event)">
-            Передать вопрос соперникам ➔
+        <div class="cat-splash-desc">
+            Этот вопрос нельзя отвечать самому!<br>
+            Его обязательно нужно отдать соперникам.
+        </div>
+        <button type="button" class="btn btn-check cat-splash-btn" onclick="dismissCatSplash(event)">
+            Понятно, открыть вопрос ➔
         </button>
-        <div class="cat-splash-hint">Кликните в любое место или нажмите [Пробел] / [Enter]</div>
     </div>
 </div>
 
-<div id="auction-splash-overlay" class="auction-splash-overlay" style="display: none;"
-     onclick="dismissAuctionSplash(event)">
-    <div class="auction-splash-content">
-        <div class="auction-splash-title" id="auction-splash-title">💰 ВОПРОС СО СТАВКОЙ! 💰</div>
-        <div class="auction-splash-subtitle" id="auction-splash-subtitle">Ставки делают все команды! Рискуйте очками и
-            идите ва-банк!
+<!-- Special Question: Auction Fullscreen Splash Overlay -->
+<div id="auction-splash-overlay" class="auction-splash-overlay" onclick="dismissAuctionSplash(event)" style="display: none;">
+    <div class="auction-splash-content" onclick="dismissAuctionSplash(event)">
+        <div id="auction-splash-title" class="auction-splash-title">💰 ВОПРОС СО СТАВКОЙ! 💰</div>
+        <div id="auction-splash-subtitle" class="auction-splash-subtitle">Ставки делают все команды! Рискуйте очками и идите ва-банк!</div>
+        <div id="auction-splash-anim-wrap" class="auction-splash-anim-wrap">
+            <div class="auction-splash-bubble">ВА-БАНК! 🪙</div>
         </div>
-
-        <div class="auction-splash-anim-wrap" id="auction-splash-anim-wrap">
-            <div class="auction-splash-bubble" id="auction-splash-bubble">ВА-БАНК! 🔥</div>
-        </div>
-
-        <button class="auction-splash-continue-btn" id="auction-splash-continue-btn"
-                onclick="dismissAuctionSplash(event)">
+        <button type="button" id="auction-splash-continue-btn" class="auction-splash-continue-btn" onclick="dismissAuctionSplash(event)">
             💰 Перейти к торгам ➔
         </button>
-        <div class="auction-splash-hint">Кликните в любое место или нажмите [Пробел] / [Enter]</div>
     </div>
 </div>
 
+<!-- Modal: Choose Turn Order / Switch Active Team -->
+<div class="modal" id="turn-order-modal" style="display: none;">
+    <div class="modal-card turn-modal-card">
+        <div class="turn-modal-header">
+            <h2 class="turn-modal-title">🔄 Очерёдность выбора вопроса</h2>
+            <div class="turn-modal-subtitle">
+                Выберите команду, которая будет выбирать следующий вопрос на игровом поле:
+            </div>
+        </div>
 
-<!-- Модальное окно предпросмотра тем выбранного пака -->
+        <div id="turn-modal-teams-list" class="turn-teams-list"></div>
 
-<div id="pack-preview-modal" class="modal" style="display: none;">
+        <div class="turn-modal-footer">
+            <button class="btn btn-close-modal" onclick="closeTurnOrderModal()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Pack Preview (Themes & Info) -->
+
+<div class="modal" id="pack-preview-modal" style="display: none;">
 
     <div class="modal-card pack-preview-modal-card">
 
         <div class="preview-modal-header">
 
-            <div style="display: flex; flex-direction: column; gap: 6px; text-align: left;">
+            <div style="display: flex; flex-direction: column; gap: 6px; text-align: left; min-width: 0; flex-grow: 1;">
 
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
 
@@ -705,8 +806,7 @@
 
             </div>
 
-            <button class="btn-mini btn-danger preview-close-x" onclick="closePackPreviewModal()" title="Закрыть">✖
-            </button>
+            <button type="button" class="preview-close-x" onclick="closePackPreviewModal()" title="Закрыть">✖</button>
 
         </div>
 
@@ -743,9 +843,8 @@
 
 </div>
     <!-- Scripts -->
-    <script src="js/packs_data.js"></script>
-    <script src="js/catalog.js"></script>
-    <script src="js/game.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="js/packs_data.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/game.js"></script>
 </body>
 </html>
