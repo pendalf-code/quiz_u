@@ -388,8 +388,7 @@
 
                         <h2 class="catalog-main-title">✏️ Редактор и загрузка паков</h2>
 
-                        <div class="catalog-main-subtitle">Загрузите файл вопросов с компьютера (.json) или настройте
-                            структуру вручную
+                        <div class="catalog-main-subtitle">Загрузите файл вопросов с компьютера (.json) или настройте структуру вручную
                         </div>
 
                     </div>
@@ -401,38 +400,7 @@
                 </div>
 
 
-                <div class="editor-file-actions-box">
-
-                    <div class="editor-action-col">
-
-                        <label class="btn btn-check editor-upload-btn" for="json-file-input">
-
-                            📁 Выбрать .JSON файл на компьютере
-
-                        </label>
-
-                        <input type="file" id="json-file-input" accept=".json" onchange="loadCustomQuestionsFile(event)"
-                               style="display: none;">
-
-                        <span class="editor-action-hint">Файл автоматически проверится и загрузится в игру</span>
-
-                    </div>
-
-                    <div class="editor-action-col">
-
-                        <button class="btn btn-check editor-export-btn" onclick="exportCurrentQuestions()">
-
-                            💾 Скачать текущий пак (.JSON)
-
-                        </button>
-
-                        <span class="editor-action-hint">Сохранить текущие вопросы в файл для повторного использования</span>
-
-                    </div>
-
-                </div>
-
-
+                <!-- JSON Editor at Top -->
                 <div class="editor-code-container">
 
                     <div class="editor-code-header">
@@ -449,25 +417,49 @@
                 </div>
 
 
-                <div class="editor-bottom-bar">
+                <!-- Actions and Navigation Below JSON -->
+                <div class="editor-controls-panel">
 
-                    <button class="btn btn-success editor-apply-btn" onclick="applyCustomQuestions()">
+                    <div class="editor-actions-grid">
 
-                        ✅ Применить и перейти к выбору команд
+                        <label class="btn btn-check editor-btn-action" for="json-file-input">
 
-                    </button>
+                            📁 Выбрать .JSON файл на ПК
 
-                    <button class="btn btn-close-modal" onclick="showSubScreen('sub-menu-prepare-choice')">
+                        </label>
 
-                        ⬅️ Назад к выбору
+                        <input type="file" id="json-file-input" accept=".json" onchange="loadCustomQuestionsFile(event)"
+                               style="display: none;">
 
-                    </button>
+                        <button class="btn btn-check editor-btn-action" type="button" onclick="exportCurrentQuestions()">
 
-                    <button class="btn btn-close-modal" onclick="backToMainMenu()">
+                            💾 Скачать текущий пак (.JSON)
 
-                        🏠 В главное меню
+                        </button>
 
-                    </button>
+                        <button class="btn btn-success editor-btn-action editor-btn-primary" type="button" onclick="applyCustomQuestions()">
+
+                            ✅ Применить и начать игру
+
+                        </button>
+
+                    </div>
+
+                    <div class="editor-nav-row">
+
+                        <button class="btn btn-close-modal editor-btn-nav" type="button" onclick="showSubScreen('sub-menu-prepare-choice')">
+
+                            ⬅️ Назад к выбору
+
+                        </button>
+
+                        <button class="btn btn-close-modal editor-btn-nav" type="button" onclick="backToMainMenu()">
+
+                            🏠 В главное меню
+
+                        </button>
+
+                    </div>
 
                 </div>
 
