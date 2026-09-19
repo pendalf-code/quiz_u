@@ -150,4 +150,24 @@ describe('Navigation & DOM Integrity Tests', () => {
     }
     assert.ok(indexHtml.includes('saveSettings()'), 'Settings screen must have saveSettings() button');
   });
+  it('team setup container action buttons must be styled for centering and responsiveness', () => {
+    const styleCss = fs.readFileSync(path.join(__dirname, '..', 'css', 'style.css'), 'utf8');
+
+    // .setup-actions should have row layout with wrap and center alignment
+    assert.ok(
+      styleCss.includes('.setup-actions') &&
+      styleCss.includes('justify-content: center') &&
+      styleCss.includes('flex-direction: row'),
+      'style.css must define .setup-actions with flex-direction: row and justify-content: center'
+    );
+
+    // #team-setup-container must have .setup-actions container
+    const teamSetupIdx = indexHtml.indexOf('id="team-setup-container"');
+    assert.ok(teamSetupIdx !== -1, 'team-setup-container exists');
+    const teamSetupSlice = indexHtml.slice(teamSetupIdx, teamSetupIdx + 1500);
+    assert.ok(
+      teamSetupSlice.includes('class="setup-actions"'),
+      'team-setup-container must contain an element with class setup-actions'
+    );
+  });
 });
