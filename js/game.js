@@ -1224,6 +1224,61 @@
         }
     }
 
+    function testLaunchFinalRoundMock() {
+        isTestMode = true;
+        if (!teams || teams.length < 2) {
+            teams = [
+                {name: "Альфа-Тест", score: 800},
+                {name: "Омега-Тест", score: 650}
+            ];
+            currentTurnTeamIdx = 0;
+        }
+        if (Object.keys(gameStats).length === 0) resetGameStats();
+
+        const finalMockRound = {
+            roundName: "🌟 Финальный раунд",
+            themes: [
+                {
+                    name: "👑 Финальная дуэль",
+                    questions: [
+                        {
+                            q: "[ТЕСТ ФИНАЛ] Это решающий вопрос викторины повышенной сложности. Проверьте отображение интерфейса!",
+                            a: "Правильный финальный ответ",
+                            cost: 1000,
+                            type: 'normal',
+                            used: false
+                        }
+                    ]
+                }
+            ]
+        };
+
+        gameData = [finalMockRound];
+        currentRoundIndex = 0;
+
+        const mainAppBox = document.getElementById('main-app-box');
+        if (mainAppBox) mainAppBox.style.display = 'none';
+
+        const headerBlock = document.getElementById('game-header-block');
+        if (headerBlock) headerBlock.style.display = 'flex';
+
+        const skipBtn = document.getElementById('btn-skip-round');
+        if (skipBtn) skipBtn.style.display = 'none';
+
+        const teamsWrapper = document.getElementById('teams-block-wrapper');
+        if (teamsWrapper) teamsWrapper.style.display = 'block';
+        const panel = document.getElementById('main-teams-panel'), title = document.getElementById('teams-block-title');
+        if (panel) {
+            panel.style.display = 'flex';
+            panel.innerHTML = '';
+        }
+        if (title) title.style.display = 'block';
+
+        updateTurnDisplay();
+        updateTeamsPanel();
+        initBoard();
+    }
+
     function testWinnerScreenMock() {
         let maxScore = Math.floor(Math.random() * 3000) + 1000;
         let winnerDesc = `<div style="font-size:26px; font-weight:800; color:#ffffff; margin: 20px 0;">
@@ -1957,7 +2012,7 @@
                 btn.onclick = () => selectTeamForCatInBag(idx);
                 listContainer.appendChild(btn);
             });
-            if (btnArea) btnArea.innerHTML = '<span style="color:var(--lavender-light); font-weight:bold; font-size:16px;">Выберите соперника выше!</span>';
+            if (btnArea) btnArea.innerHTML = '';
         } else if (['auction', 'auction_leader'].includes(question.type)) {
             let auctionListContainer = document.createElement('div');
             auctionListContainer.style.width = '100%';
