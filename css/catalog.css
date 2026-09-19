@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    READY-MADE QUESTION PACKS CATALOG & PREPARATION STYLES
    QUIZ U - Clean, Modern, Adaptive, Dark & Light Themes
    ========================================================================== */
@@ -1329,6 +1329,43 @@ body.light-theme .btn-pack-download {
 /* --------------------------------------------------------------------------
    RESPONSIVE ADAPTATIONS (Desktop, Tablet, Mobile)
    -------------------------------------------------------------------------- */
+@media (min-width: 768px) and (max-width: 1304px) {
+    .prepare-choice-grid {
+        gap: 20px;
+        margin: 24px auto 32px auto;
+    }
+
+    .prepare-choice-card {
+        padding: 34px 26px;
+        min-height: 440px;
+    }
+
+    .pack-card-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .btn-pack-play {
+        flex: 1 1 100%;
+        min-height: 42px;
+        font-size: 15px !important;
+    }
+
+    .btn-pack-preview {
+        flex: 1 1 calc(50% - 4px);
+        min-height: 42px;
+        font-size: 13.5px !important;
+        padding: 10px 8px !important;
+    }
+
+    .btn-pack-download {
+        flex: 1 1 calc(50% - 4px);
+        min-height: 42px;
+        font-size: 13.5px !important;
+        padding: 10px 8px !important;
+    }
+}
+
 @media (max-width: 1024px) {
     .prepare-choice-grid {
         grid-template-columns: 1fr;
