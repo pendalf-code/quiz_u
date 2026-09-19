@@ -108,6 +108,9 @@
             overflow-y: auto;
             overflow-x: hidden;
             height: 100%;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         ::-webkit-scrollbar {
@@ -139,6 +142,9 @@
             justify-content: flex-start;
             min-height: 100vh;
             box-sizing: border-box;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100%;
         }
 
         img:not([src]), img[src=""], img.img-error {
@@ -156,6 +162,8 @@
             font-size: 22px;
             width: 50px;
             height: 50px;
+            min-width: 44px;
+            min-height: 44px;
             border-radius: 50%;
             cursor: pointer;
             backdrop-filter: blur(8px);
@@ -164,10 +172,17 @@
             justify-content: center;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s ease, background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .theme-toggle-btn:hover {
-            transform: scale(1.1) rotate(15deg);
+        @media (hover: hover) and (pointer: fine) {
+            .theme-toggle-btn:hover {
+                transform: scale(1.1) rotate(15deg);
+            }
+        }
+
+        .theme-toggle-btn:active {
+            transform: scale(0.95);
         }
 
         .city-bg {
@@ -183,83 +198,46 @@
             transition: background 0.4s ease;
         }
 
-
         .moon-container {
-
             position: absolute;
-
             top: 8%;
-
             right: 15%;
-
             width: 120px;
-
             height: 120px;
-
             border-radius: 50%;
-
             background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e2e8f0 35%, #cbd5e1 70%, #94a3b8 100%);
-
             box-shadow: 0 0 50px rgba(226, 232, 240, 0.75), 0 0 100px rgba(165, 180, 252, 0.45), 0 0 150px rgba(129, 140, 248, 0.25);
-
             opacity: var(--moon-opacity);
-
             transition: opacity 0.4s ease;
-
             animation: moonPulse 6s infinite ease-in-out;
-
             pointer-events: none;
-
             overflow: hidden;
-
         }
 
-
         .moon-container::before {
-
             content: '';
-
             position: absolute;
-
             top: 25px;
-
             left: 30px;
-
             width: 22px;
-
             height: 22px;
-
             border-radius: 50%;
-
             background: rgba(100, 116, 139, 0.25);
-
             box-shadow: 28px 20px 0 2px rgba(100, 116, 139, 0.2),
             10px 40px 0 -2px rgba(100, 116, 139, 0.18),
             38px 45px 0 1px rgba(100, 116, 139, 0.15);
-
         }
-
 
         @keyframes moonPulse {
-
             0%, 100% {
-
                 transform: scale(1);
-
                 box-shadow: 0 0 50px rgba(226, 232, 240, 0.75), 0 0 100px rgba(165, 180, 252, 0.45);
-
             }
-
             50% {
-
                 transform: scale(1.06);
-
                 box-shadow: 0 0 75px rgba(226, 232, 240, 0.95), 0 0 130px rgba(192, 132, 252, 0.55), 0 0 180px rgba(129, 140, 248, 0.35);
-
             }
-
         }
-
 
         .sun-container {
             position: absolute;
@@ -347,11 +325,14 @@
             position: relative;
             z-index: 10;
             margin: auto 0;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         .screen {
             display: none;
             width: 100%;
+            box-sizing: border-box;
         }
 
         .screen.active {
@@ -370,16 +351,21 @@
             justify-content: center;
             text-align: center;
             min-width: 160px;
+            min-height: 44px;
             transition: background-color 0.25s ease, color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .btn:hover {
-            transform: translateY(-3px);
+        @media (hover: hover) and (pointer: fine) {
+            .btn:hover {
+                transform: translateY(-3px);
+            }
         }
 
         .btn:active {
-            transform: translateY(-1px);
+            transform: translateY(-1px) scale(0.98);
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
 
@@ -388,9 +374,11 @@
             color: var(--purple-dark);
         }
 
-        .btn-check:hover {
-            background: var(--gold-hover);
-            box-shadow: 0 6px 20px rgba(253, 216, 53, 0.5);
+        @media (hover: hover) and (pointer: fine) {
+            .btn-check:hover {
+                background: var(--gold-hover);
+                box-shadow: 0 6px 20px rgba(253, 216, 53, 0.5);
+            }
         }
 
         .btn-success {
@@ -398,10 +386,12 @@
             color: #fff;
         }
 
-        .btn-success:hover {
-            background: #55efc4;
-            color: var(--purple-dark);
-            box-shadow: 0 6px 20px rgba(85, 239, 196, 0.45);
+        @media (hover: hover) and (pointer: fine) {
+            .btn-success:hover {
+                background: #55efc4;
+                color: var(--purple-dark);
+                box-shadow: 0 6px 20px rgba(85, 239, 196, 0.45);
+            }
         }
 
         .btn-danger {
@@ -409,9 +399,11 @@
             color: #fff;
         }
 
-        .btn-danger:hover {
-            background: #ff7675;
-            box-shadow: 0 6px 20px rgba(214, 48, 49, 0.45);
+        @media (hover: hover) and (pointer: fine) {
+            .btn-danger:hover {
+                background: #ff7675;
+                box-shadow: 0 6px 20px rgba(214, 48, 49, 0.45);
+            }
         }
 
         .btn-close-modal {
@@ -420,12 +412,15 @@
             font-weight: bold;
         }
 
-        .btn-close-modal:hover {
-            background: #a29bfe;
-            color: var(--purple-dark);
-            box-shadow: 0 6px 20px rgba(162, 155, 254, 0.45);
+        @media (hover: hover) and (pointer: fine) {
+            .btn-close-modal:hover {
+                background: #a29bfe;
+                color: var(--purple-dark);
+                box-shadow: 0 6px 20px rgba(162, 155, 254, 0.45);
+            }
         }
 
+        /* Header Bar */
         .game-header {
             display: flex;
             justify-content: space-between;
@@ -439,6 +434,8 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
             transition: background 0.3s ease, border-color 0.3s ease;
             gap: 16px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .game-header-info {
@@ -451,11 +448,13 @@
         }
 
         .round-title {
-            font-size: clamp(22px, 2.2vw, 32px);
+            font-size: clamp(20px, 2.2vw, 32px);
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .game-header-actions {
@@ -474,8 +473,10 @@
             padding: 8px 14px;
             border-radius: 12px;
             box-shadow: none;
+            min-height: 44px;
         }
 
+        /* Jeopardy Table */
         .jeopardy-table {
             display: none;
             flex-direction: column;
@@ -488,14 +489,17 @@
             transition: background 0.3s ease, border-color 0.3s ease;
             width: 100%;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
         .theme-row {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 8px;
             align-items: stretch;
             margin-bottom: 12px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .theme-name {
@@ -506,7 +510,7 @@
             font-size: 16px;
             font-weight: 800;
             border-radius: 14px;
-            min-height: auto;
+            min-height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -515,32 +519,8 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
             word-break: break-word;
-        }
-
-        @media (min-width: 768px) {
-            .jeopardy-table {
-                gap: 20px;
-                padding: 25px;
-                border-radius: 28px;
-            }
-
-            .theme-row {
-                grid-template-columns: 320px repeat(5, 1fr);
-                gap: 20px;
-                margin-bottom: 0;
-                align-items: center;
-            }
-
-            .theme-name {
-                grid-column: auto;
-                padding: 22px;
-                font-size: 22px;
-                font-weight: 900;
-                border-radius: 20px;
-                min-height: 55px;
-                justify-content: flex-start;
-                text-align: left;
-            }
+            overflow-wrap: break-word;
+            box-sizing: border-box;
         }
 
         .theme-name.used {
@@ -560,10 +540,10 @@
         .question-cost {
             background: var(--cost-bg);
             color: var(--cost-color);
-            font-size: 20px;
+            font-size: clamp(15px, 2.5vw, 24px);
             font-weight: 900;
             text-align: center;
-            padding: 14px 0;
+            padding: 10px 0;
             cursor: pointer;
             border-radius: 14px;
             box-shadow: 0 4px 12px rgba(253, 216, 53, 0.35);
@@ -572,21 +552,22 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            box-sizing: border-box;
+            min-width: 0;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        @media (min-width: 768px) {
-            .question-cost {
-                font-size: 32px;
-                padding: 22px 0;
-                border-radius: 20px;
-                box-shadow: 0 6px 15px rgba(253, 216, 53, 0.35);
+        @media (hover: hover) and (pointer: fine) {
+            .question-cost:hover {
+                background: var(--cost-hover);
+                transform: scale(1.05);
+                box-shadow: 0 6px 15px rgba(253, 216, 53, 0.5);
             }
         }
 
-        .question-cost:hover {
-            background: var(--cost-hover);
-            transform: scale(1.05);
-            box-shadow: 0 6px 15px rgba(253, 216, 53, 0.5);
+        .question-cost:active {
+            transform: scale(0.96);
         }
 
         .question-cost.used {
@@ -604,10 +585,11 @@
             border: 2px dashed rgba(30, 27, 75, 0.15);
         }
 
+        /* Teams Container & Cards */
         .teams-container {
             display: flex;
-            gap: 10px;
-            margin-top: 12px;
+            gap: 12px;
+            margin-top: 14px;
             flex-wrap: wrap;
             justify-content: center;
             width: 100%;
@@ -617,11 +599,11 @@
 
         .team-card {
             background: var(--team-card-bg);
-            padding: 12px 14px;
-            border-radius: 16px;
+            padding: 14px 16px;
+            border-radius: 18px;
             box-shadow: var(--team-card-shadow);
             text-align: center;
-            width: 150px;
+            width: 160px;
             border: 3px solid var(--team-card-border);
             display: flex;
             flex-direction: column;
@@ -633,22 +615,7 @@
             min-width: 120px;
             box-sizing: border-box;
             transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
-        }
-
-        @media (min-width: 768px) {
-            .teams-container {
-                gap: 18px;
-                margin-top: 15px;
-                padding: 25px 0;
-            }
-
-            .team-card {
-                padding: 18px 20px;
-                border-radius: 20px;
-                width: 220px;
-                flex: 0 0 auto;
-                gap: 12px;
-            }
+            position: relative;
         }
 
         .team-card.active-turn {
@@ -659,7 +626,7 @@
         }
 
         .team-title {
-            font-size: 20px;
+            font-size: clamp(14px, 1.8vw, 19px);
             font-weight: 800;
             color: var(--team-title-color);
             margin-bottom: 0;
@@ -671,33 +638,40 @@
         }
 
         .team-points-clickable {
-            font-size: 34px;
+            font-size: clamp(22px, 2.5vw, 32px);
             font-weight: 900;
             color: var(--team-pts-color);
             cursor: pointer;
-            padding: 2px 14px;
+            padding: 4px 14px;
             border-radius: 10px;
             background-color: var(--team-pts-bg);
             border: 1px solid var(--team-pts-border);
             transition: all 0.2s ease, transform 0.1s;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             margin: 0;
             max-width: 100%;
+            min-height: 44px;
+            min-width: 44px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .team-points-clickable:hover {
-            background-color: var(--gold-accent);
-            color: var(--purple-dark);
-            border-color: var(--gold-hover);
-            transform: scale(1.08);
+        @media (hover: hover) and (pointer: fine) {
+            .team-points-clickable:hover {
+                background-color: var(--gold-accent);
+                color: var(--purple-dark);
+                border-color: var(--gold-hover);
+                transform: scale(1.08);
+            }
         }
 
-        /* Leader Crown, Glow & Leaderboard Animation */
-        .team-card {
-            position: relative;
+        .team-points-clickable:active {
+            transform: scale(0.95);
         }
 
         .team-card.is-leader {
@@ -707,9 +681,9 @@
 
         .leader-crown-badge {
             position: absolute;
-            top: -34px;
-            right: -14px;
-            font-size: 52px;
+            top: -30px;
+            right: -10px;
+            font-size: clamp(28px, 4vw, 48px);
             line-height: 1;
             animation: crownBounce 1.8s ease-in-out infinite alternate;
             filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.65));
@@ -722,7 +696,7 @@
                 transform: translateY(0) rotate(-10deg) scale(1);
             }
             100% {
-                transform: translateY(-8px) rotate(10deg) scale(1.15);
+                transform: translateY(-8px) rotate(10deg) scale(1.12);
             }
         }
 
@@ -733,11 +707,11 @@
         @keyframes leaderFlashAnim {
             0% {
                 box-shadow: 0 0 0px 0px rgba(255, 215, 0, 0.9);
-                transform: scale(1.12);
+                transform: scale(1.1);
             }
             35% {
                 box-shadow: 0 0 35px 15px rgba(255, 215, 0, 0.85);
-                transform: scale(1.15);
+                transform: scale(1.12);
             }
             100% {
                 box-shadow: var(--team-card-shadow);
@@ -763,6 +737,8 @@
             cursor: pointer;
             user-select: none;
             overflow: hidden;
+            box-sizing: border-box;
+            padding: 16px;
         }
 
         @keyframes splashBgGlow {
@@ -791,10 +767,11 @@
             max-width: 900px;
             width: 100%;
             text-align: center;
+            box-sizing: border-box;
         }
 
         .cat-splash-title {
-            font-size: clamp(36px, 5.5vw, 66px);
+            font-size: clamp(28px, 5.5vw, 66px);
             font-weight: 900;
             color: #f1c40f;
             text-transform: uppercase;
@@ -802,6 +779,7 @@
             text-shadow: 0 0 35px rgba(241, 196, 15, 0.65), 0 4px 18px rgba(0, 0, 0, 0.95);
             animation: splashTitlePulse 1.8s ease-in-out infinite alternate;
             margin-bottom: 6px;
+            line-height: 1.2;
         }
 
         @keyframes splashTitlePulse {
@@ -816,18 +794,19 @@
         }
 
         .cat-splash-subtitle {
-            font-size: clamp(18px, 2.6vw, 24px);
+            font-size: clamp(15px, 2.6vw, 24px);
             font-weight: 700;
             color: #c4b5fd;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
             margin-bottom: 10px;
+            line-height: 1.35;
         }
 
         .cat-splash-anim-wrap {
             position: relative;
             width: 90vw;
             max-width: 520px;
-            height: clamp(280px, 46vh, 430px);
+            height: clamp(200px, 42vh, 430px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -847,9 +826,9 @@
             right: clamp(10px, 5vw, 45px);
             background: #ffeaa7;
             color: #2d3436;
-            font-size: clamp(20px, 2.8vw, 26px);
+            font-size: clamp(16px, 2.8vw, 26px);
             font-weight: 900;
-            padding: 10px 24px;
+            padding: 8px 20px;
             border-radius: 30px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
             border: 3px solid #fdcb6e;
@@ -870,7 +849,7 @@
         .cat-splash-continue-btn {
             margin-top: 12px;
             padding: 15px 38px;
-            font-size: clamp(18px, 2.4vw, 22px);
+            font-size: clamp(16px, 2.4vw, 22px);
             font-weight: 800;
             color: #1e1b4b;
             background: linear-gradient(135deg, #fdd835, #f59e0b);
@@ -880,12 +859,23 @@
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
             animation: continuePulse 1.8s infinite ease-in-out;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .cat-splash-continue-btn:hover {
-            transform: scale(1.06);
-            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.85);
-            filter: brightness(1.1);
+        @media (hover: hover) and (pointer: fine) {
+            .cat-splash-continue-btn:hover {
+                transform: scale(1.06);
+                box-shadow: 0 8px 32px rgba(245, 158, 11, 0.85);
+                filter: brightness(1.1);
+            }
+        }
+
+        .cat-splash-continue-btn:active {
+            transform: scale(0.97);
         }
 
         @keyframes continuePulse {
@@ -1090,6 +1080,8 @@
             cursor: pointer;
             user-select: none;
             overflow: hidden;
+            box-sizing: border-box;
+            padding: 16px;
         }
 
         @keyframes auctionBgGlow {
@@ -1118,10 +1110,11 @@
             max-width: 900px;
             width: 100%;
             text-align: center;
+            box-sizing: border-box;
         }
 
         .auction-splash-title {
-            font-size: clamp(32px, 5.2vw, 62px);
+            font-size: clamp(26px, 5.2vw, 62px);
             font-weight: 900;
             color: #fbbf24;
             text-transform: uppercase;
@@ -1129,21 +1122,23 @@
             text-shadow: 0 0 35px rgba(251, 191, 36, 0.75), 0 4px 18px rgba(0, 0, 0, 0.95);
             animation: splashTitlePulse 1.8s ease-in-out infinite alternate;
             margin-bottom: 6px;
+            line-height: 1.2;
         }
 
         .auction-splash-subtitle {
-            font-size: clamp(17px, 2.5vw, 24px);
+            font-size: clamp(14px, 2.5vw, 24px);
             font-weight: 700;
             color: #fed7aa;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
             margin-bottom: 10px;
+            line-height: 1.35;
         }
 
         .auction-splash-anim-wrap {
             position: relative;
             width: 90vw;
             max-width: 520px;
-            height: clamp(280px, 46vh, 430px);
+            height: clamp(200px, 42vh, 430px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1163,9 +1158,9 @@
             right: clamp(10px, 5vw, 45px);
             background: #fef08a;
             color: #713f12;
-            font-size: clamp(20px, 2.8vw, 26px);
+            font-size: clamp(16px, 2.8vw, 26px);
             font-weight: 900;
-            padding: 10px 24px;
+            padding: 8px 20px;
             border-radius: 30px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
             border: 3px solid #f59e0b;
@@ -1186,7 +1181,7 @@
         .auction-splash-continue-btn {
             margin-top: 12px;
             padding: 15px 38px;
-            font-size: clamp(18px, 2.4vw, 22px);
+            font-size: clamp(16px, 2.4vw, 22px);
             font-weight: 800;
             color: #1e1b4b;
             background: linear-gradient(135deg, #fdd835, #f59e0b);
@@ -1196,12 +1191,23 @@
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
             animation: continuePulse 1.8s infinite ease-in-out;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .auction-splash-continue-btn:hover {
-            transform: scale(1.06);
-            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.85);
-            filter: brightness(1.1);
+        @media (hover: hover) and (pointer: fine) {
+            .auction-splash-continue-btn:hover {
+                transform: scale(1.06);
+                box-shadow: 0 8px 32px rgba(245, 158, 11, 0.85);
+                filter: brightness(1.1);
+            }
+        }
+
+        .auction-splash-continue-btn:active {
+            transform: scale(0.97);
         }
 
         .auction-splash-hint {
@@ -1560,8 +1566,6 @@
             color: #475569 !important;
         }
 
-        /* --- End Fullscreen Cat in Bag & Auction Splash Overlays --- */
-
         /* --- Turn Order Switcher & Modal Styles --- */
         .btn-turn-order {
             font-size: 14px;
@@ -1569,21 +1573,30 @@
             border-radius: 12px;
             box-shadow: none;
             min-width: auto;
+            min-height: 44px;
             background: linear-gradient(135deg, #0284c7, #0369a1) !important;
             color: #ffffff !important;
             border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
             font-weight: 800 !important;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
             cursor: pointer;
             transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .btn-turn-order:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.15);
-            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45) !important;
+        @media (hover: hover) and (pointer: fine) {
+            .btn-turn-order:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.15);
+                box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45) !important;
+            }
+        }
+
+        .btn-turn-order:active {
+            transform: scale(0.97);
         }
 
         .current-turn-container {
@@ -1591,7 +1604,7 @@
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
-            font-size: 18px;
+            font-size: clamp(14px, 1.6vw, 18px);
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -1605,12 +1618,16 @@
             border-radius: 8px;
             color: #ffffff;
             font-family: inherit;
-            font-size: 16px;
+            font-size: clamp(13px, 1.4vw, 16px);
             font-weight: 800;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             user-select: none;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* Turn Order Modal */
@@ -1623,6 +1640,7 @@
             border: 4px solid var(--gold-accent) !important;
             color: var(--text-light);
             box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(253, 216, 53, 0.25) !important;
+            box-sizing: border-box;
         }
 
         .turn-modal-header {
@@ -1631,7 +1649,7 @@
         }
 
         .turn-modal-title {
-            font-size: clamp(26px, 3.5vw, 36px);
+            font-size: clamp(24px, 3.5vw, 36px);
             font-weight: 900;
             color: var(--gold-accent);
             text-transform: uppercase;
@@ -1640,7 +1658,7 @@
         }
 
         .turn-modal-subtitle {
-            font-size: clamp(16px, 1.8vw, 20px);
+            font-size: clamp(14px, 1.8vw, 20px);
             font-weight: 600;
             color: rgba(245, 246, 250, 0.95);
             margin-top: 10px;
@@ -1671,15 +1689,22 @@
             transition: all 0.22s ease;
             user-select: none;
             gap: 16px;
-            min-height: 72px;
+            min-height: 56px;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .turn-team-card:hover {
-            background: rgba(255, 255, 255, 0.16);
-            border-color: var(--gold-accent);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        @media (hover: hover) and (pointer: fine) {
+            .turn-team-card:hover {
+                background: rgba(255, 255, 255, 0.16);
+                border-color: var(--gold-accent);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            }
+        }
+
+        .turn-team-card:active {
+            transform: scale(0.98);
         }
 
         .turn-team-card.is-active-turn {
@@ -1724,7 +1749,7 @@
         }
 
         .turn-card-name {
-            font-size: clamp(19px, 2.2vw, 24px);
+            font-size: clamp(16px, 2.2vw, 24px);
             font-weight: 800;
             color: #ffffff;
             white-space: nowrap;
@@ -1733,7 +1758,7 @@
         }
 
         .turn-card-pts {
-            font-size: clamp(15px, 1.6vw, 17px);
+            font-size: clamp(14px, 1.6vw, 17px);
             font-weight: 700;
             color: var(--gold-accent);
             margin-top: 4px;
@@ -1770,12 +1795,23 @@
             transition: all 0.2s ease;
             box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
             white-space: nowrap;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .turn-select-btn:hover {
-            background: linear-gradient(135deg, #0ea5e9, #0284c7);
-            transform: scale(1.04);
-            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.5);
+        @media (hover: hover) and (pointer: fine) {
+            .turn-select-btn:hover {
+                background: linear-gradient(135deg, #0ea5e9, #0284c7);
+                transform: scale(1.04);
+                box-shadow: 0 6px 18px rgba(2, 132, 199, 0.5);
+            }
+        }
+
+        .turn-select-btn:active {
+            transform: scale(0.96);
         }
 
         .turn-modal-footer {
@@ -1791,30 +1827,44 @@
         .btn-turn-next {
             background: linear-gradient(135deg, #0284c7, #0369a1) !important;
             color: #ffffff !important;
-            font-size: clamp(15px, 1.6vw, 17px) !important;
+            font-size: clamp(14px, 1.6vw, 17px) !important;
             font-weight: 800 !important;
             padding: 14px 28px !important;
             border-radius: 16px !important;
             border: 2px solid rgba(255, 255, 255, 0.25) !important;
             box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4) !important;
             cursor: pointer;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             transition: transform 0.2s ease, filter 0.2s ease;
             white-space: nowrap !important;
             min-width: auto !important;
         }
 
-        .btn-turn-next:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.15);
+        @media (hover: hover) and (pointer: fine) {
+            .btn-turn-next:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.15);
+            }
+        }
+
+        .btn-turn-next:active {
+            transform: scale(0.97);
         }
 
         .turn-modal-footer .btn-close-modal {
-            font-size: clamp(15px, 1.6vw, 17px) !important;
+            font-size: clamp(14px, 1.6vw, 17px) !important;
             font-weight: 800 !important;
             padding: 14px 28px !important;
             border-radius: 16px !important;
             white-space: nowrap !important;
             min-width: auto !important;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             margin: 0 !important;
         }
 
@@ -1824,7 +1874,6 @@
             border: 1.5px solid rgba(245, 158, 11, 0.7);
             color: #ffffff;
         }
-
 
         body.light-theme .modal-card.turn-modal-card {
             background: #ffffff !important;
@@ -1849,10 +1898,12 @@
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
         }
 
-        body.light-theme .turn-team-card:hover {
-            background: #fffbeb !important;
-            border-color: #f59e0b !important;
-            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2) !important;
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .turn-team-card:hover {
+                background: #fffbeb !important;
+                border-color: #f59e0b !important;
+                box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2) !important;
+            }
         }
 
         body.light-theme .turn-team-card.is-active-turn {
@@ -1891,9 +1942,11 @@
             box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
         }
 
-        body.light-theme .turn-select-btn:hover {
-            background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .turn-select-btn:hover {
+                background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+                box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
+            }
         }
 
         body.light-theme .turn-modal-footer {
@@ -1913,109 +1966,14 @@
             border: 2px solid #cbd5e1 !important;
         }
 
-        body.light-theme .turn-modal-footer .btn-close-modal:hover {
-            background: #cbd5e1 !important;
-            color: #0f172a !important;
-        }
-
-        @media (max-width: 1050px) {
-            .game-header-actions {
-                flex-wrap: wrap !important;
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .turn-modal-footer .btn-close-modal:hover {
+                background: #cbd5e1 !important;
+                color: #0f172a !important;
             }
         }
 
-        @media (max-width: 900px) {
-            .game-header {
-                flex-direction: column !important;
-                align-items: stretch !important;
-                gap: 16px !important;
-                padding: 16px 20px !important;
-            }
-
-            .game-header-info {
-                justify-content: center !important;
-                text-align: center !important;
-            }
-
-            .game-header-actions {
-                justify-content: center !important;
-                flex-wrap: wrap !important;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .turn-modal-card {
-                padding: 26px 18px !important;
-                width: 95vw !important;
-                border-radius: 22px !important;
-            }
-
-            .turn-team-card {
-                padding: 12px 14px !important;
-                gap: 12px !important;
-                min-height: auto !important;
-            }
-
-            .turn-card-left {
-                gap: 12px !important;
-            }
-
-            .turn-card-num {
-                width: 36px !important;
-                height: 36px !important;
-                font-size: 16px !important;
-            }
-
-            .turn-card-name {
-                font-size: 17px !important;
-            }
-
-            .turn-card-pts {
-                font-size: 14px !important;
-            }
-
-            .turn-badge-active {
-                padding: 8px 14px !important;
-                font-size: 13.5px !important;
-            }
-
-            .turn-select-btn {
-                padding: 8px 14px !important;
-                font-size: 13.5px !important;
-            }
-
-            .turn-modal-footer {
-                flex-direction: column !important;
-                gap: 10px !important;
-            }
-
-            .turn-modal-footer .btn {
-                width: 100% !important;
-                font-size: 15px !important;
-                padding: 12px 16px !important;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .game-header-actions {
-                gap: 8px !important;
-            }
-
-            .game-header-actions .btn {
-                font-size: 12.5px !important;
-                padding: 7px 12px !important;
-            }
-
-            .turn-modal-card {
-                padding: 20px 14px !important;
-            }
-
-            .turn-team-card {
-                padding: 10px 12px !important;
-            }
-        }
-
-
+        /* Start Menu Container */
         .start-menu-container {
             display: flex;
             flex-direction: column;
@@ -2030,10 +1988,11 @@
             max-width: 950px;
             margin: 0 auto;
             transition: max-width 0.3s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            box-sizing: border-box;
         }
 
         .start-menu-container h3 {
-            font-size: clamp(26px, 3.8vw, 36px) !important;
+            font-size: clamp(24px, 3.8vw, 36px) !important;
             color: var(--gold-accent) !important;
             margin-top: 0 !important;
             margin-bottom: 25px !important;
@@ -2044,7 +2003,7 @@
         }
 
         .menu-logo {
-            font-size: clamp(48px, 6vw, 68px);
+            font-size: clamp(40px, 6vw, 68px);
             font-weight: 900;
             color: var(--gold-accent);
             text-transform: uppercase;
@@ -2076,16 +2035,10 @@
             font-size: 22px !important;
             padding: 0 25px !important;
             border-radius: 60px !important;
+            min-height: 48px;
         }
 
-        @media (max-width: 768px) {
-            .menu-main-btn {
-                width: 100% !important;
-                height: 60px !important;
-                font-size: 18px !important;
-            }
-        }
-
+        /* Modals & Dialogs */
         .modal {
             display: none;
             position: fixed;
@@ -2130,6 +2083,7 @@
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15), opacity 0.3s ease-out, background 0.3s ease, border-color 0.3s ease;
             scrollbar-color: var(--purple-medium) transparent;
             scrollbar-width: thin;
+            box-sizing: border-box;
         }
 
         .modal.active .modal-card,
@@ -2145,8 +2099,7 @@
             width: auto;
             height: auto;
             max-width: min(900px, 92vw);
-            max-height: 520px;
-            min-height: 260px;
+            max-height: 480px;
             object-fit: contain;
             border-radius: 16px;
             margin: 0 auto 20px auto;
@@ -2167,14 +2120,16 @@
         }
 
         .modal-text {
-            font-size: clamp(20px, 3vw, 34px);
+            font-size: clamp(18px, 3vw, 34px);
             font-weight: 700;
             margin-bottom: 25px;
             line-height: 1.4;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .modal-answer {
-            font-size: clamp(18px, 2.5vw, 28px);
+            font-size: clamp(16px, 2.5vw, 28px);
             font-weight: 700;
             color: var(--gold-accent);
             margin-bottom: 25px;
@@ -2182,15 +2137,17 @@
             padding: 15px;
             border-radius: 16px;
             display: none;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .timer {
-            font-size: clamp(28px, 4vw, 36px);
+            font-size: clamp(24px, 4vw, 36px);
             font-weight: 800;
             color: white;
             margin: 0 auto 20px auto;
-            width: clamp(65px, 8vw, 80px);
-            height: clamp(65px, 8vw, 80px);
+            width: clamp(54px, 8vw, 80px);
+            height: clamp(54px, 8vw, 80px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2257,7 +2214,7 @@
         }
 
         .timer-hint {
-            font-size: clamp(14px, 2.2vw, 18px);
+            font-size: clamp(13px, 2.2vw, 18px);
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -2305,10 +2262,10 @@
         }
 
         .modal-team-title {
-            font-size: 20px;
+            font-size: clamp(15px, 2vw, 20px);
             font-weight: 900;
             color: #ffffff;
-            flex: 0 0 clamp(160px, 20vw, 280px);
+            flex: 0 0 clamp(140px, 20vw, 280px);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -2341,27 +2298,6 @@
             flex-shrink: 0;
         }
 
-        @media (max-width: 768px) {
-            .modal-team-row {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .modal-team-info-group {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .modal-team-title {
-                flex: 1 1 100%;
-                text-align: center;
-            }
-
-            .modal-badge-score, .modal-badge-bet {
-                flex: 1 1 auto;
-            }
-        }
-
         .btn-mini {
             padding: 10px 16px;
             font-size: clamp(14px, 1.8vw, 16px);
@@ -2372,10 +2308,21 @@
             transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             white-space: nowrap;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .btn-mini:hover {
-            transform: translateY(-2px) scale(1.05);
+        @media (hover: hover) and (pointer: fine) {
+            .btn-mini:hover {
+                transform: translateY(-2px) scale(1.05);
+            }
+        }
+
+        .btn-mini:active {
+            transform: scale(0.96);
         }
 
         .btn-plus {
@@ -2388,7 +2335,7 @@
             color: white;
         }
 
-        /* --- СТИЛИ НАСТРОЕК (ДЛЯ ОБЕИХ ТЕМ) --- */
+        /* Settings Screen Styles */
         .settings-row-box {
             display: flex;
             align-items: center;
@@ -2397,6 +2344,8 @@
             padding: 15px 25px;
             border-radius: 16px;
             border: 1px solid var(--settings-box-border);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .settings-label {
@@ -2411,6 +2360,8 @@
             border-radius: 16px;
             border: 1px solid var(--settings-box-border);
             text-align: left;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .settings-group-title {
@@ -2431,9 +2382,10 @@
             align-items: center;
             gap: 12px;
             cursor: pointer;
+            min-height: 44px;
         }
 
-        /* --- DEV SANDBOX CARDS --- */
+        /* Dev Sandbox Cards */
         .dev-card-section {
             background: rgba(255, 255, 255, 0.08);
             padding: 35px 40px;
@@ -2441,6 +2393,8 @@
             border: 1px solid rgba(255, 255, 255, 0.15);
             text-align: left;
             transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .dev-card-title {
@@ -2453,6 +2407,7 @@
             transition: color 0.3s ease;
         }
 
+        /* Team Setup Inputs */
         .team-input-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -2461,6 +2416,7 @@
             margin-top: 30px;
             margin-bottom: 40px;
             width: 100%;
+            box-sizing: border-box;
         }
 
         .team-input-row {
@@ -2468,6 +2424,7 @@
             align-items: center;
             gap: 8px;
             width: 100%;
+            box-sizing: border-box;
         }
 
         .team-input {
@@ -2480,6 +2437,7 @@
             background: var(--card-bg);
             color: var(--purple-dark);
             font-weight: 600;
+            min-height: 44px;
         }
 
         .team-input:focus {
@@ -2494,12 +2452,19 @@
             border-radius: 10px;
             width: 44px;
             height: 44px;
+            min-width: 44px;
+            min-height: 44px;
             font-size: 16px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-remove-team:active {
+            transform: scale(0.95);
         }
 
         .setup-actions {
@@ -2509,6 +2474,7 @@
             align-items: center;
             justify-content: center;
             width: 100%;
+            box-sizing: border-box;
         }
 
         .setup-actions .btn {
@@ -2647,13 +2613,14 @@
             font-weight: 800;
             text-align: center;
             width: 130px;
+            min-height: 44px;
             box-sizing: border-box;
         }
 
         .modal-score-input-large {
             width: 100%;
             max-width: 420px;
-            font-size: clamp(20px, 3vw, 26px);
+            font-size: clamp(18px, 3vw, 26px);
             padding: 14px 20px;
             border-radius: 16px;
             border: 3px solid var(--purple-medium);
@@ -2663,28 +2630,35 @@
             text-align: center;
             margin: 15px auto 5px auto;
             display: block;
+            min-height: 48px;
+            box-sizing: border-box;
         }
 
+        /* Stats Table */
         .stats-table-wrapper {
             width: 100%;
+            max-width: 100%;
             height: 50vh;
-            min-height: 380px;
+            min-height: 320px;
             overflow-y: auto;
-            overflow-x: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             margin-top: 15px;
             border: none !important;
             background: transparent !important;
             box-shadow: none !important;
             scrollbar-color: var(--purple-medium) rgba(255, 255, 255, 0.05);
             scrollbar-width: thin;
+            box-sizing: border-box;
         }
 
         .stats-table {
             width: 100%;
+            min-width: 600px;
             border-collapse: separate;
             border-spacing: 0;
             text-align: center;
-            font-size: 19px;
+            font-size: 18px;
             background: var(--stats-table-bg);
             border-radius: 24px;
             overflow: hidden;
@@ -2692,7 +2666,7 @@
         }
 
         .stats-table th, .stats-table td {
-            padding: 24px 10px;
+            padding: 18px 10px;
             line-height: 1.3;
             border-bottom: 1px solid var(--stats-row-border);
             white-space: nowrap;
@@ -2709,7 +2683,7 @@
             z-index: 2;
             background: var(--stats-th-bg);
             color: var(--stats-th-color);
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -2728,7 +2702,7 @@
 
         .stats-team-name {
             font-weight: 900;
-            font-size: 22px;
+            font-size: 20px;
             color: var(--stats-td-color);
             display: flex;
             align-items: center;
@@ -2736,6 +2710,7 @@
             transition: color 0.3s ease;
         }
 
+        /* Light Theme Overrides */
         body.light-theme .menu-logo {
             color: #5b21b6 !important;
             text-shadow: 0 4px 12px rgba(91, 33, 182, 0.25) !important;
@@ -2859,10 +2834,13 @@
             color: #5b21b6 !important;
         }
 
-        body.light-theme .btn-close-modal:hover {
-            background: #4c1d95 !important;
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .btn-close-modal:hover {
+                background: #4c1d95 !important;
+            }
         }
 
+        /* Rules Content Box */
         .rules-content-box {
             text-align: left;
             max-height: 65vh;
@@ -2926,10 +2904,139 @@
             padding-left: 4px;
         }
 
+
 /* ==========================================================================
-   COMPREHENSIVE MOBILE & SMALL SCREENS ADAPTATIONS
+   DESKTOP SCREEN ADAPTATIONS (>= 1024px)
+   Spacious layout, fine hover transitions, large clear boards
    ========================================================================== */
-@media (max-width: 768px) {
+@media (min-width: 1024px) {
+    .jeopardy-table {
+        gap: 18px;
+        padding: 24px;
+        border-radius: 28px;
+    }
+
+    .theme-row {
+        grid-template-columns: minmax(240px, 320px) repeat(5, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 0;
+        align-items: center;
+    }
+
+    .theme-name {
+        grid-column: auto;
+        padding: 20px 22px;
+        font-size: 20px;
+        font-weight: 900;
+        border-radius: 20px;
+        min-height: 60px;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .question-cost {
+        font-size: 28px;
+        padding: 20px 0;
+        border-radius: 18px;
+        box-shadow: 0 6px 15px rgba(253, 216, 53, 0.35);
+        min-height: 60px;
+    }
+
+    .teams-container {
+        gap: 18px;
+        margin-top: 18px;
+        padding: 25px 0;
+    }
+
+    .team-card {
+        padding: 18px 20px;
+        border-radius: 20px;
+        width: 220px;
+        flex: 0 0 auto;
+        gap: 12px;
+    }
+
+    .team-title {
+        font-size: 20px;
+    }
+
+    .team-points-clickable {
+        font-size: 34px;
+    }
+}
+
+
+/* ==========================================================================
+   TABLET SCREEN ADAPTATIONS (768px <= width < 1024px)
+   Balanced layout, flexible theme column so question costs never overflow
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .game-header {
+        padding: 16px 20px;
+        gap: 14px;
+    }
+
+    .game-header-actions {
+        gap: 8px;
+    }
+
+    .game-header-actions .btn {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+
+    .jeopardy-table {
+        gap: 14px;
+        padding: 18px;
+        border-radius: 22px;
+    }
+
+    .theme-row {
+        grid-template-columns: minmax(170px, 230px) repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 0;
+        align-items: center;
+    }
+
+    .theme-name {
+        grid-column: auto;
+        padding: 14px 16px;
+        font-size: 16px;
+        font-weight: 800;
+        border-radius: 16px;
+        min-height: 52px;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .question-cost {
+        font-size: clamp(18px, 2.2vw, 24px);
+        padding: 14px 0;
+        border-radius: 14px;
+        min-height: 52px;
+    }
+
+    .teams-container {
+        gap: 12px;
+        padding: 18px 0;
+    }
+
+    .team-card {
+        width: auto;
+        flex: 1 1 150px;
+        max-width: 200px;
+        padding: 14px 16px;
+        border-radius: 16px;
+    }
+}
+
+
+/* ==========================================================================
+   MOBILE & SMALL SCREENS ADAPTATIONS (width < 768px)
+   Touch targets >= 44px, compact headers, full-width categories,
+   zero horizontal scroll, responsive font sizing via clamp()
+   ========================================================================== */
+@media (max-width: 767px) {
     body {
         padding: 10px 8px !important;
     }
@@ -2937,9 +3044,9 @@
     .theme-toggle-btn {
         top: 10px !important;
         right: 10px !important;
-        width: 42px !important;
-        height: 42px !important;
-        font-size: 18px !important;
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 19px !important;
     }
 
     .start-menu-container {
@@ -2964,9 +3071,11 @@
     .menu-main-btn {
         width: 100% !important;
         max-width: 100% !important;
-        height: 54px !important;
-        font-size: 16.5px !important;
+        min-height: 52px !important;
+        height: auto !important;
+        font-size: 17px !important;
         border-radius: 16px !important;
+        padding: 14px 20px !important;
     }
 
     .setup-actions {
@@ -2978,15 +3087,16 @@
     .setup-actions .btn {
         width: 100% !important;
         font-size: 16px !important;
-        padding: 12px 18px !important;
+        padding: 13px 18px !important;
+        min-height: 48px !important;
     }
 
     /* Game Header on Phone */
     .game-header {
-        padding: 12px 14px !important;
+        padding: 14px 14px !important;
         border-radius: 18px !important;
         border-width: 2.5px !important;
-        gap: 10px !important;
+        gap: 12px !important;
         flex-direction: column !important;
         align-items: stretch !important;
     }
@@ -2998,7 +3108,7 @@
     }
 
     .current-turn-container {
-        font-size: 13px !important;
+        font-size: 13.5px !important;
         justify-content: center !important;
         flex-wrap: wrap !important;
         gap: 6px !important;
@@ -3006,25 +3116,26 @@
 
     .active-turn-badge {
         font-size: 13px !important;
-        padding: 3px 10px !important;
+        padding: 4px 10px !important;
     }
 
     .game-header-actions {
         display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important;
-        gap: 6px !important;
+        gap: 8px !important;
         width: 100% !important;
     }
 
     .game-header-actions .btn {
         width: 100% !important;
-        font-size: 11.5px !important;
-        padding: 8px 4px !important;
-        border-radius: 10px !important;
+        font-size: 12.5px !important;
+        padding: 10px 6px !important;
+        border-radius: 12px !important;
         white-space: normal !important;
-        min-height: 38px !important;
+        min-height: 44px !important;
         text-align: center !important;
         justify-content: center !important;
+        line-height: 1.25 !important;
     }
 
     /* Jeopardy Table on Mobile */
@@ -3036,29 +3147,30 @@
 
     .theme-row {
         display: grid !important;
-        grid-template-columns: repeat(5, 1fr) !important;
-        gap: 6px !important;
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        gap: clamp(4px, 1.5vw, 8px) !important;
         margin-bottom: 8px !important;
+        width: 100% !important;
     }
 
     .theme-name {
         grid-column: 1 / -1 !important;
         font-size: 14.5px !important;
         font-weight: 800 !important;
-        padding: 10px 10px !important;
+        padding: 10px 12px !important;
         border-radius: 12px !important;
-        min-height: auto !important;
+        min-height: 44px !important;
         text-align: center !important;
         justify-content: center !important;
         line-height: 1.3 !important;
     }
 
     .question-cost {
-        font-size: 17px !important;
+        font-size: clamp(13px, 3.8vw, 18px) !important;
         font-weight: 900 !important;
-        padding: 10px 0 !important;
+        padding: 8px 0 !important;
         border-radius: 10px !important;
-        min-height: 42px !important;
+        min-height: 44px !important;
     }
 
     /* Teams Bar on Mobile */
@@ -3074,8 +3186,9 @@
         width: auto !important;
         padding: 10px 8px !important;
         border-radius: 14px !important;
-        gap: 4px !important;
+        gap: 6px !important;
         border-width: 2px !important;
+        min-height: 44px;
     }
 
     .team-title {
@@ -3084,8 +3197,10 @@
 
     .team-points-clickable {
         font-size: 20px !important;
-        padding: 2px 8px !important;
+        padding: 4px 8px !important;
         border-radius: 8px !important;
+        min-height: 44px !important;
+        min-width: 44px !important;
     }
 
     .leader-crown-badge {
@@ -3101,7 +3216,7 @@
 
     .modal-card {
         padding: 18px 12px !important;
-        border-radius: 18px !important;
+        border-radius: 20px !important;
         border-width: 2.5px !important;
         width: 98vw !important;
         max-height: 96vh !important;
@@ -3110,14 +3225,28 @@
     .modal-card img,
     #modal-question-img,
     #modal-answer-img {
-        max-height: 180px !important;
+        max-height: clamp(140px, 28vh, 220px) !important;
         min-height: 0 !important;
         max-width: 100% !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 12px !important;
+    }
+
+    #modal-question-video,
+    #modal-answer-video {
+        max-height: clamp(140px, 28vh, 220px) !important;
+        border-radius: 14px !important;
+        margin-bottom: 12px !important;
+    }
+
+    #modal-question-iframe-container,
+    #modal-answer-iframe-container {
+        max-height: clamp(140px, 28vh, 220px) !important;
+        border-radius: 14px !important;
+        margin-bottom: 12px !important;
     }
 
     .modal-text {
-        font-size: 16px !important;
+        font-size: 16.5px !important;
         line-height: 1.4 !important;
         margin-bottom: 12px !important;
     }
@@ -3149,9 +3278,10 @@
 
     .modal-controls .btn {
         width: 100% !important;
-        font-size: 14.5px !important;
-        padding: 11px 14px !important;
+        font-size: 15px !important;
+        padding: 12px 14px !important;
         border-radius: 14px !important;
+        min-height: 44px !important;
     }
 
     .modal-team-row {
@@ -3160,6 +3290,7 @@
         padding: 10px 10px !important;
         gap: 8px !important;
         border-radius: 12px !important;
+        min-height: 44px;
     }
 
     .modal-team-info-group {
@@ -3178,7 +3309,7 @@
 
     .modal-badge-score, .modal-badge-bet {
         font-size: 12.5px !important;
-        padding: 3px 8px !important;
+        padding: 4px 8px !important;
         flex: 0 0 auto !important;
     }
 
@@ -3191,10 +3322,11 @@
 
     .btn-mini {
         width: 100% !important;
-        font-size: 13px !important;
-        padding: 8px 10px !important;
+        font-size: 13.5px !important;
+        padding: 10px 10px !important;
         justify-content: center !important;
         border-radius: 10px !important;
+        min-height: 44px !important;
     }
 
     /* Rules Modal on Mobile */
@@ -3228,6 +3360,61 @@
         line-height: 1.45 !important;
     }
 
+    /* Turn Order Modal on Mobile */
+    .turn-modal-card {
+        padding: 24px 16px !important;
+        width: 96vw !important;
+        border-radius: 22px !important;
+    }
+
+    .turn-team-card {
+        padding: 12px 14px !important;
+        gap: 12px !important;
+        min-height: 48px !important;
+    }
+
+    .turn-card-left {
+        gap: 12px !important;
+    }
+
+    .turn-card-num {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 16px !important;
+    }
+
+    .turn-card-name {
+        font-size: 16px !important;
+    }
+
+    .turn-card-pts {
+        font-size: 13.5px !important;
+    }
+
+    .turn-badge-active {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+        min-height: 44px !important;
+    }
+
+    .turn-select-btn {
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+        min-height: 44px !important;
+    }
+
+    .turn-modal-footer {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .turn-modal-footer .btn {
+        width: 100% !important;
+        font-size: 15px !important;
+        padding: 12px 16px !important;
+        min-height: 44px !important;
+    }
+
     /* Settings Screen on Mobile */
     .settings-row-box {
         flex-direction: column !important;
@@ -3238,11 +3425,13 @@
     }
 
     .settings-label {
-        font-size: 14px !important;
+        font-size: 14.5px !important;
     }
 
     .setting-input-field {
         width: 100% !important;
+        min-height: 44px !important;
+        font-size: 17px !important;
     }
 
     .settings-group-box {
@@ -3263,8 +3452,9 @@
     }
 
     .team-input {
-        font-size: 14.5px !important;
+        font-size: 16px !important;
         padding: 10px 12px !important;
+        min-height: 44px !important;
     }
 
     /* Winner Stats Screen */
@@ -3280,6 +3470,7 @@
     .stats-table-wrapper {
         overflow-x: auto !important;
         max-width: 100% !important;
+        -webkit-overflow-scrolling: touch;
     }
 
     .stats-table th, .stats-table td {
@@ -3295,7 +3486,7 @@
 
     .cat-splash-title,
     .auction-splash-title {
-        font-size: clamp(26px, 7vw, 42px) !important;
+        font-size: clamp(24px, 7vw, 42px) !important;
     }
 
     .cat-splash-subtitle,
@@ -3306,14 +3497,14 @@
     .cat-splash-anim-wrap,
     .auction-splash-anim-wrap {
         width: 88vw !important;
-        height: clamp(180px, 30vh, 260px) !important;
+        height: clamp(160px, 30vh, 260px) !important;
         margin: 6px auto 14px auto !important;
     }
 
     .cat-splash-bubble,
     .auction-splash-bubble {
         font-size: 15px !important;
-        padding: 5px 12px !important;
+        padding: 6px 14px !important;
         top: 4px !important;
         right: 6px !important;
     }
@@ -3322,6 +3513,7 @@
     .auction-splash-continue-btn {
         padding: 12px 26px !important;
         font-size: 16px !important;
+        min-height: 48px !important;
     }
 
     .skyline-far {
@@ -3333,22 +3525,25 @@
     }
 }
 
-/* Extra small phones (<= 400px width) */
-@media (max-width: 400px) {
+
+/* ==========================================================================
+   EXTRA SMALL PHONES (width <= 480px)
+   ========================================================================== */
+@media (max-width: 480px) {
     .theme-name {
-        font-size: 13px !important;
-        padding: 8px 8px !important;
+        font-size: 13.5px !important;
+        padding: 8px 10px !important;
     }
 
     .question-cost {
-        font-size: 15px !important;
+        font-size: clamp(12px, 3.6vw, 16px) !important;
         padding: 8px 0 !important;
-        min-height: 38px !important;
+        min-height: 44px !important;
     }
 
     .game-header-actions .btn {
-        font-size: 11px !important;
-        padding: 7px 3px !important;
+        font-size: 11.5px !important;
+        padding: 8px 4px !important;
     }
 
     .team-card {
@@ -3362,5 +3557,106 @@
 
     .team-points-clickable {
         font-size: 18px !important;
+    }
+}
+
+
+/* ==========================================================================
+   MINIMAL SCREENS (width <= 360px)
+   ========================================================================== */
+@media (max-width: 360px) {
+    .theme-name {
+        font-size: 12.5px !important;
+        padding: 6px 6px !important;
+    }
+
+    .question-cost {
+        font-size: 12px !important;
+        padding: 6px 0 !important;
+    }
+
+    .game-header-actions .btn {
+        font-size: 10.5px !important;
+        padding: 6px 2px !important;
+    }
+}
+
+
+/* ==========================================================================
+   LANDSCAPE MOBILE ORIENTATION (height <= 520px and orientation: landscape)
+   Prevent modal vertical overflow, compact media previews, easy tapping
+   ========================================================================== */
+@media (max-height: 520px) and (orientation: landscape) {
+    .modal-card {
+        padding: 12px 16px !important;
+        max-height: 98vh !important;
+        border-radius: 16px !important;
+    }
+
+    .modal-card img,
+    #modal-question-img,
+    #modal-answer-img {
+        max-height: 120px !important;
+        min-height: 0 !important;
+        margin-bottom: 8px !important;
+    }
+
+    #modal-question-video,
+    #modal-answer-video {
+        max-height: 120px !important;
+        margin-bottom: 8px !important;
+    }
+
+    #modal-question-iframe-container,
+    #modal-answer-iframe-container {
+        max-height: 120px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .timer {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 16px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .timer-hint {
+        font-size: 11px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .modal-text {
+        font-size: 15px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .modal-answer {
+        font-size: 14px !important;
+        padding: 8px 10px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .cat-splash-anim-wrap,
+    .auction-splash-anim-wrap {
+        height: 130px !important;
+        margin: 4px auto 8px auto !important;
+    }
+
+    .cat-splash-title,
+    .auction-splash-title {
+        font-size: 22px !important;
+    }
+
+    .cat-splash-subtitle,
+    .auction-splash-subtitle {
+        font-size: 12.5px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .cat-splash-continue-btn,
+    .auction-splash-continue-btn {
+        padding: 8px 20px !important;
+        font-size: 14px !important;
+        min-height: 44px !important;
     }
 }
