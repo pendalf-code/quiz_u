@@ -321,10 +321,10 @@
             max-width: 1520px;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             position: relative;
             z-index: 10;
-            margin: auto 0;
+            margin: clamp(35px, 6.5vh, 80px) auto 50px auto;
             box-sizing: border-box;
             overflow-x: hidden;
         }
@@ -2513,26 +2513,22 @@
             background: rgba(30, 20, 50, 0.7);
             border: 2px solid rgba(162, 107, 255, 0.4);
             border-radius: 20px;
-            padding: 20px 24px;
+            padding: 24px 28px;
             margin: 25px auto 10px auto;
             max-width: 960px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
             backdrop-filter: blur(8px);
             width: 100%;
             box-sizing: border-box;
-            height: 220px;
-            display: flex;
-            flex-direction: column;
         }
 
         .team-setup-card-title {
             font-size: 20px;
             font-weight: 800;
             color: var(--gold-accent);
-            margin-bottom: 12px;
+            margin-bottom: 18px;
             text-align: center;
             letter-spacing: 0.5px;
-            flex-shrink: 0;
         }
 
         .team-input-grid {
@@ -2541,9 +2537,6 @@
             gap: 15px;
             width: 100%;
             box-sizing: border-box;
-            overflow-y: auto;
-            padding-right: 6px;
-            flex: 1;
         }
 
         textarea {
