@@ -6,8 +6,14 @@ function normalizeGameData(data) {
   if (!data) return [];
   if (Array.isArray(data)) return data;
   if (typeof data === 'object') {
+    if (Array.isArray(data.value)) return data.value;
     if (Array.isArray(data.rounds)) return data.rounds;
-    if (data.themes) return [data];
+    if (data.rounds && typeof data.rounds === 'object') {
+      if (Array.isArray(data.rounds.value)) return data.rounds.value;
+      if (Array.isArray(data.rounds.rounds)) return data.rounds.rounds;
+      if (data.rounds.themes && Array.isArray(data.rounds.themes)) return [data.rounds];
+    }
+    if (data.themes && Array.isArray(data.themes)) return [data];
     return [data];
   }
   return [];
@@ -41,6 +47,19 @@ describe('Game Logic & Mechanics Tests', () => {
       assert.strictEqual(normalized[1].roundName, 'Раунд 2');
     });
 
+    it('extracts rounds from object with value array', () => {
+      const obj = { value: [{ roundName: 'Раунд 1', themes: [] }] };
+      const normalized = normalizeGameData(obj);
+      assert.strictEqual(normalized.length, 1);
+      assert.strictEqual(normalized[0].roundName, 'Раунд 1');
+    });
+
+    it('extracts rounds from pack with nested rounds.value array', () => {
+      const pack = { rounds: { value: [{ roundName: 'Раунд 1', themes: [] }] } };
+      const normalized = normalizeGameData(pack);
+      assert.strictEqual(normalized.length, 1);
+      assert.strictEqual(normalized[0].roundName, 'Раунд 1');
+    });
     it('wraps single-round theme object in an array', () => {
       const singleRound = {
         themes: [{ name: 'Тема 1', questions: [] }]
