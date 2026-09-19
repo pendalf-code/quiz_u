@@ -436,6 +436,17 @@ function renderCatalogPacks() {
     paginBottom.innerHTML = paginationMarkup;
 }
 
+function getPackRoundsArray(pack) {
+    if (!pack || !pack.rounds) return [];
+    if (Array.isArray(pack.rounds)) return pack.rounds;
+    if (typeof pack.rounds === 'object') {
+        if (Array.isArray(pack.rounds.value)) return pack.rounds.value;
+        if (Array.isArray(pack.rounds.rounds)) return pack.rounds.rounds;
+        if (pack.rounds.themes && Array.isArray(pack.rounds.themes)) return [pack.rounds];
+    }
+    return [];
+}
+
 function selectPackToPlay(packId) {
     const packs = window.AVAILABLE_PACKS || [];
     const pack = packs.find(p => p.id === packId);
@@ -459,10 +470,10 @@ function selectPackToPlay(packId) {
 
         // Set game data
         if (typeof window.setGameData === 'function') {
-            const roundsData = Array.isArray(pack.rounds) ? pack.rounds : [pack.rounds];
+            const roundsData = getPackRoundsArray(pack);
             window.setGameData(roundsData);
         } else {
-            const roundsData = Array.isArray(pack.rounds) ? pack.rounds : [pack.rounds];
+            const roundsData = getPackRoundsArray(pack);
             localStorage.setItem('jeopardy_pack', JSON.stringify(roundsData));
             const editor = document.getElementById('json-editor');
             if (editor) editor.value = JSON.stringify(roundsData, null, 4);
@@ -527,7 +538,8 @@ function previewPack(packId) {
     if (roundsContainer) {
         roundsContainer.innerHTML = '';
 
-        (pack.rounds || []).forEach((round, rIdx) => {
+        const packRounds = getPackRoundsArray(pack);
+        packRounds.forEach((round, rIdx) => {
             const roundBox = document.createElement('div');
             roundBox.className = 'preview-round-box';
 
