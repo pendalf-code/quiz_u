@@ -1,0 +1,11 @@
+{
+  "name": "quiz_u",
+  "version": "1.0.0",
+  "description": "Интерактивная командная викторина 'Город Ю'",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js"
+  },
+  "keywords": ["quiz", "jeopardy", "game"],
+  "author": "",
+  "license": "ISC"
+}
