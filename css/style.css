@@ -321,10 +321,10 @@
             max-width: 1520px;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             position: relative;
             z-index: 10;
-            margin: auto 0;
+            margin: 20px auto 40px auto;
             box-sizing: border-box;
             overflow-x: hidden;
         }
@@ -1978,7 +1978,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             background: var(--menu-bg);
             padding: 60px 50px;
             border-radius: 40px;
