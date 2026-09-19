@@ -114,4 +114,40 @@ describe('Navigation & DOM Integrity Tests', () => {
       'Game header must have quitToMainMenuDirectly() button'
     );
   });
+  it('all modal containers with action buttons must be styled for centering (.modal-controls or .modal-actions)', () => {
+    const modalButtonAreaRegex = /id="(modal-buttons-area|system-modal-buttons|turn-modal-footer)"[^>]*class="([^"]*)"/g;
+    let match;
+    const styleCss = fs.readFileSync(path.join(__dirname, '..', 'css', 'style.css'), 'utf8');
+
+    // Ensure CSS supports both .modal-controls and .modal-actions with justify-content: center
+    assert.ok(
+      styleCss.includes('.modal-controls') && styleCss.includes('justify-content: center'),
+      'style.css must have .modal-controls with justify-content: center'
+    );
+    assert.ok(
+      styleCss.includes('.modal-actions') && styleCss.includes('justify-content: center'),
+      'style.css must have .modal-actions with justify-content: center'
+    );
+
+    // Verify index.html button areas (order of class and id can be either)
+    const buttonAreas = ['modal-buttons-area', 'system-modal-buttons'];
+    for (const areaId of buttonAreas) {
+      const regex = new RegExp(`<div[^>]*id="${areaId}"[^>]*>|<div[^>]*class="([^"]*)"[^>]*id="${areaId}"[^>]*>`);
+      const tagMatch = indexHtml.match(new RegExp(`<div[^>]*id="${areaId}"[^>]*>`));
+      assert.ok(tagMatch, `Button area #${areaId} exists`);
+      const classMatch = tagMatch[0].match(/class="([^"]*)"/);
+      assert.ok(classMatch, `Button area #${areaId} must have class attribute`);
+      const classes = classMatch[1].split(/\s+/);
+      const hasValidClass = classes.includes('modal-controls') || classes.includes('modal-actions');
+      assert.ok(hasValidClass, `Button area #${areaId} must have class modal-controls or modal-actions, got: ${classMatch[1]}`);
+    }
+  });
+
+  it('sub-menu-settings must have all required input fields and save handler', () => {
+    const requiredInputs = ['setting-reading-time', 'setting-thinking-time', 'setting-answer-time', 'setting-type-cat', 'setting-type-auction', 'setting-type-auction-leader'];
+    for (const inputId of requiredInputs) {
+      assert.ok(indexHtml.includes(`id="${inputId}"`), `Settings input #${inputId} must exist in index.html`);
+    }
+    assert.ok(indexHtml.includes('saveSettings()'), 'Settings screen must have saveSettings() button');
+  });
 });

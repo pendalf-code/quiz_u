@@ -2227,7 +2227,8 @@
             word-break: break-word;
         }
 
-        .modal-controls {
+        .modal-controls,
+        .modal-actions {
             display: flex;
             gap: 15px;
             justify-content: center;
@@ -3276,7 +3277,8 @@
         width: 100% !important;
     }
 
-    .modal-controls .btn {
+    .modal-controls .btn,
+    .modal-actions .btn {
         width: 100% !important;
         font-size: 15px !important;
         padding: 12px 14px !important;
