@@ -2387,12 +2387,24 @@
         }
 
         /* Dev Sandbox Cards */
+        .dev-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            width: 100%;
+            max-width: 950px;
+            margin: 32px auto 38px auto;
+            box-sizing: border-box;
+        }
+
         .dev-card-section {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 35px 40px;
-            border-radius: 28px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(30, 20, 50, 0.7);
+            padding: 28px 32px;
+            border-radius: 22px;
+            border: 2px solid rgba(162, 107, 255, 0.35);
             text-align: left;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
             transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
             width: 100%;
             box-sizing: border-box;
@@ -2401,8 +2413,8 @@
         .dev-card-title {
             color: var(--gold-accent);
             font-weight: 900;
-            font-size: 24px;
-            margin-bottom: 20px;
+            font-size: 22px;
+            margin-bottom: 18px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             transition: color 0.3s ease;
@@ -3548,9 +3560,14 @@
     }
 
     /* Dev Sandbox on Mobile */
+    .dev-grid {
+        gap: 18px !important;
+        margin: 20px auto 25px auto !important;
+    }
+
     .dev-card-section {
-        padding: 16px 12px !important;
-        border-radius: 16px !important;
+        padding: 18px 14px !important;
+        border-radius: 18px !important;
     }
 
     /* Team Setup on Mobile */
