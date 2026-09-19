@@ -614,20 +614,22 @@
                     <button class="btn btn-success" onclick="saveTeamsFromSetup()">✅ Запустить игру</button>
                     <button class="btn btn-check" onclick="addInputRow()">➕ Добавить команду</button>
                     <button class="btn btn-check" onclick="showSubScreen('sub-menu-prepare-choice')">⬅️ К выбору пака</button>
-                    <div class="team-setup-back-block" style="margin-top: 15px; width: 100%; display: flex; justify-content: center;">
-                        <button class="btn btn-close-modal" onclick="backToMainMenu()">🏠 В главное меню</button>
-                    </div>
+                    <button class="btn btn-close-modal" onclick="backToMainMenu()">🏠 В главное меню</button>
                 </div>
-                <div class="team-input-grid" id="team-inputs" style="margin-top: 35px; margin-bottom: 35px;">
-                    <div class="team-input-row">
-                        <input type="text" class="team-input" value="Команда 1" placeholder="Название команды 1">
-                        <button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌
-                        </button>
-                    </div>
-                    <div class="team-input-row">
-                        <input type="text" class="team-input" value="Команда 2" placeholder="Название команды 2">
-                        <button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌
-                        </button>
+
+                <div class="team-setup-card-block">
+                    <div class="team-setup-card-title">👥 Список команд</div>
+                    <div class="team-input-grid" id="team-inputs" style="margin-top: 15px; margin-bottom: 10px;">
+                        <div class="team-input-row">
+                            <input type="text" class="team-input" value="Команда 1" placeholder="Название команды 1">
+                            <button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌
+                            </button>
+                        </div>
+                        <div class="team-input-row">
+                            <input type="text" class="team-input" value="Команда 2" placeholder="Название команды 2">
+                            <button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

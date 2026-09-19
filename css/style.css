@@ -2493,7 +2493,7 @@
             align-items: center !important;
             gap: 16px !important;
             max-width: 440px !important;
-            margin: 35px auto 30px auto !important;
+            margin: 30px auto 35px auto !important;
             width: 100% !important;
         }
 
@@ -2506,18 +2506,29 @@
             padding: 14px 24px !important;
             box-sizing: border-box !important;
             border-radius: 16px !important;
+            margin: 0 !important;
         }
 
-        .team-setup-back-block {
-            margin-top: 25px;
+        .team-setup-card-block {
+            background: rgba(30, 20, 50, 0.7);
+            border: 2px solid rgba(162, 107, 255, 0.4);
+            border-radius: 20px;
+            padding: 24px 28px;
+            margin: 30px auto 35px auto;
+            max-width: 960px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
             width: 100%;
-            display: flex;
-            justify-content: center;
+            box-sizing: border-box;
         }
 
-        .team-setup-back-block .btn {
-            width: 100% !important;
-            max-width: 440px !important;
+        .team-setup-card-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--gold-accent);
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 0.5px;
         }
 
         textarea {
