@@ -1300,7 +1300,6 @@ body.light-theme .pack-preview-modal-card .btn-pack-modal-download {
     background: #6d28d9 !important;
     border: 1.5px solid #5b21b6 !important;
     color: #ffffff !important;
-    font-weight: bold !important;
     box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25) !important;
 }
 
@@ -1313,7 +1312,6 @@ body.light-theme .pack-preview-modal-card .btn-pack-modal-close {
     background: #475569 !important;
     border: 1.5px solid #334155 !important;
     color: #ffffff !important;
-    font-weight: bold !important;
     box-shadow: none !important;
 }
 
@@ -1326,7 +1324,6 @@ body.light-theme .btn-pack-download {
     background: #f5f3ff !important;
     border: 1.5px solid #8b5cf6 !important;
     color: #5b21b6 !important;
-    font-weight: 700 !important;
 }
 
 body.light-theme .btn-pack-download:hover {

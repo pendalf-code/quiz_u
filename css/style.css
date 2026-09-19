@@ -2778,7 +2778,7 @@
             transition: color 0.3s ease;
         }
 
-        /* Light Theme Overrides */
+        /* Light Theme Overrides (Color only, typography identical to dark theme) */
         body.light-theme .menu-logo {
             color: #5b21b6 !important;
             text-shadow: 0 4px 14px rgba(91, 33, 182, 0.2) !important;
@@ -2786,13 +2786,11 @@
 
         body.light-theme .menu-subtitle {
             color: #334155 !important;
-            font-weight: 700 !important;
         }
 
         body.light-theme .btn-check {
             background: #6d28d9 !important;
             color: #ffffff !important;
-            font-weight: bold !important;
         }
 
         @media (hover: hover) and (pointer: fine) {
@@ -2836,20 +2834,17 @@
 
         body.light-theme .special-question-badge.badge-system span {
             color: #334155 !important;
-            font-weight: 700 !important;
         }
 
         body.light-theme .modal-card b,
         body.light-theme .modal-card strong {
             color: #6d28d9 !important;
-            font-weight: 800 !important;
         }
 
         body.light-theme .modal-answer {
             background: #fefce8 !important;
             color: #78350f !important;
             border: 2px solid #f59e0b !important;
-            font-weight: 700 !important;
         }
 
         body.light-theme .modal-team-row {
@@ -2871,7 +2866,6 @@
             background: #fef3c7 !important;
             color: #78350f !important;
             border: 1.5px solid #f59e0b !important;
-            font-weight: 700 !important;
         }
 
         body.light-theme .auction-team-card {
@@ -2885,7 +2879,6 @@
 
         body.light-theme .auction-team-header span:last-child {
             color: #92400e !important;
-            font-weight: 800 !important;
         }
 
         body.light-theme .auction-controls-row span {
@@ -2901,7 +2894,6 @@
         body.light-theme .btn-close-modal {
             background: #6d28d9 !important;
             color: #ffffff !important;
-            font-weight: bold !important;
         }
 
         @media (hover: hover) and (pointer: fine) {
