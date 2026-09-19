@@ -1,4 +1,4 @@
-    let audioCtx = null;
+﻿    let audioCtx = null;
     let fireworksInterval = null;
     let isTestMode = false;
 
@@ -1159,13 +1159,26 @@
         currentCost = 300;
         activeTeamIdxForQuestion = null;
         auctionBets = {};
+
+        let normalizedType = type;
+        if (type === 'secret') normalizedType = 'cat';
+        if (type === 'auction_all') normalizedType = 'auction';
+
+        if (!teams || teams.length < 2) {
+            teams = [
+                {name: "Команда 1 (Лидер)", score: 500},
+                {name: "Команда 2", score: 200}
+            ];
+            currentTurnTeamIdx = 0;
+        }
+
         if (Object.keys(gameStats).length === 0) resetGameStats();
 
         const testQuestion = {
-            q: `[ТЕСТ] Это тестовый вопрос типа: "${type.toUpperCase()}". Проверьте работу кнопок и таймеров!`,
+            q: `[ТЕСТ] Это тестовый вопрос типа: "${normalizedType.toUpperCase()}". Проверьте работу кнопок, анимаций и таймеров!`,
             a: "Это правильный тестовый ответ",
             cost: 300,
-            type: type,
+            type: normalizedType,
             used: false
         };
 

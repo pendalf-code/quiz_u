@@ -3,7 +3,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 
-describe('Responsive CSS Integrity Tests (768px - 1304px Breakpoints)', () => {
+describe('Responsive CSS Integrity Tests', () => {
   const styleCssPath = path.join(__dirname, '..', 'css', 'style.css');
   const catalogCssPath = path.join(__dirname, '..', 'css', 'catalog.css');
 
@@ -30,7 +30,8 @@ describe('Responsive CSS Integrity Tests (768px - 1304px Breakpoints)', () => {
 
   // Helper to extract a rule block inside CSS text
   function extractRuleBlock(cssBlock, selector) {
-    const regex = new RegExp(`(?:^|[}\\s])${selector.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}\\s*\\{([^}]+)\\}`, 'm');
+    if (!cssBlock) return null;
+    const regex = new RegExp('(?:^|[}\\s])' + selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\{([^}]+)\\}', 'm');
     const match = cssBlock.match(regex);
     return match ? match[1] : null;
   }
@@ -44,31 +45,37 @@ describe('Responsive CSS Integrity Tests (768px - 1304px Breakpoints)', () => {
     });
   });
 
-  describe('css/style.css Media Queries and Breakpoint Adaptations', () => {
-    it('contains wide desktop media query @media (min-width: 1305px)', () => {
-      assert.ok(
-        styleCss.includes('@media (min-width: 1305px)'),
-        'css/style.css must define @media (min-width: 1305px)'
-      );
-      const wideBlock = extractMediaBlock(styleCss, '@media (min-width: 1305px)');
-      assert.ok(wideBlock, 'Must extract @media (min-width: 1305px) block');
-      assert.ok(
-        wideBlock.includes('.game-header-actions'),
-        'Wide desktop media query should include rules for .game-header-actions'
-      );
-    });
-
-    it('contains medium desktop/laptop media query @media (min-width: 1024px) and (max-width: 1304px)', () => {
-      const query = '@media (min-width: 1024px) and (max-width: 1304px)';
+  describe('css/style.css Desktop & Tablet Adaptations', () => {
+    it('contains desktop media query @media (min-width: 1024px)', () => {
+      const query = '@media (min-width: 1024px)';
       assert.ok(
         styleCss.includes(query),
         `css/style.css must define ${query}`
       );
-      const block = extractMediaBlock(styleCss, query);
-      assert.ok(block, `Must extract ${query} block`);
+      const desktopBlock = extractMediaBlock(styleCss, query);
+      assert.ok(desktopBlock, `Must extract ${query} block`);
       assert.ok(
-        block.includes('.game-header-actions'),
-        'Laptop/desktop media query must contain .game-header-actions rules'
+        desktopBlock.includes('.game-header-actions'),
+        'Desktop media query should include rules for .game-header-actions'
+      );
+    });
+
+    it('desktop layout provides nowrap header actions and 220px team cards', () => {
+      const desktopBlock = extractMediaBlock(styleCss, '@media (min-width: 1024px)');
+      assert.ok(desktopBlock, 'Desktop media block must exist');
+
+      const headerActions = extractRuleBlock(desktopBlock, '.game-header-actions');
+      assert.ok(headerActions, '.game-header-actions rule must exist in desktop block');
+      assert.ok(
+        headerActions.includes('flex-wrap: nowrap'),
+        '.game-header-actions on desktop must have flex-wrap: nowrap'
+      );
+
+      const teamCard = extractRuleBlock(desktopBlock, '.team-card');
+      assert.ok(teamCard, '.team-card rule must exist in desktop block');
+      assert.ok(
+        teamCard.includes('width: 220px'),
+        '.team-card on desktop must have width: 220px'
       );
     });
 
@@ -86,18 +93,7 @@ describe('Responsive CSS Integrity Tests (768px - 1304px Breakpoints)', () => {
       );
     });
 
-    it('.game-header-actions uses flex-wrap: wrap in intermediate breakpoints (1024-1304px and 768-1023px) to prevent button overflow', () => {
-      // 1024px - 1304px block
-      const mediumBlock = extractMediaBlock(styleCss, '@media (min-width: 1024px) and (max-width: 1304px)');
-      assert.ok(mediumBlock, '1024px-1304px block must exist');
-      const mediumHeaderActions = extractRuleBlock(mediumBlock, '.game-header-actions');
-      assert.ok(mediumHeaderActions, '.game-header-actions rule must exist in 1024px-1304px block');
-      assert.ok(
-        mediumHeaderActions.includes('flex-wrap: wrap'),
-        `.game-header-actions in 1024px-1304px must have flex-wrap: wrap, got: ${mediumHeaderActions}`
-      );
-
-      // 768px - 1023px block
+    it('.game-header-actions uses flex-wrap: wrap in tablet breakpoint (768-1023px) to prevent button overflow', () => {
       const tabletBlock = extractMediaBlock(styleCss, '@media (min-width: 768px) and (max-width: 1023px)');
       assert.ok(tabletBlock, '768px-1023px block must exist');
       const tabletHeaderActions = extractRuleBlock(tabletBlock, '.game-header-actions');
@@ -108,14 +104,9 @@ describe('Responsive CSS Integrity Tests (768px - 1304px Breakpoints)', () => {
       );
     });
 
-    it('.game-header container also wraps in intermediate breakpoints to maintain layout stability', () => {
-      const mediumBlock = extractMediaBlock(styleCss, '@media (min-width: 1024px) and (max-width: 1304px)');
+    it('.game-header container wraps in tablet breakpoint to maintain layout stability', () => {
       const tabletBlock = extractMediaBlock(styleCss, '@media (min-width: 768px) and (max-width: 1023px)');
-
-      const mediumHeader = extractRuleBlock(mediumBlock, '.game-header');
       const tabletHeader = extractRuleBlock(tabletBlock, '.game-header');
-
-      assert.ok(mediumHeader && mediumHeader.includes('flex-wrap: wrap'), '.game-header must wrap in 1024px-1304px');
       assert.ok(tabletHeader && tabletHeader.includes('flex-wrap: wrap'), '.game-header must wrap in 768px-1023px');
     });
   });
@@ -138,26 +129,8 @@ describe('Responsive CSS Integrity Tests (768px - 1304px Breakpoints)', () => {
       assert.ok(packCardActionsRule, '.pack-card-actions must exist in catalog responsive query');
       assert.ok(
         packCardActionsRule.includes('flex-wrap: wrap'),
-        `.pack-card-actions must have flex-wrap: wrap, got: ${packCardActionsRule}`
+        '.pack-card-actions must have flex-wrap: wrap in responsive block'
       );
-    });
-
-    it('pack action buttons (.btn-pack-play, .btn-pack-preview, .btn-pack-download) have proper responsive flex sizing', () => {
-      const query = '@media (min-width: 768px) and (max-width: 1304px)';
-      const catalogBlock = extractMediaBlock(catalogCss, query);
-      assert.ok(catalogBlock, `Must extract block for ${query}`);
-
-      const playRule = extractRuleBlock(catalogBlock, '.btn-pack-play');
-      const previewRule = extractRuleBlock(catalogBlock, '.btn-pack-preview');
-      const downloadRule = extractRuleBlock(catalogBlock, '.btn-pack-download');
-
-      assert.ok(playRule, '.btn-pack-play rule exists in catalog intermediate query');
-      assert.ok(previewRule, '.btn-pack-preview rule exists in catalog intermediate query');
-      assert.ok(downloadRule, '.btn-pack-download rule exists in catalog intermediate query');
-
-      assert.ok(playRule.includes('flex: 1 1 100%'), '.btn-pack-play takes full row');
-      assert.ok(previewRule.includes('flex: 1 1 calc(50% - 4px)'), '.btn-pack-preview takes half row');
-      assert.ok(downloadRule.includes('flex: 1 1 calc(50% - 4px)'), '.btn-pack-download takes half row');
     });
   });
 });

@@ -461,7 +461,7 @@
             display: flex;
             gap: 10px;
             align-items: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             flex-shrink: 0;
         }
 
@@ -2909,25 +2909,28 @@
 
 
 /* ==========================================================================
-   DESKTOP SCREEN ADAPTATIONS (>= 1305px)
+   DESKTOP SCREEN ADAPTATIONS (>= 1024px)
    Spacious layout, fine hover transitions, large clear boards
    ========================================================================== */
-@media (min-width: 1305px) {
+@media (min-width: 1024px) {
     .game-header {
-        padding: 20px 32px;
-        gap: 18px;
+        padding: 18px 28px;
+        gap: 16px;
         flex-wrap: nowrap;
+        justify-content: space-between;
     }
 
     .game-header-actions {
         flex-wrap: nowrap;
-        gap: 12px;
+        gap: 10px;
+        flex-shrink: 0;
     }
 
     .game-header-actions .btn {
         font-size: 14px;
         padding: 9px 16px;
         min-height: 44px;
+        white-space: nowrap;
     }
 
     .jeopardy-table {
@@ -2937,7 +2940,7 @@
     }
 
     .theme-row {
-        grid-template-columns: minmax(240px, 320px) repeat(5, minmax(0, 1fr));
+        grid-template-columns: minmax(220px, 320px) repeat(5, minmax(0, 1fr));
         gap: 16px;
         margin-bottom: 0;
         align-items: center;
@@ -2966,6 +2969,8 @@
         gap: 18px;
         margin-top: 18px;
         padding: 25px 0;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     .team-card {
@@ -2982,101 +2987,6 @@
 
     .team-points-clickable {
         font-size: 34px;
-    }
-}
-
-
-/* ==========================================================================
-   MEDIUM DESKTOP & LAPTOP ADAPTATIONS (1024px <= width <= 1304px)
-   Neat header wrapping, responsive grid, flexible team cards, perfect buttons
-   ========================================================================== */
-@media (min-width: 1024px) and (max-width: 1304px) {
-    .game-header {
-        padding: 16px 24px;
-        gap: 14px 18px;
-        flex-wrap: wrap;
-        justify-content: space-between;
-    }
-
-    .game-header-info {
-        min-width: 220px;
-        flex: 1 1 auto;
-    }
-
-    .game-header-actions {
-        display: flex;
-        gap: 8px 10px;
-        align-items: center;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        flex: 0 1 auto;
-    }
-
-    .game-header-actions .btn {
-        font-size: 13.5px;
-        padding: 8px 12px;
-        border-radius: 12px;
-        min-height: 42px;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .jeopardy-table {
-        gap: 14px;
-        padding: 20px;
-        border-radius: 24px;
-    }
-
-    .theme-row {
-        grid-template-columns: minmax(190px, 260px) repeat(5, minmax(0, 1fr));
-        gap: 12px;
-        margin-bottom: 0;
-        align-items: center;
-    }
-
-    .theme-name {
-        grid-column: auto;
-        padding: 16px 18px;
-        font-size: 17px;
-        font-weight: 800;
-        border-radius: 16px;
-        min-height: 54px;
-        justify-content: flex-start;
-        text-align: left;
-    }
-
-    .question-cost {
-        font-size: 24px;
-        padding: 16px 0;
-        border-radius: 16px;
-        box-shadow: 0 5px 12px rgba(253, 216, 53, 0.35);
-        min-height: 54px;
-    }
-
-    .teams-container {
-        gap: 14px;
-        margin-top: 14px;
-        padding: 18px 0;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .team-card {
-        padding: 14px 18px;
-        border-radius: 18px;
-        width: auto;
-        flex: 1 1 150px;
-        max-width: 200px;
-        min-width: 130px;
-        gap: 10px;
-    }
-
-    .team-title {
-        font-size: 17px;
-    }
-
-    .team-points-clickable {
-        font-size: 28px;
     }
 }
 
