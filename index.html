@@ -381,9 +381,8 @@
                     <button class="btn btn-danger" onclick="document.getElementById('upload-file').click()">Открыть файл
                         с ПК
                     </button>
-                    <button class="btn btn-close-modal" onclick="showSubScreen('sub-menu-prepare-choice')"
-                            style="margin: 0;">⬅️ Назад к выбору
-                    </button>
+                    <button class="btn btn-check" onclick="showSubScreen('sub-menu-prepare-choice')" style="margin: 0;">⬅️ Назад к выбору</button>
+                    <button class="btn btn-close-modal" onclick="backToMainMenu()" style="margin: 0;">🏠 В главное меню</button>
                 </div>
             </div>
 
@@ -433,9 +432,7 @@
 
                 <div class="setup-actions" style="justify-content: center;">
                     <button class="btn btn-success" onclick="saveSettings()">💾 Сохранить настройки</button>
-                    <button class="btn btn-close-modal" onclick="showSubScreen('sub-menu-prepare-choice')"
-                            style="margin: 0;">⬅️ Назад к выбору
-                    </button>
+                    <button class="btn btn-close-modal" onclick="backToMainMenu()" style="margin: 0;">⬅️ Назад в главное меню</button>
                 </div>
             </div>
 
@@ -530,8 +527,8 @@
                 <div class="setup-actions" style="margin-top: 25px;">
                     <button class="btn btn-success" onclick="saveTeamsFromSetup()">✅ Запустить игру</button>
                     <button class="btn btn-check" onclick="addInputRow()">➕ Добавить команду</button>
-                    <button class="btn btn-close-modal" onclick="backToMainMenu()" style="margin: 0;">⬅️ Выйти в меню
-                    </button>
+                    <button class="btn btn-check" onclick="showSubScreen('sub-menu-prepare-choice')" style="margin: 0;">⬅️ К выбору пака</button>
+                    <button class="btn btn-close-modal" onclick="backToMainMenu()" style="margin: 0;">🏠 В главное меню</button>
                 </div>
                 <div class="team-input-grid" id="team-inputs" style="margin-top: 35px; margin-bottom: 10px;">
                     <div class="team-input-row">
