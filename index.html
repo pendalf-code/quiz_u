@@ -610,6 +610,14 @@
 
             <div id="team-setup-container" style="display: none; width: 100%;">
                 <h3>⭐ Настройка команд перед игрой</h3>
+                <div class="setup-actions team-setup-actions-vertical" style="margin-top: 30px; margin-bottom: 35px;">
+                    <button class="btn btn-success" onclick="saveTeamsFromSetup()">✅ Запустить игру</button>
+                    <button class="btn btn-check" onclick="addInputRow()">➕ Добавить команду</button>
+                    <button class="btn btn-check" onclick="showSubScreen('sub-menu-prepare-choice')">⬅️ К выбору пака</button>
+                    <div class="team-setup-back-block" style="margin-top: 15px; width: 100%; display: flex; justify-content: center;">
+                        <button class="btn btn-close-modal" onclick="backToMainMenu()">🏠 В главное меню</button>
+                    </div>
+                </div>
                 <div class="team-input-grid" id="team-inputs" style="margin-top: 35px; margin-bottom: 35px;">
                     <div class="team-input-row">
                         <input type="text" class="team-input" value="Команда 1" placeholder="Название команды 1">
@@ -620,14 +628,6 @@
                         <input type="text" class="team-input" value="Команда 2" placeholder="Название команды 2">
                         <button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌
                         </button>
-                    </div>
-                </div>
-                <div class="setup-actions team-setup-actions-vertical" style="margin-top: 35px; margin-bottom: 30px;">
-                    <button class="btn btn-success" onclick="saveTeamsFromSetup()">✅ Запустить игру</button>
-                    <button class="btn btn-check" onclick="addInputRow()">➕ Добавить команду</button>
-                    <button class="btn btn-check" onclick="showSubScreen('sub-menu-prepare-choice')">⬅️ К выбору пака</button>
-                    <div class="team-setup-back-block" style="margin-top: 25px; width: 100%; display: flex; justify-content: center;">
-                        <button class="btn btn-close-modal" onclick="backToMainMenu()">🏠 В главное меню</button>
                     </div>
                 </div>
             </div>
