@@ -77,7 +77,7 @@ describe('Navigation & DOM Integrity Tests', () => {
     );
   });
 
-  it('sub-menu-packs-catalog must provide navigation back to choice and to main menu', () => {
+  it('sub-menu-packs-catalog must provide navigation back to choice via top-right button', () => {
     const catalogIdx = indexHtml.indexOf('id="sub-menu-packs-catalog"');
     const editorIdx = indexHtml.indexOf('id="sub-menu-editor"');
     assert.ok(catalogIdx !== -1, 'sub-menu-packs-catalog found');
@@ -85,11 +85,7 @@ describe('Navigation & DOM Integrity Tests', () => {
 
     assert.ok(
       catalogSlice.includes("showSubScreen('sub-menu-prepare-choice')"),
-      'Catalog must have a back to choice button'
-    );
-    assert.ok(
-      catalogSlice.includes('backToMainMenu()'),
-      'Catalog must have a back to main menu button'
+      'Catalog must have a back to choice button in header'
     );
   });
 
