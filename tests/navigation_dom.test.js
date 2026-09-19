@@ -93,7 +93,7 @@ describe('Navigation & DOM Integrity Tests', () => {
     );
   });
 
-  it('sub-menu-editor must provide navigation back to choice and to main menu', () => {
+  it('sub-menu-editor must provide navigation back to choice via top-right button', () => {
     const editorIdx = indexHtml.indexOf('id="sub-menu-editor"');
     const settingsIdx = indexHtml.indexOf('id="sub-menu-settings"');
     assert.ok(editorIdx !== -1, 'sub-menu-editor found');
@@ -101,11 +101,7 @@ describe('Navigation & DOM Integrity Tests', () => {
 
     assert.ok(
       editorSlice.includes("showSubScreen('sub-menu-prepare-choice')"),
-      'Editor must have a back to choice button'
-    );
-    assert.ok(
-      editorSlice.includes('backToMainMenu()'),
-      'Editor must have a back to main menu button'
+      'Editor must have a back to choice button in header'
     );
   });
 
