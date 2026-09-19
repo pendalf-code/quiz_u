@@ -114,9 +114,8 @@ describe('Navigation & DOM Integrity Tests', () => {
       'Game header must have quitToMainMenuDirectly() button'
     );
   });
+
   it('all modal containers with action buttons must be styled for centering (.modal-controls or .modal-actions)', () => {
-    const modalButtonAreaRegex = /id="(modal-buttons-area|system-modal-buttons|turn-modal-footer)"[^>]*class="([^"]*)"/g;
-    let match;
     const styleCss = fs.readFileSync(path.join(__dirname, '..', 'css', 'style.css'), 'utf8');
 
     // Ensure CSS supports both .modal-controls and .modal-actions with justify-content: center
@@ -129,10 +128,9 @@ describe('Navigation & DOM Integrity Tests', () => {
       'style.css must have .modal-actions with justify-content: center'
     );
 
-    // Verify index.html button areas (order of class and id can be either)
+    // Verify index.html button areas
     const buttonAreas = ['modal-buttons-area', 'system-modal-buttons'];
     for (const areaId of buttonAreas) {
-      const regex = new RegExp(`<div[^>]*id="${areaId}"[^>]*>|<div[^>]*class="([^"]*)"[^>]*id="${areaId}"[^>]*>`);
       const tagMatch = indexHtml.match(new RegExp(`<div[^>]*id="${areaId}"[^>]*>`));
       assert.ok(tagMatch, `Button area #${areaId} exists`);
       const classMatch = tagMatch[0].match(/class="([^"]*)"/);
@@ -150,24 +148,26 @@ describe('Navigation & DOM Integrity Tests', () => {
     }
     assert.ok(indexHtml.includes('saveSettings()'), 'Settings screen must have saveSettings() button');
   });
-  it('team setup container action buttons must be styled for centering and responsiveness', () => {
+
+  it('team setup container action buttons must be styled vertically and centered before starting game', () => {
     const styleCss = fs.readFileSync(path.join(__dirname, '..', 'css', 'style.css'), 'utf8');
 
-    // .setup-actions should have row layout with wrap and center alignment
     assert.ok(
-      styleCss.includes('.setup-actions') &&
-      styleCss.includes('justify-content: center') &&
-      styleCss.includes('flex-direction: row'),
-      'style.css must define .setup-actions with flex-direction: row and justify-content: center'
+      styleCss.includes('.team-setup-actions-vertical') &&
+      styleCss.includes('flex-direction: column'),
+      'style.css must define .team-setup-actions-vertical with flex-direction: column'
     );
 
-    // #team-setup-container must have .setup-actions container
     const teamSetupIdx = indexHtml.indexOf('id="team-setup-container"');
     assert.ok(teamSetupIdx !== -1, 'team-setup-container exists');
     const teamSetupSlice = indexHtml.slice(teamSetupIdx, teamSetupIdx + 1500);
     assert.ok(
-      teamSetupSlice.includes('class="setup-actions"'),
-      'team-setup-container must contain an element with class setup-actions'
+      teamSetupSlice.includes('setup-actions'),
+      'team-setup-container must contain setup-actions'
+    );
+    assert.ok(
+      teamSetupSlice.includes('team-setup-actions-vertical'),
+      'team-setup-container must use team-setup-actions-vertical for vertical layout'
     );
   });
 });
