@@ -2513,25 +2513,37 @@
             background: rgba(30, 20, 50, 0.7);
             border: 2px solid rgba(162, 107, 255, 0.4);
             border-radius: 20px;
-            padding: 24px 28px;
-            margin: 30px auto 20px auto;
+            padding: 20px 24px;
+            margin: 25px auto 10px auto;
             max-width: 960px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
             backdrop-filter: blur(8px);
             width: 100%;
             box-sizing: border-box;
-            min-height: 180px;
-            max-height: 380px;
-            overflow-y: auto;
+            height: 220px;
+            display: flex;
+            flex-direction: column;
         }
 
         .team-setup-card-title {
             font-size: 20px;
             font-weight: 800;
             color: var(--gold-accent);
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             text-align: center;
             letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .team-input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-y: auto;
+            padding-right: 6px;
+            flex: 1;
         }
 
         textarea {
