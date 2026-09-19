@@ -1297,33 +1297,41 @@ body.light-theme .preview-modal-buttons {
 }
 
 body.light-theme .pack-preview-modal-card .btn-pack-modal-download {
-    background: #f1f5f9 !important;
-    border: 1.5px solid #cbd5e1 !important;
-    color: #1e1b4b !important;
-    box-shadow: none !important;
+    background: #6d28d9 !important;
+    border: 1.5px solid #5b21b6 !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25) !important;
 }
 
 body.light-theme .pack-preview-modal-card .btn-pack-modal-download:hover {
-    background: #e2e8f0 !important;
-    border-color: #94a3b8 !important;
+    background: #5b21b6 !important;
+    color: #ffffff !important;
 }
 
 body.light-theme .pack-preview-modal-card .btn-pack-modal-close {
-    background: #f1f5f9 !important;
-    border: 1.5px solid #cbd5e1 !important;
-    color: #1e1b4b !important;
+    background: #475569 !important;
+    border: 1.5px solid #334155 !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
     box-shadow: none !important;
 }
 
 body.light-theme .pack-preview-modal-card .btn-pack-modal-close:hover {
-    background: #e2e8f0 !important;
-    border-color: #94a3b8 !important;
+    background: #334155 !important;
+    color: #ffffff !important;
 }
 
 body.light-theme .btn-pack-download {
-    background: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
-    color: #1e1b4b !important;
+    background: #f5f3ff !important;
+    border: 1.5px solid #8b5cf6 !important;
+    color: #5b21b6 !important;
+    font-weight: 700 !important;
+}
+
+body.light-theme .btn-pack-download:hover {
+    background: #6d28d9 !important;
+    color: #ffffff !important;
 }
 
 

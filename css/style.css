@@ -54,35 +54,35 @@
         }
 
         body.light-theme {
-            --bg-city: radial-gradient(circle at 80% 12%, #ede9fe 0%, #dbeafe 45%, #93c5fd 100%);
+            --bg-city: radial-gradient(circle at 80% 15%, #fef3c7 0%, #ede9fe 45%, #c7d2fe 100%);
             --menu-bg: #ffffff;
-            --menu-border: #6366f1;
-            --menu-shadow: 0 20px 45px rgba(30, 27, 75, 0.12);
-            --header-bg: #4338ca;
-            --header-border: #6366f1;
-            --theme-name-bg: #f8fafc;
+            --menu-border: #8b5cf6;
+            --menu-shadow: 0 20px 45px rgba(76, 29, 149, 0.12);
+            --header-bg: #5b21b6;
+            --header-border: #f59e0b;
+            --theme-name-bg: #ffffff;
             --theme-name-color: #1e1b4b;
             --theme-name-border: 2px solid #cbd5e1;
-            --cost-bg: #4f46e5;
-            --cost-hover: #4338ca;
-            --cost-color: #ffffff;
-            --board-bg: rgba(255, 255, 255, 0.82);
+            --cost-bg: #f59e0b;
+            --cost-hover: #d97706;
+            --cost-color: #1e1b4b;
+            --board-bg: rgba(255, 255, 255, 0.88);
             --board-border: rgba(255, 255, 255, 0.95);
             --team-card-bg: #ffffff;
-            --team-card-border: #6366f1;
-            --team-card-active-bg: #eef2ff;
-            --team-card-active-border: #4f46e5;
-            --team-card-shadow: 0 10px 25px rgba(30, 27, 75, 0.08);
+            --team-card-border: #8b5cf6;
+            --team-card-active-bg: #fefce8;
+            --team-card-active-border: #f59e0b;
+            --team-card-shadow: 0 10px 25px rgba(76, 29, 149, 0.08);
             --team-title-color: #1e1b4b;
-            --team-pts-bg: rgba(79, 70, 229, 0.06);
-            --team-pts-border: rgba(79, 70, 229, 0.18);
-            --team-pts-color: #312e81;
+            --team-pts-bg: #fef3c7;
+            --team-pts-border: #fde68a;
+            --team-pts-color: #92400e;
             --modal-bg: rgba(15, 23, 42, 0.65);
             --modal-card-bg: #ffffff;
-            --modal-card-border: #4f46e5;
+            --modal-card-border: #8b5cf6;
             --stats-table-bg: #ffffff;
-            --stats-th-bg: #4338ca;
-            --stats-th-color: #ffffff;
+            --stats-th-bg: #5b21b6;
+            --stats-th-color: #fef08a;
             --stats-td-color: #1e1b4b;
             --stats-row-border: #e2e8f0;
             --skyline-far-opacity: 0.45;
@@ -92,15 +92,15 @@
             --stars-opacity: 0;
 
             --purple-dark: #1e1b4b;
-            --purple-medium: #4f46e5;
-            --lavender-light: #f8fafc;
-            --gold-accent: #4f46e5;
-            --gold-hover: #4338ca;
+            --purple-medium: #6d28d9;
+            --lavender-light: #f5f3ff;
+            --gold-accent: #d97706;
+            --gold-hover: #b45309;
             --text-dark: #1e1b4b;
 
             --settings-text-color: #1e1b4b;
-            --settings-box-bg: rgba(79, 70, 229, 0.06);
-            --settings-box-border: rgba(79, 70, 229, 0.2);
+            --settings-box-bg: rgba(109, 40, 217, 0.06);
+            --settings-box-border: rgba(109, 40, 217, 0.2);
         }
 
         html {
@@ -2780,8 +2780,8 @@
 
         /* Light Theme Overrides */
         body.light-theme .menu-logo {
-            color: #4338ca !important;
-            text-shadow: 0 4px 14px rgba(67, 56, 202, 0.2) !important;
+            color: #5b21b6 !important;
+            text-shadow: 0 4px 14px rgba(91, 33, 182, 0.2) !important;
         }
 
         body.light-theme .menu-subtitle {
@@ -2789,11 +2789,24 @@
             font-weight: 700 !important;
         }
 
+        body.light-theme .btn-check {
+            background: #6d28d9 !important;
+            color: #ffffff !important;
+            font-weight: bold !important;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .btn-check:hover {
+                background: #5b21b6 !important;
+                color: #ffffff !important;
+            }
+        }
+
         body.light-theme .modal-card {
             background: #ffffff !important;
-            border-color: #4f46e5 !important;
+            border: 3.5px solid #8b5cf6 !important;
             color: #1e1b4b !important;
-            box-shadow: 0 25px 60px rgba(30, 27, 75, 0.2) !important;
+            box-shadow: 0 25px 60px rgba(76, 29, 149, 0.2) !important;
         }
 
         body.light-theme .modal-text {
@@ -2801,23 +2814,23 @@
         }
 
         body.light-theme .timer-hint {
-            color: #4338ca !important;
+            color: #5b21b6 !important;
         }
 
         body.light-theme .timer.paused {
-            background: #4338ca !important;
-            border-color: #6366f1 !important;
-            box-shadow: 0 0 25px rgba(99, 102, 241, 0.45) !important;
+            background: #5b21b6 !important;
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.45) !important;
         }
 
         body.light-theme .timer.paused::before,
         body.light-theme .timer.paused::after {
-            background-color: #c7d2fe !important;
-            box-shadow: 0 0 10px #c7d2fe !important;
+            background-color: #fef08a !important;
+            box-shadow: 0 0 10px #fef08a !important;
         }
 
         body.light-theme .special-question-badge.badge-system {
-            color: #4338ca !important;
+            color: #5b21b6 !important;
             text-shadow: none !important;
         }
 
@@ -2828,18 +2841,20 @@
 
         body.light-theme .modal-card b,
         body.light-theme .modal-card strong {
-            color: #4338ca !important;
+            color: #6d28d9 !important;
+            font-weight: 800 !important;
         }
 
         body.light-theme .modal-answer {
-            background: #eef2ff !important;
-            color: #312e81 !important;
-            border: 2px solid #6366f1 !important;
+            background: #fefce8 !important;
+            color: #78350f !important;
+            border: 2px solid #f59e0b !important;
+            font-weight: 700 !important;
         }
 
         body.light-theme .modal-team-row {
-            background: #e0e7ff !important;
-            border: 1px solid #c7d2fe !important;
+            background: #f5f3ff !important;
+            border: 1.5px solid #ddd6fe !important;
         }
 
         body.light-theme .modal-team-title {
@@ -2849,18 +2864,19 @@
         body.light-theme .modal-badge-score {
             background: #ffffff !important;
             color: #1e1b4b !important;
-            border: 1px solid #c7d2fe !important;
+            border: 1.5px solid #cbd5e1 !important;
         }
 
         body.light-theme .modal-badge-bet {
-            background: #eef2ff !important;
-            color: #4338ca !important;
-            border: 1px solid #6366f1 !important;
+            background: #fef3c7 !important;
+            color: #78350f !important;
+            border: 1.5px solid #f59e0b !important;
+            font-weight: 700 !important;
         }
 
         body.light-theme .auction-team-card {
-            background: #e0e7ff !important;
-            border: 2px solid #c7d2fe !important;
+            background: #f5f3ff !important;
+            border: 2px solid #ddd6fe !important;
         }
 
         body.light-theme .auction-team-header {
@@ -2868,7 +2884,8 @@
         }
 
         body.light-theme .auction-team-header span:last-child {
-            color: #4338ca !important;
+            color: #92400e !important;
+            font-weight: 800 !important;
         }
 
         body.light-theme .auction-controls-row span {
@@ -2878,12 +2895,20 @@
         body.light-theme .modal-auction-input {
             background: #ffffff !important;
             color: #1e1b4b !important;
-            border-color: #4f46e5 !important;
+            border-color: #8b5cf6 !important;
         }
 
         body.light-theme .btn-close-modal {
-            background: #4338ca !important;
+            background: #6d28d9 !important;
             color: #ffffff !important;
+            font-weight: bold !important;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .btn-close-modal:hover {
+                background: #5b21b6 !important;
+                color: #ffffff !important;
+            }
         }
 
         body.light-theme .dev-card-section {
