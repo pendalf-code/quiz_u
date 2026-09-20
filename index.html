@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Викторина Город Ю</title>
     <link rel="icon"
-          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌆</text></svg>">
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏙️</text></svg>">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,26 +32,16 @@
             <div id="sub-menu-main">
                 <div class="menu-logo">ГОРОД Ю</div>
                 <div class="menu-subtitle">Место, где раскрываются таланты и создаётся будущее!</div>
-                <div class="setup-actions" style="flex-direction: column; gap: 20px; align-items: center;">
-                    <button class="btn btn-check menu-main-btn" onclick="checkSavedGame()">▶️ Играть</button>
-                    <button class="btn btn-check menu-main-btn" onclick="showJeopardyRules()"
-                            style="background: var(--purple-medium); color: white;">📖 Правила игры
-                    </button>
-                    <button class="btn btn-check menu-main-btn" onclick="openPrepareQuestionsChoice()"
-                            style="background: var(--purple-medium); color: white;">🛠️ Подготовить вопросы
-                    </button>
-                    <button class="btn btn-check menu-main-btn" onclick="showSubScreen('sub-menu-settings')"
-                            style="background: var(--purple-medium); color: white;">⚙️ Настройки
-                    </button>
-                    <button class="btn btn-check menu-main-btn" onclick="openDevMenu()"
-                            style="background: #e67e22; color: white;">🧪 Для тестирования
-                    </button>
+                <div class="setup-actions" style="flex-direction: column; gap: 18px; align-items: center;">
+                    <button class="btn menu-main-btn btn-menu-play" onclick="checkSavedGame()">▶️ Играть</button>
+                    <button class="btn menu-main-btn btn-menu-packs" onclick="openPrepareQuestionsChoice()">🛠️ Подготовить вопросы</button>
+                    <button class="btn menu-main-btn btn-menu-rules" onclick="showJeopardyRules()">📖 Правила игры</button>
+                    <button class="btn menu-main-btn btn-menu-settings" onclick="showSubScreen('sub-menu-settings')">⚙️ Настройки</button>
+                    <button class="btn menu-main-btn btn-menu-dev" onclick="openDevMenu()">🧪 Для тестирования</button>
                 </div>
             </div>
 
-
             <!-- Sub-screen: Выбор способа подготовки вопросов -->
-
             <div id="sub-menu-prepare-choice" style="display: none; width: 100%;">
 
                 <div class="prepare-choice-header">
@@ -75,14 +65,14 @@
 
                         <div class="prepare-card-desc">
 
-                            Большая библиотека из <b>200+ готовых викторин</b> на любые темы: кино, мультфильмы, музыка,
+                            Большая библиотека из <b>300+ готовых викторин</b> на любые темы: кино, мультфильмы, музыка,
                             игры, наука, животные, мемы и сказки! Удобные фильтры по сложности и раундам.
 
                         </div>
 
                         <div class="prepare-card-features">
 
-                            <span class="choice-feat-chip">✨ 200+ паков</span>
+                            <span class="choice-feat-chip">✨ 300+ паков</span>
 
                             <span class="choice-feat-chip">🎯 4 уровня сложности</span>
 
@@ -104,7 +94,7 @@
 
                         <div class="prepare-card-badge badge-custom-flag">💾 Свой файл</div>
 
-                        <div class="prepare-card-icon">📤</div>
+                        <div class="prepare-card-icon">📥</div>
 
                         <div class="prepare-card-title">Загрузить свой пак</div>
 
@@ -270,7 +260,7 @@
                             <select id="catalog-category-select" class="catalog-styled-select"
                                     onchange="handleCatalogFiltersChanged()">
 
-                                <option value="all">🌈 Все категории (200+ тем)</option>
+                                <option value="all">🌈 Все категории (300+ тем)</option>
 
                                 <option value="01_Мультфильмы_и_Сказки">🎨 Мультфильмы и Сказки</option>
 

@@ -2030,13 +2030,72 @@
             word-break: break-word;
         }
 
+        /* --------------------------------------------------------------------------
+           MAIN MENU VERTICAL BUTTONS (Pleasing, Balanced, Harmonious Theme Colors)
+           -------------------------------------------------------------------------- */
         .menu-main-btn {
             width: 440px !important;
-            height: 72px !important;
-            font-size: 22px !important;
-            padding: 0 25px !important;
-            border-radius: 60px !important;
-            min-height: 48px;
+            height: 68px !important;
+            font-size: 21px !important;
+            font-weight: 800 !important;
+            padding: 0 26px !important;
+            border-radius: 50px !important;
+            min-height: 48px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 12px !important;
+            border: 2px solid transparent !important;
+            cursor: pointer !important;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease !important;
+            box-sizing: border-box !important;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-menu-play {
+            background: var(--gold-accent) !important;
+            color: var(--purple-dark) !important;
+            box-shadow: 0 6px 20px rgba(253, 216, 53, 0.35) !important;
+        }
+
+        .btn-menu-packs,
+        .btn-menu-rules,
+        .btn-menu-settings {
+            background: var(--purple-medium) !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 18px rgba(76, 55, 153, 0.35) !important;
+        }
+
+        .btn-menu-dev {
+            background: #e67e22 !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 18px rgba(230, 126, 34, 0.3) !important;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .btn-menu-play:hover {
+                background: var(--gold-hover) !important;
+                transform: translateY(-3px) scale(1.015) !important;
+                box-shadow: 0 10px 25px rgba(253, 216, 53, 0.5) !important;
+            }
+
+            .btn-menu-packs:hover,
+            .btn-menu-rules:hover,
+            .btn-menu-settings:hover {
+                background: #5d45b5 !important;
+                transform: translateY(-3px) scale(1.015) !important;
+                box-shadow: 0 10px 25px rgba(76, 55, 153, 0.5) !important;
+            }
+
+            .btn-menu-dev:hover {
+                background: #d35400 !important;
+                transform: translateY(-3px) scale(1.015) !important;
+                box-shadow: 0 10px 25px rgba(230, 126, 34, 0.5) !important;
+            }
+        }
+
+        .menu-main-btn:active {
+            transform: scale(0.98) !important;
         }
 
         /* Modals & Dialogs */
@@ -2788,6 +2847,71 @@
             color: #334155 !important;
         }
 
+        /* Light Theme Distinct Soft Colorful Buttons (Eye-friendly & harmonious) */
+        body.light-theme .btn-menu-play {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.28) !important;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .btn-menu-play:hover {
+                background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+                box-shadow: 0 10px 24px rgba(16, 185, 129, 0.42) !important;
+            }
+        }
+
+        body.light-theme .btn-menu-packs {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 18px rgba(139, 92, 246, 0.28) !important;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .btn-menu-packs:hover {
+                background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+                box-shadow: 0 10px 24px rgba(139, 92, 246, 0.42) !important;
+            }
+        }
+
+        body.light-theme .btn-menu-rules {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 18px rgba(245, 158, 11, 0.28) !important;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .btn-menu-rules:hover {
+                background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+                box-shadow: 0 10px 24px rgba(245, 158, 11, 0.42) !important;
+            }
+        }
+
+        body.light-theme .btn-menu-settings {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 18px rgba(59, 130, 246, 0.28) !important;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .btn-menu-settings:hover {
+                background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+                box-shadow: 0 10px 24px rgba(59, 130, 246, 0.42) !important;
+            }
+        }
+
+        body.light-theme .btn-menu-dev {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 18px rgba(249, 115, 22, 0.25) !important;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            body.light-theme .btn-menu-dev:hover {
+                background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+                box-shadow: 0 10px 24px rgba(249, 115, 22, 0.38) !important;
+            }
+        }
         body.light-theme .btn-check {
             background: #6d28d9 !important;
             color: #ffffff !important;
