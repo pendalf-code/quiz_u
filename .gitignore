@@ -9,6 +9,8 @@
 Thumbs.db
 Desktop.ini
 .DS_Store
+$RECYCLE.BIN/
+$AV_NLL/
 
 # Logs and runtime artifacts
 *.log
@@ -19,3 +21,4 @@ yarn-error.log*
 # Temporary files
 *.tmp
 *.bak
+scratch/
