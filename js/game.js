@@ -1,4 +1,4 @@
-﻿    let audioCtx = null;
+    let audioCtx = null;
     let fireworksInterval = null;
     let isTestMode = false;
 
@@ -889,6 +889,8 @@
             const skipBtn = document.getElementById('btn-skip-round');
             if (skipBtn) skipBtn.style.display = (currentRoundIndex < gameData.length - 1) ? 'inline-block' : 'none';
 
+            const teamsWrapper = document.getElementById('teams-block-wrapper');
+            if (teamsWrapper) teamsWrapper.style.display = 'block';
             const panel = document.getElementById('main-teams-panel'),
                 title = document.getElementById('teams-block-title');
             if (panel) {
@@ -1044,7 +1046,7 @@
     }
 
     function hideGameLayout() {
-        ['game-board', 'game-header-block', 'main-teams-panel', 'teams-block-title'].forEach(id => {
+        ['game-board', 'game-header-block', 'main-teams-panel', 'teams-block-title', 'teams-block-wrapper'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
@@ -1647,7 +1649,7 @@
         if (!panel) return;
 
         const maxScore = teams.length > 0 ? Math.max(...teams.map(t => t.score)) : 0;
-        const hasLeader = maxScore > 0;
+        const hasLeader = teams.length > 0 && (maxScore !== 0 || teams.some(t => t.score !== teams[0].score));
         const currentLeaders = hasLeader ? teams.filter(t => t.score === maxScore).map(t => t.name) : [];
         const currentLeadersStr = currentLeaders.slice().sort().join('|');
 
@@ -2871,7 +2873,7 @@
         listContainer.innerHTML = '';
 
         const maxScore = teams.length > 0 ? Math.max(...teams.map(t => t.score)) : 0;
-        const hasLeader = maxScore > 0;
+        const hasLeader = teams.length > 0 && (maxScore !== 0 || teams.some(t => t.score !== teams[0].score));
 
         teams.forEach((team, idx) => {
             const isActive = (idx === currentTurnTeamIdx);
