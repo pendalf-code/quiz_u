@@ -19,12 +19,21 @@ function normalizeRounds(data) {
 
 describe('Packs Integrity & Schema Tests', () => {
   const packsDataPath = path.join(__dirname, '..', 'js', 'packs_data.js');
+  const packsCatalogJsonPath = path.join(__dirname, '..', 'js', 'packs_catalog.json');
   const packsDir = path.join(__dirname, '..', 'паки вопросов');
 
   it('js/packs_data.js must exist and contain no replacement characters (\\uFFFD)', () => {
     assert.ok(fs.existsSync(packsDataPath), 'js/packs_data.js does not exist');
     const content = fs.readFileSync(packsDataPath, 'utf8');
     assert.strictEqual(content.includes('\uFFFD'), false, 'js/packs_data.js contains \\uFFFD!');
+  });
+
+  it('js/packs_catalog.json must exist and be valid JSON', () => {
+    assert.ok(fs.existsSync(packsCatalogJsonPath), 'js/packs_catalog.json does not exist');
+    const content = fs.readFileSync(packsCatalogJsonPath, 'utf8');
+    const catalog = JSON.parse(content);
+    assert.ok(Array.isArray(catalog), 'Catalog must be an array');
+    assert.ok(catalog.length >= 200, `Expected >= 200 packs in catalog, got ${catalog.length}`);
   });
 
   it('js/packs_data.js must load and export a non-empty window.AVAILABLE_PACKS array', () => {
@@ -37,7 +46,7 @@ describe('Packs Integrity & Schema Tests', () => {
     assert.ok(sandbox.window.AVAILABLE_PACKS.length >= 200, `Expected >= 200 packs, got ${sandbox.window.AVAILABLE_PACKS.length}`);
   });
 
-  it('every pack in js/packs_data.js must have valid schema', () => {
+  it('every pack in catalog must have valid metadata and valid JSON file with questions in "паки вопросов"', () => {
     const sandbox = { window: {} };
     const code = fs.readFileSync(packsDataPath, 'utf8');
     vm.createContext(sandbox);
@@ -50,9 +59,18 @@ describe('Packs Integrity & Schema Tests', () => {
       assert.ok(pack.title && typeof pack.title === 'string', `Pack #${idx} missing title`);
       assert.ok(pack.category && typeof pack.category === 'string', `Pack "${pack.title}" missing category`);
       assert.ok(validDifficulties.includes(pack.difficulty), `Pack "${pack.title}" invalid difficulty: ${pack.difficulty}`);
+      assert.ok(pack.filePath && typeof pack.filePath === 'string', `Pack "${pack.title}" missing filePath`);
 
-      const rounds = normalizeRounds(pack.rounds);
-      assert.ok(rounds.length > 0, `Pack "${pack.title}" has no valid rounds`);
+      const fullFilePath = path.join(__dirname, '..', pack.filePath);
+      assert.ok(fs.existsSync(fullFilePath), `Pack "${pack.title}" JSON file not found at ${fullFilePath}`);
+
+      // Read pack data directly from individual JSON file
+      let raw = fs.readFileSync(fullFilePath, 'utf8');
+      if (raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1);
+      const fileData = JSON.parse(raw);
+
+      const rounds = normalizeRounds(fileData);
+      assert.ok(rounds.length > 0, `Pack "${pack.title}" in ${pack.filePath} has no valid rounds`);
 
       rounds.forEach((round, rIdx) => {
         assert.ok(round.roundName, `Pack "${pack.title}" round #${rIdx} missing roundName`);
@@ -100,8 +118,7 @@ describe('Packs Integrity & Schema Tests', () => {
       } catch (err) {
         assert.fail(`File ${file} is not valid JSON: ${err.message}`);
       }
-      const rounds = normalizeRounds(parsed);
-      assert.ok(rounds.length > 0, `File ${file} contains no valid rounds`);
+      assert.ok(parsed, `File ${file} parsed as empty/falsy`);
     });
   });
 });

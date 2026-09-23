@@ -1,5 +1,4 @@
-// Auto-generated question packs catalog metadata (points to individual JSON files in 'паки вопросов/')
-window.AVAILABLE_PACKS = [
+[
   {
     "id": "pack_001_муль",
     "title": "Золотая классика Союзмультфильма",
@@ -14222,4 +14221,4 @@ window.AVAILABLE_PACKS = [
     "questionsCount": 0,
     "filePath": "паки вопросов/11_Логика_и_Загадки/406_Гранд-тест эрудиции и дедукции.json"
   }
-];
+]

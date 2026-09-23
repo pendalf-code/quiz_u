@@ -1880,7 +1880,10 @@
 
         if (qTextElem) {
             if (question.q && question.q.trim().length > 0) {
-                qTextElem.textContent = question.q;
+                const renderFn = (typeof window !== 'undefined' && typeof window.renderMathInString === 'function')
+                    ? window.renderMathInString
+                    : (str => str);
+                qTextElem.innerHTML = renderFn(question.q);
                 qTextElem.style.display = 'block';
             } else {
                 qTextElem.textContent = '';
@@ -1888,7 +1891,10 @@
             }
         }
 
-        document.getElementById('modal-answer-text').textContent = "Правильный ответ: " + question.a;
+        const renderFn = (typeof window !== 'undefined' && typeof window.renderMathInString === 'function')
+            ? window.renderMathInString
+            : (str => str);
+        document.getElementById('modal-answer-text').innerHTML = "Правильный ответ: " + renderFn(question.a);
         if (ansImgElement) {
             ansImgElement.classList.remove('img-error');
             ansImgElement.src = "";
@@ -2260,7 +2266,10 @@
 
         if (qTextElem) {
             if (question && question.q && question.q.trim().length > 0) {
-                qTextElem.textContent = question.q;
+                const renderFn = (typeof window !== 'undefined' && typeof window.renderMathInString === 'function')
+                    ? window.renderMathInString
+                    : (str => str);
+                qTextElem.innerHTML = renderFn(question.q);
                 qTextElem.style.display = 'block';
             } else {
                 qTextElem.style.display = 'none';

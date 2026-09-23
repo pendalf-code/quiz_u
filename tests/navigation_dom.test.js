@@ -2,8 +2,25 @@
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 describe('Navigation & DOM Integrity Tests', () => {
+  it('all local JS scripts referenced in index.html must parse with valid syntax', () => {
+    const scriptMatches = [...indexHtml.matchAll(/<script[^>]+src=["']([^"']+)["']/g)];
+    assert.ok(scriptMatches.length > 0, 'No scripts found in index.html');
+    for (const match of scriptMatches) {
+      const src = match[1];
+      if (!src.startsWith('http')) {
+        const fullPath = path.join(__dirname, '..', src);
+        assert.ok(fs.existsSync(fullPath), `Script file ${src} must exist`);
+        const scriptCode = fs.readFileSync(fullPath, 'utf8');
+        assert.doesNotThrow(() => {
+          new vm.Script(scriptCode);
+        }, `Script ${src} has syntax errors!`);
+      }
+    }
+  });
+
   const indexPath = path.join(__dirname, '..', 'index.html');
   const indexHtml = fs.readFileSync(indexPath, 'utf8');
 

@@ -3932,3 +3932,106 @@
         min-height: 44px !important;
     }
 }
+
+
+/* ==========================================================
+   Math Formula Rendering Styles (KaTeX & Offline Fallback)
+   ========================================================== */
+.math-formula,
+.math-katex-wrapper {
+    font-family: 'Cambria Math', 'KaTeX_Math', 'Times New Roman', serif;
+    font-weight: 600;
+    color: var(--gold-accent, #ffd166);
+    background: rgba(255, 209, 102, 0.12);
+    border: 1px solid rgba(255, 209, 102, 0.35);
+    border-radius: 8px;
+    padding: 2px 8px;
+    margin: 2px 4px;
+    display: inline-block;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+    line-height: normal;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.math-formula:hover,
+.math-katex-wrapper:hover {
+    background: rgba(255, 209, 102, 0.2);
+    border-color: var(--gold-accent, #ffd166);
+    transform: scale(1.02);
+}
+
+.math-formula-prominent {
+    display: inline-block;
+    padding: 6px 14px;
+    margin: 8px 4px;
+    background: rgba(255, 209, 102, 0.16);
+    border: 1.5px solid var(--gold-accent, #ffd166);
+    border-radius: 12px;
+    font-size: 1.05em;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+}
+
+.math-formula sup {
+    font-size: 0.72em;
+    vertical-align: super;
+    line-height: 0;
+    margin-left: 1px;
+}
+
+.math-formula sub {
+    font-size: 0.72em;
+    vertical-align: sub;
+    line-height: 0;
+    margin-left: 1px;
+}
+
+.math-formula-block {
+    display: block;
+    text-align: center;
+    margin: 18px auto;
+    padding: 14px 22px;
+    font-size: clamp(20px, 2.5vw, 28px);
+    background: rgba(255, 209, 102, 0.12);
+    border: 2px solid rgba(255, 209, 102, 0.45);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    max-width: 90%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.katex {
+    font-size: 1.15em !important;
+    color: var(--gold-accent, #ffd166) !important;
+}
+
+.katex-display {
+    margin: 12px 0 !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* Light Theme overrides for Math Formulas */
+body.light-theme .math-formula,
+body.light-theme .math-katex-wrapper {
+    color: #92400e;
+    background: rgba(245, 158, 11, 0.14);
+    border-color: rgba(217, 119, 6, 0.5);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .math-formula-prominent {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: #d97706;
+}
+
+body.light-theme .math-formula-block {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(217, 119, 6, 0.6);
+}
+
+body.light-theme .katex {
+    color: #92400e !important;
+}

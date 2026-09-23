@@ -3,6 +3,7 @@ const path = require('path');
 
 const PACKS_DIR = path.join(__dirname, '..', 'паки вопросов');
 const OUTPUT_FILE = path.join(__dirname, '..', 'js', 'packs_data.js');
+const OUTPUT_JSON = path.join(__dirname, '..', 'js', 'packs_catalog.json');
 
 const categoryIcons = {
   '01_Мультфильмы_и_Сказки': '🎨',
@@ -56,7 +57,7 @@ function main() {
       const numStr = match ? match[1] : '000';
       const cleanTitle = match ? match[2] : file.replace('.json', '');
 
-      // Normalize rounds array
+      // Normalize rounds array for metadata extraction
       let roundsArray = [];
       if (Array.isArray(data)) {
         roundsArray = data;
@@ -69,11 +70,22 @@ function main() {
       const roundsCount = nonFinalRounds.length > 0 ? nonFinalRounds.length : roundsArray.length;
 
       const themeNames = [];
+      let hasMedia = false;
+      let questionsCount = 0;
+
       roundsArray.forEach(r => {
         if (r.themes && Array.isArray(r.themes)) {
           r.themes.forEach(t => {
             if (t.name && !t.name.toLowerCase().includes('финал')) {
               themeNames.push(t.name);
+            }
+            if (t.questions && Array.isArray(t.questions)) {
+              questionsCount += t.questions.length;
+              t.questions.forEach(q => {
+                if (q.img || q.audio || q.video || q.q_img || q.a_img) {
+                  hasMedia = true;
+                }
+              });
             }
           });
         }
@@ -92,6 +104,9 @@ function main() {
         difficulty = 'hard';
       }
 
+      // Relative path to JSON pack file
+      const relativeJsonPath = `паки вопросов/${folder}/${file}`;
+
       const packObj = {
         id: `pack_${numStr}_${catName.slice(0, 4).toLowerCase()}`,
         title: cleanTitle,
@@ -102,13 +117,14 @@ function main() {
         roundsCount: roundsCount,
         hasFinal: hasFinal,
         description: `Увлекательная викторина по теме '${cleanTitle}'. Прекрасно подходит для игры любой компанией!`,
-        hasMedia: true,
+        hasMedia: hasMedia,
         hasCat: true,
         hasAuction: true,
         tags: [catName.toLowerCase(), 'викторина', 'квиз', 'эрудиция'],
         themeNames: themeNames,
-        rounds: roundsArray,
-        themesList: themeNames
+        themesList: themeNames,
+        questionsCount: questionsCount,
+        filePath: relativeJsonPath
       };
 
       allPacks.push(packObj);
@@ -122,9 +138,17 @@ function main() {
     return numA - numB;
   });
 
-  const jsContent = `window.AVAILABLE_PACKS = ${JSON.stringify(allPacks, null, 2)};\n`;
+  // 1. Output lightweight packs_catalog.json (~80 KB instead of 9.6 MB!)
+  const jsonCatalogStr = JSON.stringify(allPacks, null, 2);
+  fs.writeFileSync(OUTPUT_JSON, jsonCatalogStr, 'utf8');
+
+  // 2. Output lightweight JS metadata manifest (window.AVAILABLE_PACKS) for instant offline catalog rendering
+  const jsContent = `// Auto-generated question packs catalog metadata (points to individual JSON files in 'паки вопросов/')\nwindow.AVAILABLE_PACKS = ${jsonCatalogStr};\n`;
   fs.writeFileSync(OUTPUT_FILE, jsContent, 'utf8');
-  console.log(`Synced ${allPacks.length} packs to ${OUTPUT_FILE}`);
+
+  console.log(`Synced ${allPacks.length} packs to:`);
+  console.log(` - ${OUTPUT_JSON} (${Math.round(jsonCatalogStr.length / 1024)} KB)`);
+  console.log(` - ${OUTPUT_FILE} (${Math.round(jsContent.length / 1024)} KB)`);
 }
 
 main();

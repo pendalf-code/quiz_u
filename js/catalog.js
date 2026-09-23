@@ -1,7 +1,7 @@
 /**
  * Question Packs Catalog Module
  * Provides rich UI for browsing, filtering, searching, previewing, and loading
- * over 200 ready-to-play Jeopardy question packs.
+ * ready-to-play Jeopardy question packs directly from JSON files.
  */
 
 const CATALOG_PAGE_SIZE = 10;
@@ -24,11 +24,30 @@ function openCustomPackEditor() {
     }
 }
 
-function openPacksCatalog() {
+async function ensureCatalogLoaded() {
+    if (window.AVAILABLE_PACKS && Array.isArray(window.AVAILABLE_PACKS) && window.AVAILABLE_PACKS.length > 0) {
+        return window.AVAILABLE_PACKS;
+    }
+    try {
+        const resp = await fetch('js/packs_catalog.json');
+        if (resp.ok) {
+            window.AVAILABLE_PACKS = await resp.json();
+            return window.AVAILABLE_PACKS;
+        }
+    } catch (e) {
+        console.warn('Could not fetch packs_catalog.json:', e);
+    }
+    return window.AVAILABLE_PACKS || [];
+}
+
+async function openPacksCatalog() {
     if (typeof showSubScreen === 'function') {
         showSubScreen('sub-menu-packs-catalog');
     }
     initCatalogFilters();
+    if (!window.AVAILABLE_PACKS || window.AVAILABLE_PACKS.length === 0) {
+        await ensureCatalogLoaded();
+    }
     renderCatalogPacks();
 }
 
@@ -403,7 +422,7 @@ function renderCatalogPacks() {
                     <span class="pack-mini-pill">⏱️ ${roundsBadgeText}</span>
                     ${pack.hasFinal ? '<span class="pack-mini-pill pill-final">🏆 С финалом</span>' : ''}
                     ${pack.hasMedia ? '<span class="pack-mini-pill pill-media">🎬 Аудио/Видео</span>' : ''}
-                    ${pack.hasCatInBag ? '<span class="pack-mini-pill pill-cat">🐱 Кот</span>' : ''}
+                    ${pack.hasCatInBag || pack.hasCat ? '<span class="pack-mini-pill pill-cat">🐱 Кот</span>' : ''}
                     ${pack.hasAuction ? '<span class="pack-mini-pill pill-auction">💰 Аукцион</span>' : ''}
                 </div>
 
@@ -416,7 +435,7 @@ function renderCatalogPacks() {
 
                 <div class="pack-card-actions">
                     <button type="button" class="btn btn-pack-play" onclick="selectPackToPlay('${pack.id}')" title="Начать викторину с этим паком">▶️ Играть</button>
-                    <button type="button" class="btn btn-pack-preview" onclick="previewPack('${pack.id}')" title="Посмотреть темы и вопросы">👁️ Темы</button>
+                    <button type="button" class="btn btn-pack-preview" onclick="previewPack('${pack.id}')" title="Посмотреть темы и структуру вопросов">👁️ Темы</button>
                     <button type="button" class="btn btn-pack-download" onclick="downloadPackById('${pack.id}')" title="Скачать файл пака (.json)">📥 .JSON</button>
                 </div>
             </div>
@@ -446,8 +465,8 @@ function renderCatalogPacks() {
 }
 
 function getPackRoundsArray(pack) {
-    if (!pack || !pack.rounds) return [];
-    if (Array.isArray(pack.rounds)) return pack.rounds;
+    if (!pack) return [];
+    if (pack.rounds && Array.isArray(pack.rounds)) return pack.rounds;
     if (typeof pack.rounds === 'object') {
         if (Array.isArray(pack.rounds.value)) return pack.rounds.value;
         if (Array.isArray(pack.rounds.rounds)) return pack.rounds.rounds;
@@ -456,7 +475,53 @@ function getPackRoundsArray(pack) {
     return [];
 }
 
-function selectPackToPlay(packId) {
+/**
+ * Loads pack data directly from the individual JSON file in 'паки вопросов/'
+ */
+async function loadPackJsonData(pack) {
+    if (!pack) throw new Error('Данные пака не переданы');
+
+    // If rounds are already loaded into memory
+    if (pack.rounds && Array.isArray(pack.rounds) && pack.rounds.length > 0) {
+        return pack.rounds;
+    }
+
+    const filePath = pack.filePath || pack.path;
+    if (!filePath) {
+        throw new Error('Путь к файлу пака не указан в метаданных');
+    }
+
+    try {
+        const response = await fetch(encodeURI(filePath));
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        let raw = await response.text();
+        if (raw.charCodeAt(0) === 0xFEFF) {
+            raw = raw.slice(1);
+        }
+        const parsed = JSON.parse(raw);
+        const normalized = (typeof normalizeGameData === 'function')
+            ? normalizeGameData(parsed)
+            : (Array.isArray(parsed) ? parsed : [parsed]);
+
+        pack.rounds = normalized;
+        return normalized;
+    } catch (err) {
+        console.error('Ошибка загрузки JSON файла пака:', err);
+        if (window.location && window.location.protocol === 'file:') {
+            throw new Error(
+                `Браузер заблокировал доступ к файлу '${filePath}' из-за ограничений протокола file://.\n\n` +
+                `Чтобы играть:\n` +
+                `1. Откройте проект через локальный веб-сервер (например, в IntelliJ IDEA нажмите иконку браузера в index.html, либо запустите любой локальный HTTP-сервер).\n` +
+                `2. Либо перейдите в меню «Свой пакет» и загрузите этот файл через кнопку «Загрузить свой пак (.json)».`
+            );
+        }
+        throw new Error(`Не удалось загрузить пак из файла: ${err.message}`);
+    }
+}
+
+async function selectPackToPlay(packId) {
     const packs = window.AVAILABLE_PACKS || [];
     const pack = packs.find(p => p.id === packId);
     if (!pack) {
@@ -467,8 +532,14 @@ function selectPackToPlay(packId) {
     }
 
     try {
-        // Close modal if open
+        // Close preview modal if open
         closePackPreviewModal();
+
+        // Load pack questions directly from JSON file
+        const roundsData = await loadPackJsonData(pack);
+        if (!roundsData || roundsData.length === 0) {
+            throw new Error('Файл пака не содержит раундов с вопросами');
+        }
 
         // Clear previous in-progress game save
         if (typeof clearGameState === 'function') {
@@ -477,12 +548,10 @@ function selectPackToPlay(packId) {
             localStorage.removeItem('quiz_save_state');
         }
 
-        // Set game data
+        // Set game data into game engine
         if (typeof window.setGameData === 'function') {
-            const roundsData = getPackRoundsArray(pack);
             window.setGameData(roundsData);
         } else {
-            const roundsData = getPackRoundsArray(pack);
             localStorage.setItem('jeopardy_pack', JSON.stringify(roundsData));
             const editor = document.getElementById('json-editor');
             if (editor) editor.value = JSON.stringify(roundsData, null, 4);
@@ -499,17 +568,19 @@ function selectPackToPlay(packId) {
         }
 
         if (typeof showSystemModal === 'function') {
-            showSystemModal('Пак загружен! 🎉', `Пак «${pack.title}» готов к игре! Выберите команды и приступайте к викторине.`);
+            showSystemModal('Пак загружен! 🎉', `Пак «${pack.title}» успешно загружен из JSON-файла!\nВыберите команды и приступайте к игре.`);
         }
     } catch (err) {
         console.error('Error loading pack:', err);
         if (typeof showSystemModal === 'function') {
-            showSystemModal('Ошибка', 'Не удалось загрузить пак: ' + err.message);
+            showSystemModal('Ошибка загрузки JSON', err.message);
+        } else {
+            alert('Ошибка загрузки: ' + err.message);
         }
     }
 }
 
-function previewPack(packId) {
+async function previewPack(packId) {
     const packs = window.AVAILABLE_PACKS || [];
     const pack = packs.find(p => p.id === packId);
     if (!pack) return;
@@ -545,30 +616,50 @@ function previewPack(packId) {
 
     const roundsContainer = document.getElementById('preview-rounds-container');
     if (roundsContainer) {
-        roundsContainer.innerHTML = '';
+        // Immediately render themes from manifest metadata
+        const fallbackThemes = (pack.themeNames || pack.themesList || []);
+        let initialThemesHtml = fallbackThemes.map(th => `
+            <div class="preview-theme-item">
+                <span class="preview-theme-item-name">📌 ${th}</span>
+                <span class="preview-theme-costs">Вопросы по номиналу</span>
+            </div>
+        `).join('');
 
-        const packRounds = getPackRoundsArray(pack);
-        packRounds.forEach((round, rIdx) => {
-            const roundBox = document.createElement('div');
-            roundBox.className = 'preview-round-box';
+        roundsContainer.innerHTML = `
+            <div class="preview-round-box">
+                <div class="preview-round-name">📁 Темы викторины</div>
+                <div class="preview-themes-grid">${initialThemesHtml || '<p style="color: rgba(255,255,255,0.6)">Загрузка структуры пака...</p>'}</div>
+            </div>
+        `;
 
-            let themesHtml = '';
-            (round.themes || []).forEach(theme => {
-                const costs = (theme.questions || []).map(q => q.cost).filter(Boolean).join(', ');
-                const countQ = (theme.questions || []).length;
-                themesHtml += `
-                    <div class="preview-theme-item">
-                        <span class="preview-theme-item-name">📌 ${theme.name}</span>
-                        <span class="preview-theme-costs">Вопросы (${countQ} шт.): <b>${costs || 'по номиналу'}</b> баллов</span>
-                    </div>
+        // Asynchronously load detailed questions from the JSON file
+        loadPackJsonData(pack).then(packRounds => {
+            if (!packRounds || packRounds.length === 0) return;
+            roundsContainer.innerHTML = '';
+            packRounds.forEach((round, rIdx) => {
+                const roundBox = document.createElement('div');
+                roundBox.className = 'preview-round-box';
+
+                let themesHtml = '';
+                (round.themes || []).forEach(theme => {
+                    const costs = (theme.questions || []).map(q => q.cost).filter(Boolean).join(', ');
+                    const countQ = (theme.questions || []).length;
+                    themesHtml += `
+                        <div class="preview-theme-item">
+                            <span class="preview-theme-item-name">📌 ${theme.name}</span>
+                            <span class="preview-theme-costs">Вопросы (${countQ} шт.): <b>${costs || 'по номиналу'}</b> баллов</span>
+                        </div>
+                    `;
+                });
+
+                roundBox.innerHTML = `
+                    <div class="preview-round-name">📁 ${round.roundName || round.name || ('Раунд ' + (rIdx + 1))}</div>
+                    <div class="preview-themes-grid">${themesHtml}</div>
                 `;
+                roundsContainer.appendChild(roundBox);
             });
-
-            roundBox.innerHTML = `
-                <div class="preview-round-name">📁 ${round.roundName || round.name || ('Раунд ' + (rIdx + 1))}</div>
-                <div class="preview-themes-grid">${themesHtml}</div>
-            `;
-            roundsContainer.appendChild(roundBox);
+        }).catch(err => {
+            console.warn('Could not load detailed questions from JSON:', err.message);
         });
     }
 
@@ -606,26 +697,33 @@ function closePackPreviewModal() {
     }
 }
 
-function downloadPackById(packId) {
+async function downloadPackById(packId) {
     const packs = window.AVAILABLE_PACKS || [];
     const pack = packs.find(p => p.id === packId);
-    if (!pack || !pack.rounds) {
-        if (typeof showSystemModal === 'function') {
-            showSystemModal('Ошибка', 'Данные пака недоступны для скачивания.');
-        }
-        return;
-    }
+    if (!pack) return;
 
-    const jsonStr = JSON.stringify(pack.rounds, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = (pack.title || 'pack').replace(/[^a-zA-Zа-яА-Я0-9_-]/g, '_') + '.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+        let rounds = pack.rounds;
+        if (!rounds || rounds.length === 0) {
+            rounds = await loadPackJsonData(pack);
+        }
+        const jsonStr = JSON.stringify(rounds, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (pack.title || 'quiz_pack').replace(/[\\/:*?"<>|]/g, '_') + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        if (typeof showSystemModal === 'function') {
+            showSystemModal('Файл пака', `Файл пака расположен на диске по пути:\n${pack.filePath || 'паки вопросов/'}`);
+        } else {
+            alert('Файл пака: ' + (pack.filePath || pack.title));
+        }
+    }
 }
 
 // Global exports on window
@@ -645,3 +743,5 @@ window.selectPackToPlay = selectPackToPlay;
 window.previewPack = previewPack;
 window.closePackPreviewModal = closePackPreviewModal;
 window.downloadPackById = downloadPackById;
+window.loadPackJsonData = loadPackJsonData;
+window.ensureCatalogLoaded = ensureCatalogLoaded;
