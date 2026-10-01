@@ -60,6 +60,9 @@ describe('Packs Integrity & Schema Tests', () => {
       assert.ok(pack.category && typeof pack.category === 'string', `Pack "${pack.title}" missing category`);
       assert.ok(validDifficulties.includes(pack.difficulty), `Pack "${pack.title}" invalid difficulty: ${pack.difficulty}`);
       assert.ok(pack.filePath && typeof pack.filePath === 'string', `Pack "${pack.title}" missing filePath`);
+      assert.ok(Array.isArray(pack.themeNames) && pack.themeNames.length > 0, `Pack "${pack.title}" has empty or missing themeNames`);
+      assert.ok(typeof pack.roundsCount === 'number' && pack.roundsCount > 0, `Pack "${pack.title}" has roundsCount <= 0`);
+      assert.ok(typeof pack.questionsCount === 'number' && pack.questionsCount > 0, `Pack "${pack.title}" has questionsCount <= 0`);
 
       const fullFilePath = path.join(__dirname, '..', pack.filePath);
       assert.ok(fs.existsSync(fullFilePath), `Pack "${pack.title}" JSON file not found at ${fullFilePath}`);

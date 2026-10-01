@@ -61,6 +61,8 @@ function main() {
       let roundsArray = [];
       if (Array.isArray(data)) {
         roundsArray = data;
+      } else if (Array.isArray(data.rounds)) {
+        roundsArray = data.rounds;
       } else if (data.roundName || data.themes) {
         roundsArray = [data];
       }
