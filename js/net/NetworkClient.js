@@ -23,6 +23,9 @@ class NetworkClient {
         this.isConnected = false;
         this.selfPlayer = null;
         this.connectedHost = null;
+        this.hasHost = false;
+        this.isHostOnPC = false;
+        this.canStartGame = false;
         this.sessionToken = options.sessionToken || null;
         this.listeners = new Map();
         this.reconnectAttempts = 0;
@@ -151,6 +154,7 @@ class NetworkClient {
                 if (payload.player) {
                     if (payload.role === 'host' || payload.player.role === 'host') {
                         this.connectedHost = payload.player;
+                        this.hasHost = true;
                     }
                     this.connectedPlayers.set(payload.player.id, payload.player);
                 }
@@ -165,6 +169,7 @@ class NetworkClient {
                     }
                     if (this.connectedHost && this.connectedHost.id === payload.playerId) {
                         this.connectedHost.isConnected = false;
+                        this.hasHost = Boolean(this.isHostOnPC);
                     }
                 }
                 this.emit('player_left', payload);
@@ -173,9 +178,6 @@ class NetworkClient {
             case MSG.ROOM_STATE:
                 this.lastState = payload;
                 this._syncPlayersFromState(payload);
-                if (payload.host) {
-                    this.connectedHost = payload.host;
-                }
                 if (payload.self) {
                     this.selfPlayer = payload.self;
                 }
@@ -258,11 +260,21 @@ class NetworkClient {
     }
 
     _syncPlayersFromState(state) {
-        if (state && state.host) {
+        if (!state) return;
+        if (state.hasHost !== undefined) this.hasHost = Boolean(state.hasHost);
+        if (state.isHostOnPC !== undefined) this.isHostOnPC = Boolean(state.isHostOnPC);
+        if (state.canStartGame !== undefined) this.canStartGame = Boolean(state.canStartGame);
+
+        if (state.host) {
             this.connectedHost = state.host;
             this.connectedPlayers.set(state.host.id, state.host);
+            this.hasHost = true;
+        } else if (state.host === null) {
+            this.connectedHost = null;
+            if (!this.isHostOnPC) this.hasHost = false;
         }
-        if (state && Array.isArray(state.players)) {
+
+        if (Array.isArray(state.players)) {
             for (const p of state.players) {
                 this.connectedPlayers.set(p.id, p);
             }
@@ -290,6 +302,12 @@ class NetworkClient {
 
     setPack(pack) {
         return this.send(MSG.HOST_SET_PACK, { pack });
+    }
+
+    setLocalHost(isHostOnPC) {
+        this.isHostOnPC = Boolean(isHostOnPC);
+        if (this.isHostOnPC) this.hasHost = true;
+        return this.send(MSG.HOST_SET_LOCAL_HOST, { isHostOnPC: Boolean(isHostOnPC) });
     }
 
     startGame() {
@@ -360,11 +378,15 @@ class NetworkClient {
     }
 
     getPlayersList() {
-        return Array.from(this.connectedPlayers.values());
+        return Array.from(this.connectedPlayers.values()).filter(p => p.role !== 'host');
     }
 
     getHost() {
-        return this.connectedHost || Array.from(this.connectedPlayers.values()).find(p => p.role === 'host') || null;
+        if (this.connectedHost && this.connectedHost.isConnected) return this.connectedHost;
+        const roleHost = Array.from(this.connectedPlayers.values()).find(p => p.role === 'host' && p.isConnected);
+        if (roleHost) return roleHost;
+        if (this.isHostOnPC) return { id: 'host_pc', name: 'Ведущий (ПК)', role: 'host', isConnected: true };
+        return null;
     }
 
     getActivePlayersCount() {
@@ -388,6 +410,9 @@ class NetworkClient {
         this.hostToken = null;
         this.selfPlayer = null;
         this.connectedHost = null;
+        this.hasHost = false;
+        this.isHostOnPC = false;
+        this.canStartGame = false;
         this.connectedPlayers.clear();
     }
 }

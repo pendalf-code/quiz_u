@@ -61,6 +61,29 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         assert.ok(cssContent.includes('body.light-theme .online-lobby-title'), 'Light theme overrides must exist');
     });
 
+    test('TASK-05: Lobby UI contains readiness badges, local host toggle, and validation rules', () => {
+        assert.ok(htmlContent.includes('id="lobby-readiness-panel"'), 'Lobby readiness panel must exist');
+        assert.ok(htmlContent.includes('id="lobby-host-badge"'), 'Host readiness badge must exist');
+        assert.ok(htmlContent.includes('id="lobby-players-badge"'), 'Players readiness badge must exist');
+        assert.ok(htmlContent.includes('id="btn-toggle-local-host"'), 'Local host toggle button must exist');
+
+        const cssContent = fs.readFileSync(path.join(rootDir, 'css', 'style.css'), 'utf8');
+        assert.ok(cssContent.includes('.lobby-readiness-panel'), '.lobby-readiness-panel CSS must exist');
+        assert.ok(cssContent.includes('.readiness-badge'), '.readiness-badge CSS must exist');
+        assert.ok(cssContent.includes('.badge-ready'), '.badge-ready CSS must exist');
+        assert.ok(cssContent.includes('.badge-warning'), '.badge-warning CSS must exist');
+        assert.ok(cssContent.includes('.btn-toggle-local-host'), '.btn-toggle-local-host CSS must exist');
+
+        const { ERROR_CODES, MSG_TYPES } = require('../js/net/Protocol.js');
+        assert.equal(ERROR_CODES.NOT_ENOUGH_PLAYERS, 'NOT_ENOUGH_PLAYERS', 'NOT_ENOUGH_PLAYERS error code must exist');
+        assert.equal(ERROR_CODES.HOST_REQUIRED, 'HOST_REQUIRED', 'HOST_REQUIRED error code must exist');
+        assert.equal(MSG_TYPES.HOST_SET_LOCAL_HOST, 'HOST_SET_LOCAL_HOST', 'HOST_SET_LOCAL_HOST message type must exist');
+
+        const NetworkClient = require('../js/net/NetworkClient.js');
+        const client = new NetworkClient({ url: 'ws://127.0.0.1:8080', isHost: true });
+        assert.equal(typeof client.setLocalHost, 'function', 'client.setLocalHost method must exist');
+    });
+
     test('Network Protocol and NetworkClient modules instantiate correctly', () => {
         const { MSG_TYPES, ERROR_CODES, createMessage, parseMessage } = require('../js/net/Protocol.js');
         assert.ok(MSG_TYPES.HOST_CREATE_ROOM, 'HOST_CREATE_ROOM message type must exist');

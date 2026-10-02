@@ -400,10 +400,23 @@
             elements.hostCostBadge.textContent = `${state.currentCost} очков`;
         }
 
-        // Lobby action button (Start Game)
+        // Lobby action button (Start Game) (TASK-05 validation)
+        const activePlayers = (state.roomState && Array.isArray(state.roomState.players))
+            ? state.roomState.players.filter(p => p.isConnected && p.role !== 'host')
+            : [];
+        const canStart = activePlayers.length >= 2;
+
         if (elements.hostLobbyAction) {
             if (currentRoomState === 'LOBBY' || currentRoomState === 'INIT') {
                 elements.hostLobbyAction.style.display = 'block';
+                if (elements.btnHostStartGame) {
+                    elements.btnHostStartGame.disabled = !canStart;
+                    if (!canStart) {
+                        elements.btnHostStartGame.textContent = `🚀 Начать игру (Игроков: ${activePlayers.length}/2)`;
+                    } else {
+                        elements.btnHostStartGame.textContent = `🚀 Начать игру (${activePlayers.length} игроков)`;
+                    }
+                }
             } else {
                 elements.hostLobbyAction.style.display = 'none';
             }
@@ -927,6 +940,14 @@
         if (elements.btnHostStartGame) {
             elements.btnHostStartGame.addEventListener('click', () => {
                 if (!netClient) return;
+                const activePlayers = (state.roomState && Array.isArray(state.roomState.players))
+                    ? state.roomState.players.filter(p => p.isConnected && p.role !== 'host')
+                    : [];
+                if (activePlayers.length < 2) {
+                    haptic('buzz_lost');
+                    showToast(`⚠️ Требуется минимум 2 игрока (сейчас: ${activePlayers.length})`, 'warning');
+                    return;
+                }
                 netClient.startGame();
                 haptic('success');
                 showToast('Запуск игры...', 'success');
