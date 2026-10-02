@@ -175,6 +175,13 @@ class NetworkClient {
                 this.emit('player_left', payload);
                 break;
 
+            case MSG.ROOM_SETTINGS_UPDATED:
+                if (this.lastState && payload && payload.options) {
+                    this.lastState.options = payload.options;
+                }
+                this.emit('room_settings_updated', payload);
+                break;
+
             case MSG.ROOM_STATE:
                 this.lastState = payload;
                 this._syncPlayersFromState(payload);
@@ -302,6 +309,13 @@ class NetworkClient {
 
     setPack(pack) {
         return this.send(MSG.HOST_SET_PACK, { pack });
+    }
+
+    updateRoomSettings(settings) {
+        if (this.lastState && settings) {
+            this.lastState.options = { ...(this.lastState.options || {}), ...settings };
+        }
+        return this.send(MSG.HOST_UPDATE_ROOM_SETTINGS, { settings });
     }
 
     setLocalHost(isHostOnPC) {

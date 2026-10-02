@@ -625,6 +625,21 @@
                             </button>
                         </div>
 
+                        <!-- Game & Timer Settings Bar in Hub (TASK-01) -->
+                        <div class="lobby-settings-bar" id="lobby-settings-bar">
+                            <div class="lobby-settings-summary-row">
+                                <div class="lobby-settings-chips" id="lobby-settings-chips" onclick="openLobbySettingsModal()" title="Нажмите для настройки таймеров и штрафов">
+                                    <span class="setting-summary-chip" id="chip-reading-time">⏱️ Чтение: 7с</span>
+                                    <span class="setting-summary-chip" id="chip-thinking-time">🔥 Баззер: 30с</span>
+                                    <span class="setting-summary-chip" id="chip-answer-time">🎤 Ответ: 5с</span>
+                                    <span class="setting-summary-chip" id="chip-penalty">⚖️ Штраф: Номинал</span>
+                                </div>
+                                <button type="button" class="btn-configure-lobby-settings" id="btn-open-lobby-settings" onclick="openLobbySettingsModal()">
+                                    ⚙️ Настройки игры
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="lobby-players-list" id="lobby-players-list">
                             <div class="lobby-players-empty" id="lobby-players-empty">
                                 <div class="lobby-empty-icon">⏳</div>
@@ -937,6 +952,78 @@
     </div>
 
 </div>
+<!-- Modal: Настройки партии и таймеров в хабе подготовки (TASK-01) -->
+<div class="modal" id="lobby-settings-modal" style="display: none;">
+    <div class="modal-card lobby-settings-modal-card">
+        <div class="lobby-settings-modal-header">
+            <h2 class="lobby-settings-modal-title">⚙️ Настройки игры и таймеров</h2>
+            <button class="btn-close-modal-x" type="button" onclick="closeLobbySettingsModal()">&times;</button>
+        </div>
+
+        <div class="lobby-settings-modal-body">
+            <div class="settings-group-box">
+                <label class="settings-group-title">⏱️ Тайминги раунда и вопросов</label>
+
+                <div class="settings-row-box">
+                    <label class="settings-label" for="lobby-setting-reading-time">
+                        ⏱️ Время на чтение ведущим (сек):
+                    </label>
+                    <input type="number" id="lobby-setting-reading-time" class="setting-input-field" value="7" min="0" max="60">
+                </div>
+
+                <div class="settings-row-box">
+                    <label class="settings-label" for="lobby-setting-thinking-time">
+                        🔥 Общее время на размышление / окно баззера (сек):
+                    </label>
+                    <input type="number" id="lobby-setting-thinking-time" class="setting-input-field" value="30" min="5" max="120">
+                </div>
+
+                <div class="settings-row-box">
+                    <label class="settings-label" for="lobby-setting-answer-time">
+                        🎤 Персональное время игрока на ответ (сек):
+                    </label>
+                    <input type="number" id="lobby-setting-answer-time" class="setting-input-field" value="5" min="1" max="60">
+                </div>
+            </div>
+
+            <div class="settings-group-box">
+                <label class="settings-group-title">⚖️ Штрафы за неверный ответ</label>
+
+                <div class="settings-row-box">
+                    <label class="settings-checkbox-label" for="lobby-setting-penalty-enabled">
+                        <input type="checkbox" id="lobby-setting-penalty-enabled" checked onchange="toggleLobbyPenaltyInputs()">
+                        <span>Списывать очки при неверном ответе или таймауте</span>
+                    </label>
+                </div>
+
+                <div class="settings-row-box" id="lobby-penalty-mode-row">
+                    <label class="settings-label" for="lobby-setting-penalty-mode">Режим списания:</label>
+                    <select id="lobby-setting-penalty-mode" class="catalog-sort-dropdown" onchange="toggleLobbyPenaltyInputs()">
+                        <option value="nominal">Номинал вопроса (полная цена)</option>
+                        <option value="fixed">Фиксированный штраф</option>
+                    </select>
+                </div>
+
+                <div class="settings-row-box" id="lobby-penalty-fixed-group" style="display: none;">
+                    <label class="settings-label" for="lobby-setting-penalty-fixed-amount">
+                        Сумма штрафа (очков):
+                    </label>
+                    <input type="number" id="lobby-setting-penalty-fixed-amount" class="setting-input-field" value="100" min="10" step="50">
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-controls" style="margin-top: 24px; gap: 14px;">
+            <button class="btn btn-success" id="btn-save-lobby-settings" onclick="saveLobbySettings()">
+                💾 Сохранить и применить
+            </button>
+            <button class="btn btn-close-modal" onclick="closeLobbySettingsModal()">
+                Отмена
+            </button>
+        </div>
+    </div>
+</div>
+
     <!-- Scripts -->
 <!-- KaTeX Math Renderer with offline fallback -->
 <!-- Core Quiz Engine Modules -->

@@ -229,6 +229,14 @@ function handleClientMessage(ws, message) {
             break;
         }
 
+        case MSG_TYPES.HOST_UPDATE_ROOM_SETTINGS: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            const newOpts = payload && (payload.settings || payload.options);
+            room.updateOptions(newOpts);
+            break;
+        }
+
         case MSG_TYPES.HOST_SELECT_QUESTION: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
@@ -303,15 +311,6 @@ function handleClientMessage(ws, message) {
             ws.roomCode = room.code;
             ws.playerId = joinResult.player.id;
             ws.isHost = (joinResult.role === 'host');
-
-            const isHostClient = ws.isHost;
-            // Send initial state to the joined client (for host: full question; for player: answers stripped)
-            ws.send(createMessage(MSG_TYPES.ROOM_STATE, {
-                ...room.getStateSnapshot(!isHostClient),
-                self: isHostClient ? room.sanitizeHost(joinResult.player) : room.sanitizePlayer(joinResult.player),
-                sessionToken: joinResult.player.sessionToken,
-                role: joinResult.role || 'player'
-            }));
             break;
         }
 

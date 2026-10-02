@@ -243,4 +243,90 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         const toggleStart = toggleRoom.startGame();
         assert.equal(toggleStart.success, true);
     });
+
+    await t.test('TASK-01: Game and Timer Settings (Reading, Thinking, Answer Times & Penalty Modes)', () => {
+        const settingsWs = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
+        const testRoom = new Room('SETT', settingsWs, {
+            readingTime: 5,
+            thinkingTime: 25,
+            answerTime: 4,
+            penaltyEnabled: true,
+            penaltyMode: 'nominal',
+            penaltyFixedAmount: 100
+        });
+
+        // 1. Initial options initialization
+        assert.equal(testRoom.options.readingTime, 5);
+        assert.equal(testRoom.options.thinkingTime, 25);
+        assert.equal(testRoom.options.answerTime, 4);
+        assert.equal(testRoom.options.penaltyEnabled, true);
+        assert.equal(testRoom.options.penaltyMode, 'nominal');
+
+        // 2. Update options via room.updateOptions()
+        testRoom.updateOptions({
+            readingTime: 0,
+            thinkingTime: 45,
+            answerTime: 7,
+            penaltyEnabled: true,
+            penaltyMode: 'fixed',
+            penaltyFixedAmount: 150
+        });
+
+        assert.equal(testRoom.options.readingTime, 0);
+        assert.equal(testRoom.options.thinkingTime, 45);
+        assert.equal(testRoom.options.answerTime, 7);
+        assert.equal(testRoom.options.penaltyMode, 'fixed');
+        assert.equal(testRoom.options.penaltyFixedAmount, 150);
+
+        const updateMsg = settingsWs.messages.find(m => m.type === 'ROOM_SETTINGS_UPDATED');
+        assert.ok(updateMsg, 'Must broadcast ROOM_SETTINGS_UPDATED');
+        assert.equal(updateMsg.payload.options.penaltyFixedAmount, 150);
+
+        // 3. Penalty calculation: fixed mode
+        testRoom.currentCost = 300;
+        assert.equal(testRoom.getPenaltyAmount(), 150, 'Fixed penalty amount should be 150, ignoring 300 question cost');
+
+        // 4. Penalty calculation: nominal mode
+        testRoom.updateOptions({ penaltyMode: 'nominal' });
+        assert.equal(testRoom.getPenaltyAmount(), 300, 'Nominal penalty should equal current cost 300');
+
+        // 5. Penalty calculation: penalty disabled
+        testRoom.updateOptions({ penaltyEnabled: false });
+        assert.equal(testRoom.getPenaltyAmount(), 0, 'Disabled penalty should return 0 points deduction');
+
+        // 6. Penalty deduction in judgeAnswer (wrong answer)
+        const pWs = { messages: [], readyState: 1, send(d) {} };
+        const pJoin = testRoom.addPlayer('Штрафник', '🤖', pWs);
+        const pId = pJoin.player.id;
+        testRoom.updatePlayerScore(pId, 500);
+        assert.equal(testRoom.players.get(pId).score, 500);
+
+        // A. Wrong answer with disabled penalty -> score remains 500
+        testRoom.stateMachine.state = 'BUZZ_ACTIVE';
+        testRoom.handleBuzz(pId);
+        testRoom.judgeAnswer(false);
+        assert.equal(testRoom.players.get(pId).score, 500);
+
+        // B. Wrong answer with nominal penalty (300) -> score becomes 200
+        testRoom.updateOptions({ penaltyEnabled: true, penaltyMode: 'nominal' });
+        testRoom.stateMachine.state = 'BUZZ_ACTIVE';
+        testRoom.buzzedPlayers.clear();
+        testRoom.handleBuzz(pId);
+        testRoom.judgeAnswer(false);
+        assert.equal(testRoom.players.get(pId).score, 200);
+
+        // C. Wrong answer with fixed penalty (100) -> score becomes 100
+        testRoom.updateOptions({ penaltyMode: 'fixed', penaltyFixedAmount: 100 });
+        testRoom.stateMachine.state = 'BUZZ_ACTIVE';
+        testRoom.buzzedPlayers.clear();
+        testRoom.handleBuzz(pId);
+        testRoom.judgeAnswer(false);
+        assert.equal(testRoom.players.get(pId).score, 100);
+
+        // 7. Reading time 0: immediate buzzer activation without timer delay
+        testRoom.updateOptions({ readingTime: 0 });
+        testRoom.stateMachine.state = 'BOARD';
+        testRoom.selectQuestion(0, 0, { q: 'Q', a: 'A', price: 100 });
+        assert.equal(testRoom.stateMachine.state, 'BUZZ_ACTIVE', 'State must immediately be BUZZ_ACTIVE when readingTime is 0');
+    });
 });

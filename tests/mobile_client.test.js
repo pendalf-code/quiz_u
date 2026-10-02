@@ -185,6 +185,7 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
             assert.equal(res4.status, 200);
             assert.ok(res4.headers.get('content-type').includes('application/javascript'));
         } finally {
+            if (server.closeAllConnections) server.closeAllConnections();
             await new Promise((resolve) => server.close(resolve));
         }
     });
@@ -370,6 +371,17 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
             hostWs.close();
         } finally {
             roomManager.destroy();
+            if (wss && wss.clients) {
+                wss.clients.forEach(client => {
+                    try { client.terminate(); } catch (e) {}
+                });
+            }
+            try { duplicateHostWs.terminate(); } catch (e) {}
+            try { mobileHostWs.terminate(); } catch (e) {}
+            try { player1Ws.terminate(); } catch (e) {}
+            try { player2Ws.terminate(); } catch (e) {}
+            try { hostWs.terminate(); } catch (e) {}
+            if (server.closeAllConnections) server.closeAllConnections();
             await new Promise((resolve) => {
                 wss.close(() => {
                     server.close(resolve);

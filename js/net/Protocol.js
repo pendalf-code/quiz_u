@@ -18,6 +18,7 @@ const MSG_TYPES = {
     HOST_KICK_PLAYER: 'HOST_KICK_PLAYER',
     HOST_NEXT_ROUND: 'HOST_NEXT_ROUND',
     HOST_SET_LOCAL_HOST: 'HOST_SET_LOCAL_HOST',
+    HOST_UPDATE_ROOM_SETTINGS: 'HOST_UPDATE_ROOM_SETTINGS',
 
     // Player -> Server
     PLAYER_JOIN: 'PLAYER_JOIN',
@@ -31,6 +32,7 @@ const MSG_TYPES = {
     PLAYER_JOINED: 'PLAYER_JOINED',
     PLAYER_LEFT: 'PLAYER_LEFT',
     ROOM_STATE: 'ROOM_STATE',
+    ROOM_SETTINGS_UPDATED: 'ROOM_SETTINGS_UPDATED',
     QUESTION_ACTIVE: 'QUESTION_ACTIVE',
     BUZZER_READY: 'BUZZER_READY',
     BUZZ_LOCKED: 'BUZZ_LOCKED',
@@ -86,16 +88,7 @@ function parseMessage(rawMessage) {
     }
 }
 
-// Browser & Node.js Universal Export
-if (typeof window !== 'undefined') {
-    window.Protocol = {
-        MSG_TYPES,
-        ERROR_CODES,
-        createMessage,
-        parseMessage
-    };
-}
-
+// Universal export
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         MSG_TYPES,
@@ -103,4 +96,11 @@ if (typeof module !== 'undefined' && module.exports) {
         createMessage,
         parseMessage
     };
+}
+
+if (typeof window !== 'undefined') {
+    window.MSG_TYPES = MSG_TYPES;
+    window.ERROR_CODES = ERROR_CODES;
+    window.createMessage = createMessage;
+    window.parseMessage = parseMessage;
 }

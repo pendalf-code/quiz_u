@@ -4502,6 +4502,125 @@ body.light-theme .katex {
     box-shadow: 0 0 10px rgba(253, 216, 53, 0.3);
 }
 
+/* Hub Game & Timer Settings (TASK-01) */
+.lobby-settings-bar {
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+}
+
+.lobby-settings-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.lobby-settings-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.setting-summary-chip {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--lavender-light);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.lobby-settings-chips:hover .setting-summary-chip {
+    border-color: var(--gold-accent);
+    color: #ffffff;
+}
+
+.btn-configure-lobby-settings {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.5), rgba(76, 55, 153, 0.6));
+    border: 1.5px solid var(--purple-medium);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.btn-configure-lobby-settings:hover {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.8), rgba(76, 55, 153, 0.9));
+    border-color: var(--gold-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(108, 92, 231, 0.4);
+}
+
+.lobby-settings-modal-card {
+    max-width: 600px !important;
+    width: min(94vw, 600px) !important;
+    padding: 30px !important;
+    border-radius: 28px !important;
+    background: var(--modal-card-bg) !important;
+    border: 3px solid var(--purple-medium) !important;
+    color: var(--text-light);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(108, 92, 231, 0.2) !important;
+}
+
+.lobby-settings-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.12);
+    padding-bottom: 12px;
+}
+
+.lobby-settings-modal-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--gold-accent);
+    margin: 0;
+}
+
+.btn-close-modal-x {
+    background: transparent;
+    border: none;
+    color: var(--lavender-light);
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0 6px;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.btn-close-modal-x:hover {
+    color: #ffffff;
+}
+
+.lobby-settings-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
 .lobby-pack-info-card {
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -4783,6 +4902,57 @@ body.light-theme .btn-toggle-local-host.is-active {
 
 body.light-theme .lobby-start-hint {
     color: #64748b;
+}
+
+body.light-theme .lobby-settings-bar {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+body.light-theme .setting-summary-chip {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+body.light-theme .lobby-settings-chips:hover .setting-summary-chip {
+    border-color: #6366f1;
+    color: #1e1b4b;
+}
+
+body.light-theme .btn-configure-lobby-settings {
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    border-color: #818cf8;
+    color: #312e81;
+}
+
+body.light-theme .btn-configure-lobby-settings:hover {
+    background: linear-gradient(135deg, #c7d2fe, #a5b4fc);
+    border-color: #6366f1;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+body.light-theme .lobby-settings-modal-card {
+    background: #ffffff !important;
+    border-color: #818cf8 !important;
+    color: #1e293b !important;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25) !important;
+}
+
+body.light-theme .lobby-settings-modal-header {
+    border-bottom-color: #e2e8f0;
+}
+
+body.light-theme .lobby-settings-modal-title {
+    color: #4338ca;
+}
+
+body.light-theme .btn-close-modal-x {
+    color: #64748b;
+}
+
+body.light-theme .btn-close-modal-x:hover {
+    color: #0f172a;
 }
 
 /* Responsive grid for Online Lobby */

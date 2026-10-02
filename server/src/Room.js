@@ -18,9 +18,12 @@ class Room {
         this.hostPlayer = null; // Mobile host: { id, name, avatar, ws, sessionToken, role: 'host', isConnected, joinedAt }
         this.options = {
             maxPlayers: options.maxPlayers || 8,
-            readingTime: options.readingTime || 7,
-            thinkingTime: options.thinkingTime || 30,
-            answerTime: options.answerTime || 5,
+            readingTime: options.readingTime !== undefined ? Math.max(0, parseInt(options.readingTime, 10)) : 7,
+            thinkingTime: options.thinkingTime !== undefined ? Math.max(1, parseInt(options.thinkingTime, 10)) : 30,
+            answerTime: options.answerTime !== undefined ? Math.max(1, parseInt(options.answerTime, 10)) : 5,
+            penaltyEnabled: options.penaltyEnabled !== undefined ? Boolean(options.penaltyEnabled) : true,
+            penaltyMode: options.penaltyMode === 'fixed' ? 'fixed' : 'nominal',
+            penaltyFixedAmount: options.penaltyFixedAmount !== undefined ? Math.max(0, parseInt(options.penaltyFixedAmount, 10)) : 100,
             ...options
         };
 
@@ -45,7 +48,6 @@ class Room {
         this.buzzedPlayers = new Set();
         this.answerTimer = null;
         this.readingTimer = null;
-
         this.createdAt = Date.now();
         this.lastActivityAt = Date.now();
 
@@ -93,13 +95,22 @@ class Room {
             this.hostWs.send(createMessage(MSG_TYPES.ROOM_STATE, this.getStateSnapshot(false)));
         }
         if (this.hostPlayer && this.hostPlayer.ws && this.hostPlayer.ws.readyState === 1) {
-            this.hostPlayer.ws.send(createMessage(MSG_TYPES.ROOM_STATE, this.getStateSnapshot(false)));
+            this.hostPlayer.ws.send(createMessage(MSG_TYPES.ROOM_STATE, {
+                ...this.getStateSnapshot(false),
+                self: this.sanitizeHost(this.hostPlayer),
+                sessionToken: this.hostPlayer.sessionToken,
+                role: 'host'
+            }));
         }
         const playerSnapshot = this.getStateSnapshot(true);
-        const playerMsg = createMessage(MSG_TYPES.ROOM_STATE, playerSnapshot);
         for (const player of this.players.values()) {
             if (player.ws && player.ws.readyState === 1) {
-                player.ws.send(playerMsg);
+                player.ws.send(createMessage(MSG_TYPES.ROOM_STATE, {
+                    ...playerSnapshot,
+                    self: this.sanitizePlayer(player),
+                    sessionToken: player.sessionToken,
+                    role: player.role || 'player'
+                }));
             }
         }
     }
@@ -138,127 +149,162 @@ class Room {
                 }
 
                 // Host already exists in room
-                return {
-                    success: false,
-                    error: ERROR_CODES.HOST_ALREADY_EXISTS,
-                    message: 'Роль ведущего в этой комнате уже занята. Пожалуйста, войдите как игрок.'
-                };
+                if (this.hostPlayer.isConnected) {
+                    return {
+                        success: false,
+                        error: ERROR_CODES.HOST_ALREADY_EXISTS,
+                        message: 'Роль ведущего в этой комнате уже занята. Выберите роль Игрока.'
+                    };
+                } else {
+                    // Previous host disconnected, reclaim role
+                    this.hostPlayer.ws = ws;
+                    this.hostPlayer.isConnected = true;
+                    this.hostPlayer.name = trimmedName;
+                    if (avatar) this.hostPlayer.avatar = avatar;
+                    this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
+                        player: this.sanitizeHost(this.hostPlayer),
+                        role: 'host',
+                        isReconnect: true
+                    });
+                    return { success: true, player: this.hostPlayer, role: 'host', isReconnect: true };
+                }
             }
 
-            const hostId = 'h_' + crypto.randomBytes(4).toString('hex');
-            const token = crypto.randomUUID();
-            this.hostPlayer = {
-                id: hostId,
+            // Duplicate name check against existing players
+            for (const player of this.players.values()) {
+                if (player.isConnected && player.name.toLowerCase() === trimmedName.toLowerCase()) {
+                    return { success: false, error: ERROR_CODES.NAME_ALREADY_TAKEN, message: 'Имя уже занято в этой комнате' };
+                }
+            }
+
+            // Register brand new mobile host
+            const newHostToken = sessionToken || crypto.randomUUID();
+            const hostObj = {
+                id: 'host_' + crypto.randomUUID().slice(0, 8),
                 name: trimmedName,
                 avatar: avatar || '🎙️',
                 ws,
-                sessionToken: token,
+                sessionToken: newHostToken,
                 role: 'host',
                 isConnected: true,
                 joinedAt: Date.now()
             };
+            this.hostPlayer = hostObj;
 
             this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
                 player: this.sanitizeHost(this.hostPlayer),
-                role: 'host',
-                isReconnect: false
+                role: 'host'
             });
 
-            return { success: true, player: this.hostPlayer, role: 'host', isReconnect: false };
+            this.broadcastRoomState();
+
+            return { success: true, player: this.hostPlayer, role: 'host' };
         }
 
         // --- PLAYER ROLE LOGIC ---
-        // Check if reconnecting by sessionToken
+        // Check sessionToken reconnect for player
         if (sessionToken) {
-            for (const [id, existing] of this.players.entries()) {
-                if (existing.sessionToken === sessionToken) {
-                    existing.ws = ws;
-                    existing.isConnected = true;
-                    existing.name = trimmedName;
-                    existing.avatar = avatar || existing.avatar;
+            for (const [id, player] of this.players.entries()) {
+                if (player.sessionToken === sessionToken) {
+                    player.ws = ws;
+                    player.isConnected = true;
+                    player.name = trimmedName;
+                    if (avatar) player.avatar = avatar;
                     this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
-                        player: this.sanitizePlayer(existing),
+                        player: this.sanitizePlayer(player),
                         role: 'player',
                         isReconnect: true
                     });
-                    this.syncScoreManagerTeams();
-                    return { success: true, player: existing, role: 'player', isReconnect: true };
+                    return { success: true, player, role: 'player', isReconnect: true };
                 }
             }
         }
 
+        // Capacity check
         if (this.players.size >= this.options.maxPlayers) {
             return { success: false, error: ERROR_CODES.ROOM_FULL, message: 'Комната заполнена' };
         }
 
-        // Check duplicate name against host and active players
-        if (this.hostPlayer && this.hostPlayer.name.toLowerCase() === trimmedName.toLowerCase() && this.hostPlayer.isConnected) {
+        // Duplicate name check against host and active players
+        if (this.hostPlayer && this.hostPlayer.isConnected && this.hostPlayer.name.toLowerCase() === trimmedName.toLowerCase()) {
             return { success: false, error: ERROR_CODES.NAME_ALREADY_TAKEN, message: 'Имя уже занято в этой комнате' };
         }
-        for (const existing of this.players.values()) {
-            if (existing.name.toLowerCase() === trimmedName.toLowerCase() && existing.isConnected) {
-                return { success: false, error: ERROR_CODES.NAME_ALREADY_TAKEN, message: 'Имя уже занято в этой комнате' };
+        for (const player of this.players.values()) {
+            if (player.isConnected && player.name.toLowerCase() === trimmedName.toLowerCase()) {
+                return { success: false, error: ERROR_CODES.NAME_ALREADY_TAKEN, message: 'Игрок с таким именем уже в комнате' };
             }
         }
 
-        const playerId = 'p_' + crypto.randomBytes(4).toString('hex');
-        const token = crypto.randomUUID();
+        const playerId = crypto.randomUUID();
+        const newSessionToken = crypto.randomUUID();
+
         const newPlayer = {
             id: playerId,
+            sessionToken: newSessionToken,
             name: trimmedName,
-            avatar: avatar || '🐱',
-            ws,
-            sessionToken: token,
-            role: 'player',
+            avatar: avatar || '🎮',
             score: 0,
+            ws,
             isConnected: true,
+            role: 'player',
             joinedAt: Date.now()
         };
 
         this.players.set(playerId, newPlayer);
-        this.syncScoreManagerTeams();
+
+        // Synchronize with core ScoreManager
+        this.scoreManager.addTeam(trimmedName);
 
         this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
             player: this.sanitizePlayer(newPlayer),
-            role: 'player',
-            isReconnect: false
+            role: 'player'
         });
 
-        return { success: true, player: newPlayer, role: 'player', isReconnect: false };
+        this.broadcastRoomState();
+
+        return { success: true, player: newPlayer, role: 'player' };
     }
 
-    removePlayer(playerId) {
+    removePlayer(ws) {
         this.touch();
-        if (this.hostPlayer && this.hostPlayer.id === playerId) {
+        // Check mobile host disconnect
+        if (this.hostPlayer && this.hostPlayer.ws === ws) {
             this.hostPlayer.isConnected = false;
             this.hostPlayer.ws = null;
             this.broadcastToAll(MSG_TYPES.PLAYER_LEFT, {
-                playerId,
-                name: this.hostPlayer.name,
+                playerId: this.hostPlayer.id,
+                playerName: this.hostPlayer.name,
                 role: 'host'
             });
+            this.broadcastRoomState();
             return;
         }
 
-        const player = this.players.get(playerId);
-        if (player) {
-            player.isConnected = false;
-            player.ws = null;
-            this.broadcastToAll(MSG_TYPES.PLAYER_LEFT, {
-                playerId,
-                name: player.name,
-                role: 'player'
-            });
-        }
-    }
+        for (const [id, player] of this.players.entries()) {
+            if (player.ws === ws) {
+                player.isConnected = false;
+                player.ws = null;
 
-    syncScoreManagerTeams() {
-        const teams = Array.from(this.players.values()).map(p => ({
-            name: p.name,
-            score: p.score,
-            id: p.id
-        }));
-        this.scoreManager.setTeams(teams);
+                this.broadcastToAll(MSG_TYPES.PLAYER_LEFT, {
+                    playerId: id,
+                    playerName: player.name,
+                    role: 'player'
+                });
+
+                // If currently answering player disconnects, cancel answer timer
+                if (this.activeBuzzerPlayerId === id) {
+                    if (this.answerTimer) {
+                        clearTimeout(this.answerTimer);
+                        this.answerTimer = null;
+                    }
+                    this.activeBuzzerPlayerId = null;
+                    this.broadcastToAll(MSG_TYPES.BUZZ_RESET, {});
+                }
+
+                this.broadcastRoomState();
+                break;
+            }
+        }
     }
 
     sanitizeHost(host) {
@@ -298,6 +344,51 @@ class Room {
         this.isHostOnPC = Boolean(isHostOnPC);
         this.broadcastRoomState();
         return this.isHostOnPC;
+    }
+
+    getPenaltyAmount() {
+        if (this.options.penaltyEnabled === false) return 0;
+        if (this.options.penaltyMode === 'fixed') {
+            return Math.max(0, Number(this.options.penaltyFixedAmount) || 100);
+        }
+        return this.currentCost;
+    }
+
+    updateOptions(newOptions = {}) {
+        this.touch();
+        if (typeof newOptions !== 'object' || newOptions === null) return this.options;
+
+        if (newOptions.readingTime !== undefined) {
+            const val = parseInt(newOptions.readingTime, 10);
+            if (!isNaN(val) && val >= 0) this.options.readingTime = val;
+        }
+        if (newOptions.thinkingTime !== undefined) {
+            const val = parseInt(newOptions.thinkingTime, 10);
+            if (!isNaN(val) && val >= 1) this.options.thinkingTime = val;
+        }
+        if (newOptions.answerTime !== undefined) {
+            const val = parseInt(newOptions.answerTime, 10);
+            if (!isNaN(val) && val >= 1) this.options.answerTime = val;
+        }
+        if (newOptions.penaltyEnabled !== undefined) {
+            this.options.penaltyEnabled = Boolean(newOptions.penaltyEnabled);
+        }
+        if (newOptions.penaltyMode !== undefined) {
+            this.options.penaltyMode = newOptions.penaltyMode === 'fixed' ? 'fixed' : 'nominal';
+        }
+        if (newOptions.penaltyFixedAmount !== undefined) {
+            const val = parseInt(newOptions.penaltyFixedAmount, 10);
+            if (!isNaN(val) && val >= 0) this.options.penaltyFixedAmount = val;
+        }
+        if (newOptions.maxPlayers !== undefined) {
+            const val = parseInt(newOptions.maxPlayers, 10);
+            if (!isNaN(val) && val >= 2) this.options.maxPlayers = val;
+        }
+
+        this.broadcastToAll(MSG_TYPES.ROOM_SETTINGS_UPDATED, { options: this.options });
+        this.broadcastRoomState();
+
+        return this.options;
     }
 
     hasHost() {
@@ -364,6 +455,8 @@ class Room {
             themeIdx,
             questionIdx,
             cost: this.currentCost,
+            readingTime: this.options.readingTime,
+            thinkingTime: this.options.thinkingTime,
             question: this.currentQuestion // Host gets full question with 'a', 'comment', etc.
         });
 
@@ -373,15 +466,22 @@ class Room {
             themeIdx,
             questionIdx,
             cost: this.currentCost,
+            readingTime: this.options.readingTime,
+            thinkingTime: this.options.thinkingTime,
             question: sanitizedQuestion // Players get NO 'a' or 'a_img'
         });
 
         // Start reading timer
         if (this.readingTimer) clearTimeout(this.readingTimer);
-        this.readingTimer = setTimeout(() => {
+        const rTime = (this.options.readingTime !== undefined) ? this.options.readingTime : 7;
+        if (rTime <= 0) {
             this.activateBuzzer();
-        }, (this.options.readingTime || 7) * 1000);
-        if (this.readingTimer.unref) this.readingTimer.unref();
+        } else {
+            this.readingTimer = setTimeout(() => {
+                this.activateBuzzer();
+            }, rTime * 1000);
+            if (this.readingTimer.unref) this.readingTimer.unref();
+        }
 
         return { success: true };
     }
@@ -401,6 +501,7 @@ class Room {
 
         this.broadcastToAll(MSG_TYPES.BUZZER_READY, {
             cost: this.currentCost,
+            thinkingTime: this.options.thinkingTime,
             allowedPlayerIds: Array.from(this.players.keys()).filter(id => !this.buzzedPlayers.has(id))
         });
     }
@@ -425,18 +526,20 @@ class Room {
         this.activeBuzzerPlayerId = playerId;
         this.stateMachine.registerBuzz(playerId);
 
+        const ansTime = (this.options.answerTime !== undefined) ? this.options.answerTime : 5;
+
         this.broadcastToAll(MSG_TYPES.BUZZ_LOCKED, {
             playerId,
             playerName: player.name,
             cost: this.currentCost,
-            answerTime: this.options.answerTime
+            answerTime: ansTime
         });
 
         // Start answer countdown timer
         if (this.answerTimer) clearTimeout(this.answerTimer);
         this.answerTimer = setTimeout(() => {
             this.handleAnswerTimeout();
-        }, (this.options.answerTime || 5) * 1000);
+        }, ansTime * 1000);
         if (this.answerTimer.unref) this.answerTimer.unref();
 
         return { success: true, winner: player };
@@ -449,44 +552,37 @@ class Room {
         }
 
         const player = this.players.get(playerId);
-        if (!player) return { success: false, error: ERROR_CODES.INVALID_ACTION };
-
-        // Forward answer to host
-        this.sendToHost(MSG_TYPES.ANSWER_SUBMITTED, {
+        this.broadcastToAll(MSG_TYPES.ANSWER_SUBMITTED, {
             playerId,
-            playerName: player.name,
+            playerName: player ? player.name : '',
             answerText
         });
-
-        return { success: true };
     }
 
     handleAuctionBet(playerId, amount) {
         this.touch();
         const player = this.players.get(playerId);
-        if (!player) return { success: false, error: ERROR_CODES.INVALID_ACTION };
+        if (!player) return;
 
         this.broadcastToAll(MSG_TYPES.AUCTION_BET_MADE, {
             playerId,
             playerName: player.name,
-            amount: Number(amount) || 0
+            amount
         });
-        return { success: true };
     }
 
-    handleCatTransfer(playerId, targetPlayerId) {
+    handleCatTransfer(fromPlayerId, toPlayerId) {
         this.touch();
-        const player = this.players.get(playerId);
-        const targetPlayer = this.players.get(targetPlayerId);
-        if (!player || !targetPlayer) return { success: false, error: ERROR_CODES.INVALID_ACTION };
+        const fromPlayer = this.players.get(fromPlayerId);
+        const toPlayer = this.players.get(toPlayerId);
+        if (!fromPlayer || !toPlayer) return;
 
         this.broadcastToAll(MSG_TYPES.CAT_TRANSFERRED, {
-            fromPlayerId: playerId,
-            fromPlayerName: player.name,
-            toPlayerId: targetPlayerId,
-            toPlayerName: targetPlayer.name
+            fromPlayerId,
+            fromPlayerName: fromPlayer.name,
+            toPlayerId,
+            toPlayerName: toPlayer.name
         });
-        return { success: true };
     }
 
     handleAnswerTimeout() {
@@ -504,9 +600,12 @@ class Room {
             message: 'Время на ответ истекло!'
         });
 
-        // Deduct points for timeout
+        // Deduct penalty points for timeout
         if (timedOutPlayerId) {
-            this.updatePlayerScore(timedOutPlayerId, -this.currentCost);
+            const penalty = this.getPenaltyAmount();
+            if (penalty > 0) {
+                this.updatePlayerScore(timedOutPlayerId, -penalty);
+            }
         }
 
         // Check if there are other eligible players
@@ -546,7 +645,10 @@ class Room {
             this.finishQuestion();
             return { success: true, correct: true, playerId: answeringPlayerId };
         } else {
-            this.updatePlayerScore(answeringPlayerId, -this.currentCost);
+            const penalty = this.getPenaltyAmount();
+            if (penalty > 0) {
+                this.updatePlayerScore(answeringPlayerId, -penalty);
+            }
             this.activeBuzzerPlayerId = null;
 
             // Check if others can buzz
@@ -556,7 +658,7 @@ class Room {
                     isCorrect: false,
                     playerId: answeringPlayerId,
                     playerName: answeringPlayerName,
-                    cost: this.currentCost,
+                    cost: penalty,
                     reopened: true
                 });
                 this.stateMachine.state = 'BUZZ_ACTIVE';
@@ -567,7 +669,7 @@ class Room {
                     isCorrect: false,
                     playerId: answeringPlayerId,
                     playerName: answeringPlayerName,
-                    cost: this.currentCost,
+                    cost: penalty,
                     reopened: false
                 });
                 this.finishQuestion();
@@ -583,36 +685,30 @@ class Room {
         } else {
             this.isPaused = !this.isPaused;
         }
-        this.broadcastToAll(MSG_TYPES.GAME_PAUSED, { isPaused: this.isPaused });
-        return { success: true, isPaused: this.isPaused };
+
+        this.broadcastToAll(MSG_TYPES.GAME_PAUSED, {
+            isPaused: this.isPaused
+        });
     }
 
     showAnswer() {
         this.touch();
         this.broadcastToAll(MSG_TYPES.SHOW_ANSWER, {
-            themeIdx: this.currentThemeIndex,
-            questionIdx: this.currentQuestionIndex,
-            cost: this.currentCost,
-            question: this.currentQuestion
+            answer: (this.currentQuestion && this.currentQuestion.a) || '',
+            comment: (this.currentQuestion && this.currentQuestion.comment) || ''
         });
-        return { success: true };
     }
 
     closeQuestion() {
         this.touch();
         this.finishQuestion();
-        this.broadcastToAll(MSG_TYPES.QUESTION_CLOSED, {
-            themeIdx: this.currentThemeIndex,
-            questionIdx: this.currentQuestionIndex
-        });
-        return { success: true };
     }
 
     updatePlayerScore(playerId, delta) {
+        this.touch();
         const player = this.players.get(playerId);
         if (player) {
             player.score += delta;
-            this.syncScoreManagerTeams();
             this.broadcastToAll(MSG_TYPES.SCORE_UPDATED, {
                 playerId,
                 playerName: player.name,
