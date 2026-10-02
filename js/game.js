@@ -1013,6 +1013,9 @@
 
     function resolveMediaPath(url) {
         if (!url || typeof url !== 'string') return url;
+        if (typeof CdnManager !== 'undefined' && typeof CdnManager.resolve === 'function') {
+            return CdnManager.resolve(url);
+        }
         const trimmed = url.trim();
         if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
             return trimmed;

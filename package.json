@@ -6,14 +6,34 @@
     "test": "node --test tests/**/*.test.js",
     "tauri": "tauri",
     "build:desktop": "tauri build",
-    "dev:desktop": "tauri dev"
+    "dev:desktop": "tauri dev",
+    "cap": "cap",
+    "cap:sync": "cap sync",
+    "cap:open:android": "cap open android",
+    "cap:open:ios": "cap open ios",
+    "cap:copy": "cap copy",
+    "build:mobile": "cap sync android",
+    "optimize:media": "node scripts/optimize_media.js",
+    "test:load": "node server/load_test/simulate_load.js"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
   },
   "keywords": [
     "quiz",
     "jeopardy",
     "game",
     "steam",
-    "steam-deck"
+    "steam-deck",
+    "capacitor",
+    "android",
+    "ios",
+    "pwa"
   ],
   "author": "",
   "license": "ISC"

@@ -1,0 +1,25 @@
+{
+  "name": "Quiz U — Мобильный пульт игрока",
+  "short_name": "Quiz U",
+  "description": "Беспроводной мобильный контроллер для командной викторины 'Город Ю'. Мгновенная кнопка ответа Buzzer, ставки аукциона и ввод ответов.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "./icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"]
+}
