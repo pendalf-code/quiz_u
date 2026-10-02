@@ -42,6 +42,9 @@ test('Server: Real WebSocket Integration Test', async (t) => {
 
     t.after(async () => {
         roomManager.destroy();
+        for (const client of wss.clients) {
+            try { client.terminate(); } catch {}
+        }
         await new Promise((resolve) => {
             wss.close(() => {
                 server.close(resolve);

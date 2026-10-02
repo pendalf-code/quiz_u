@@ -34,6 +34,7 @@ class Room {
         this.currentQuestionIndex = null;
         this.currentCost = 0;
         this.currentQuestion = null; // Full question with answer (HOST ONLY)
+        this.isPaused = false;
 
         this.activeBuzzerPlayerId = null;
         this.buzzedPlayers = new Set();
@@ -78,6 +79,23 @@ class Room {
         for (const player of this.players.values()) {
             if (player.ws && player.ws.readyState === 1) {
                 player.ws.send(msg);
+            }
+        }
+    }
+
+
+    broadcastRoomState() {
+        if (this.hostWs && this.hostWs.readyState === 1) {
+            this.hostWs.send(createMessage(MSG_TYPES.ROOM_STATE, this.getStateSnapshot(false)));
+        }
+        if (this.hostPlayer && this.hostPlayer.ws && this.hostPlayer.ws.readyState === 1) {
+            this.hostPlayer.ws.send(createMessage(MSG_TYPES.ROOM_STATE, this.getStateSnapshot(false)));
+        }
+        const playerSnapshot = this.getStateSnapshot(true);
+        const playerMsg = createMessage(MSG_TYPES.ROOM_STATE, playerSnapshot);
+        for (const player of this.players.values()) {
+            if (player.ws && player.ws.readyState === 1) {
+                player.ws.send(playerMsg);
             }
         }
     }
@@ -277,7 +295,7 @@ class Room {
             return { success: false, message: 'В комнате нет игроков' };
         }
         this.stateMachine.showBoard();
-        this.broadcastToAll(MSG_TYPES.ROOM_STATE, this.getStateSnapshot());
+        this.broadcastRoomState();
         return { success: true };
     }
 
@@ -289,6 +307,7 @@ class Room {
         this.currentCost = (questionData && (questionData.cost !== undefined ? questionData.cost : questionData.price)) ? Number(questionData.cost !== undefined ? questionData.cost : questionData.price) : 100;
         this.activeBuzzerPlayerId = null;
         this.buzzedPlayers.clear();
+        this.isPaused = false;
 
         const qType = (questionData && questionData.type) ? questionData.type : 'normal';
         this.stateMachine.startQuestion(this.currentCost, qType);
@@ -298,7 +317,7 @@ class Room {
             themeIdx,
             questionIdx,
             cost: this.currentCost,
-            question: this.currentQuestion // Host gets full question with 'a'
+            question: this.currentQuestion // Host gets full question with 'a', 'comment', etc.
         });
 
         // Anti-Cheat: sanitize question before sending to players!
@@ -465,8 +484,18 @@ class Room {
             return { success: false, message: 'Нет отвечающего игрока' };
         }
 
+        const answeringPlayer = this.players.get(answeringPlayerId);
+        const answeringPlayerName = answeringPlayer ? answeringPlayer.name : 'Игрок';
+
         if (isCorrect) {
             this.updatePlayerScore(answeringPlayerId, this.currentCost);
+            this.broadcastToAll(MSG_TYPES.JUDGE_RESULT, {
+                isCorrect: true,
+                playerId: answeringPlayerId,
+                playerName: answeringPlayerName,
+                cost: this.currentCost,
+                reopened: false
+            });
             this.finishQuestion();
             return { success: true, correct: true, playerId: answeringPlayerId };
         } else {
@@ -476,14 +505,60 @@ class Room {
             // Check if others can buzz
             const remainingPlayers = Array.from(this.players.keys()).filter(id => !this.buzzedPlayers.has(id));
             if (remainingPlayers.length > 0) {
+                this.broadcastToAll(MSG_TYPES.JUDGE_RESULT, {
+                    isCorrect: false,
+                    playerId: answeringPlayerId,
+                    playerName: answeringPlayerName,
+                    cost: this.currentCost,
+                    reopened: true
+                });
                 this.stateMachine.state = 'BUZZ_ACTIVE';
                 this.activateBuzzer();
                 return { success: true, correct: false, reopened: true };
             } else {
+                this.broadcastToAll(MSG_TYPES.JUDGE_RESULT, {
+                    isCorrect: false,
+                    playerId: answeringPlayerId,
+                    playerName: answeringPlayerName,
+                    cost: this.currentCost,
+                    reopened: false
+                });
                 this.finishQuestion();
                 return { success: true, correct: false, reopened: false };
             }
         }
+    }
+
+    togglePause(isPaused = null) {
+        this.touch();
+        if (typeof isPaused === 'boolean') {
+            this.isPaused = isPaused;
+        } else {
+            this.isPaused = !this.isPaused;
+        }
+        this.broadcastToAll(MSG_TYPES.GAME_PAUSED, { isPaused: this.isPaused });
+        return { success: true, isPaused: this.isPaused };
+    }
+
+    showAnswer() {
+        this.touch();
+        this.broadcastToAll(MSG_TYPES.SHOW_ANSWER, {
+            themeIdx: this.currentThemeIndex,
+            questionIdx: this.currentQuestionIndex,
+            cost: this.currentCost,
+            question: this.currentQuestion
+        });
+        return { success: true };
+    }
+
+    closeQuestion() {
+        this.touch();
+        this.finishQuestion();
+        this.broadcastToAll(MSG_TYPES.QUESTION_CLOSED, {
+            themeIdx: this.currentThemeIndex,
+            questionIdx: this.currentQuestionIndex
+        });
+        return { success: true };
     }
 
     updatePlayerScore(playerId, delta) {
@@ -515,7 +590,7 @@ class Room {
             this.stateMachine.state = 'BOARD';
         }
 
-        this.broadcastToAll(MSG_TYPES.ROOM_STATE, this.getStateSnapshot());
+        this.broadcastRoomState();
     }
 
     getStateSnapshot(forPlayer = false) {
@@ -535,6 +610,7 @@ class Room {
             currentCost: this.currentCost,
             activeBuzzerPlayerId: this.activeBuzzerPlayerId,
             currentQuestion: questionData,
+            isPaused: this.isPaused,
             options: this.options
         };
     }
