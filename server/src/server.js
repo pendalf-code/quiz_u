@@ -52,7 +52,11 @@ const server = http.createServer((req, res) => {
     }
 
     // Static files hosting for host and mobile clients
-    let filePath = path.join(ROOT_DIR, url.pathname === '/' ? 'index.html' : url.pathname);
+    let reqPath = url.pathname;
+    if (reqPath === '/' || reqPath === '/mobile' || reqPath === '/mobile/') {
+        reqPath = reqPath.startsWith('/mobile') ? '/mobile/index.html' : '/index.html';
+    }
+    let filePath = path.join(ROOT_DIR, reqPath);
 
     // Prevent directory traversal attacks
     if (!filePath.startsWith(ROOT_DIR)) {
@@ -125,7 +129,7 @@ function handleClientMessage(ws, message) {
     const { type, payload } = message;
 
     switch (type) {
-        // --- HOST ACTIONS ---
+        // --- HOST ACTIONS ---\
         case MSG_TYPES.HOST_CREATE_ROOM: {
             const room = roomManager.createRoom(ws, payload ? payload.options : {});
             ws.isHost = true;
@@ -238,6 +242,27 @@ function handleClientMessage(ws, message) {
                     message: buzzResult.message
                 }));
             }
+            break;
+        }
+
+        case MSG_TYPES.PLAYER_SUBMIT_ANSWER: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.playerId) return;
+            room.submitAnswer(ws.playerId, payload ? payload.answerText : '');
+            break;
+        }
+
+        case MSG_TYPES.PLAYER_AUCTION_BET: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.playerId) return;
+            room.handleAuctionBet(ws.playerId, payload ? payload.amount : 0);
+            break;
+        }
+
+        case MSG_TYPES.PLAYER_CAT_TRANSFER: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.playerId) return;
+            room.handleCatTransfer(ws.playerId, payload ? payload.targetPlayerId : null);
             break;
         }
 

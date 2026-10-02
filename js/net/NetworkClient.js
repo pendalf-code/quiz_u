@@ -20,6 +20,8 @@ class NetworkClient {
         this.hostToken = null;
         this.isHost = options.isHost !== false;
         this.isConnected = false;
+        this.selfPlayer = null;
+        this.sessionToken = options.sessionToken || null;
         this.listeners = new Map();
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = options.maxReconnectAttempts || 5;
@@ -172,6 +174,12 @@ class NetworkClient {
             case MSG.ROOM_STATE:
                 this.lastState = payload;
                 this._syncPlayersFromState(payload);
+                if (payload.self) {
+                    this.selfPlayer = payload.self;
+                }
+                if (payload.sessionToken) {
+                    this.sessionToken = payload.sessionToken;
+                }
                 this.emit('room_state', payload);
                 break;
 
@@ -187,6 +195,18 @@ class NetworkClient {
                 this.emit('buzz_locked', payload);
                 break;
 
+            case MSG.ANSWER_SUBMITTED:
+                this.emit('answer_submitted', payload);
+                break;
+
+            case MSG.AUCTION_BET_MADE:
+                this.emit('auction_bet_made', payload);
+                break;
+
+            case MSG.CAT_TRANSFERRED:
+                this.emit('cat_transferred', payload);
+                break;
+
             case MSG.ANSWER_TIMEOUT:
                 this.emit('answer_timeout', payload);
                 break;
@@ -199,6 +219,9 @@ class NetworkClient {
                     }
                 } else if (payload.playerId && this.connectedPlayers.has(payload.playerId)) {
                     this.connectedPlayers.get(payload.playerId).score = payload.newScore;
+                }
+                if (this.selfPlayer && payload.playerId === this.selfPlayer.id) {
+                    this.selfPlayer.score = payload.newScore;
                 }
                 this.emit('score_updated', payload);
                 break;
@@ -269,6 +292,35 @@ class NetworkClient {
         return this.send(MSG.HOST_UPDATE_SCORE, { playerId, delta: Number(delta) || 0 });
     }
 
+    /**
+     * Player Actions
+     */
+    joinRoom(roomCode, name, avatar, sessionToken) {
+        this.roomCode = (roomCode || '').toUpperCase().trim();
+        return this.send(MSG.PLAYER_JOIN, {
+            roomCode: this.roomCode,
+            name,
+            avatar,
+            sessionToken: sessionToken || this.sessionToken
+        });
+    }
+
+    buzz() {
+        return this.send(MSG.PLAYER_BUZZ, {});
+    }
+
+    submitAnswer(answerText) {
+        return this.send(MSG.PLAYER_SUBMIT_ANSWER, { answerText });
+    }
+
+    auctionBet(amount) {
+        return this.send(MSG.PLAYER_AUCTION_BET, { amount: Number(amount) || 0 });
+    }
+
+    catTransfer(targetPlayerId) {
+        return this.send(MSG.PLAYER_CAT_TRANSFER, { targetPlayerId });
+    }
+
     getPlayersList() {
         return Array.from(this.connectedPlayers.values());
     }
@@ -287,11 +339,12 @@ class NetworkClient {
             try {
                 this.ws.close();
             } catch {}
-            this.ws = null;
+                this.ws = null;
         }
         this.isConnected = false;
         this.roomCode = null;
         this.hostToken = null;
+        this.selfPlayer = null;
         this.connectedPlayers.clear();
     }
 }

@@ -289,6 +289,48 @@ class Room {
         return { success: true, player: this.sanitizePlayer(player) };
     }
 
+    submitAnswer(playerId, answerText) {
+        this.touch();
+        const player = this.players.get(playerId);
+        if (!player) return { success: false, error: ERROR_CODES.NOT_AUTHORIZED };
+
+        this.broadcastToAll(MSG_TYPES.ANSWER_SUBMITTED, {
+            playerId,
+            playerName: player.name,
+            answerText: (answerText || '').trim()
+        });
+        return { success: true };
+    }
+
+    handleAuctionBet(playerId, amount) {
+        this.touch();
+        const player = this.players.get(playerId);
+        if (!player) return { success: false, error: ERROR_CODES.NOT_AUTHORIZED };
+
+        const betAmount = Math.max(0, parseInt(amount, 10) || 0);
+        this.broadcastToAll(MSG_TYPES.AUCTION_BET_MADE, {
+            playerId,
+            playerName: player.name,
+            amount: betAmount
+        });
+        return { success: true, amount: betAmount };
+    }
+
+    handleCatTransfer(playerId, targetPlayerId) {
+        this.touch();
+        const player = this.players.get(playerId);
+        const targetPlayer = this.players.get(targetPlayerId);
+        if (!player || !targetPlayer) return { success: false, error: ERROR_CODES.INVALID_ACTION };
+
+        this.broadcastToAll(MSG_TYPES.CAT_TRANSFERRED, {
+            fromPlayerId: playerId,
+            fromPlayerName: player.name,
+            toPlayerId: targetPlayerId,
+            toPlayerName: targetPlayer.name
+        });
+        return { success: true };
+    }
+
     handleAnswerTimeout() {
         this.touch();
         if (this.answerTimer) {
