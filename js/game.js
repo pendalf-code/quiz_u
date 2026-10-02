@@ -827,7 +827,78 @@
         }, 350);
     }
 
+    let isGlobalTimerPaused = false;
+    let pausedTimerData = null;
+
+    function pauseTimer() {
+        if (isGlobalTimerPaused) return;
+        const modalElem = document.getElementById('question-modal');
+        if (!modalElem || !modalElem.classList.contains('active')) return;
+
+        if (timerInterval || answerCountdownInterval) {
+            pausedTimerData = {
+                hadTimerInterval: Boolean(timerInterval),
+                hadAnswerCountdown: Boolean(answerCountdownInterval),
+                timeLeft: timeLeft,
+                isAnswerTimerActive: isAnswerTimerActive,
+                isReadingTime: isReadingTime
+            };
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (answerCountdownInterval) {
+                clearInterval(answerCountdownInterval);
+                answerCountdownInterval = null;
+            }
+            isGlobalTimerPaused = true;
+            const hintElem = document.getElementById('timer-hint');
+            if (hintElem) {
+                hintElem.textContent = '⏸️ Пауза (нажмите Y или кнопку для продолжения)';
+                hintElem.style.color = '#ffeaa7';
+            }
+            if (window.gamepadManager) {
+                window.gamepadManager.showToast('⏸️ Таймер на паузе');
+            }
+        }
+    }
+
+    function resumeTimer() {
+        if (!isGlobalTimerPaused) return;
+        isGlobalTimerPaused = false;
+        const modalElem = document.getElementById('question-modal');
+        if (!modalElem || !modalElem.classList.contains('active')) return;
+
+        const hintElem = document.getElementById('timer-hint');
+        if (hintElem) {
+            hintElem.textContent = isReadingTime ? '📖 Чтение вопроса...' : '🔥 Время пошло! Обсуждение';
+            hintElem.style.color = isReadingTime ? '#81ecec' : '#ff7675';
+        }
+
+        if (pausedTimerData && pausedTimerData.hadAnswerCountdown) {
+            isAnswerTimerActive = false;
+            toggleAnswerPause();
+        } else {
+            startTimer();
+        }
+
+        if (window.gamepadManager) {
+            window.gamepadManager.showToast('▶️ Таймер возобновлен');
+        }
+        pausedTimerData = null;
+    }
+
+    function toggleTimerPause() {
+        if (isGlobalTimerPaused) {
+            resumeTimer();
+        } else {
+            pauseTimer();
+        }
+    }
+
     function stopTimer() {
+        isGlobalTimerPaused = false;
+        pausedTimerData = null;
         if (timerInterval) {
             clearInterval(timerInterval);
             timerInterval = null;
@@ -1086,6 +1157,26 @@
         }
         const target = document.getElementById(screenId);
         if (target) target.style.display = 'block';
+
+        if (window.gamepadManager) {
+            setTimeout(() => window.gamepadManager.ensureInitialFocus(), 60);
+        }
+        if (window.steamIntegration) {
+            const screenActivities = {
+                'sub-menu-main': 'В главном меню',
+                'sub-menu-online-lobby': 'В лобби онлайн-комнаты',
+                'sub-menu-prepare-choice': 'Выбор режима игры',
+                'sub-menu-packs-catalog': 'Просмотр каталога викторин',
+                'sub-menu-editor': 'В редакторе вопросов',
+                'sub-menu-settings': 'В настройках игры',
+                'sub-menu-dev': 'В режиме разработчика',
+                'team-setup-container': 'Настройка команд',
+                'sub-menu-first-turn': 'Выбор первого хода'
+            };
+            if (screenActivities[screenId]) {
+                window.steamIntegration.updateGameStatus({ activity: screenActivities[screenId] });
+            }
+        }
     }
 
     window.setGameData = function (newGameData) {
@@ -2503,6 +2594,15 @@
             }
         }
 
+        if (event.code === 'KeyP' || event.key === 'p' || event.key === 'P' || event.key === 'з' || event.key === 'З') {
+            const modalElem = document.getElementById('question-modal');
+            if (modalElem && modalElem.classList.contains('active')) {
+                event.preventDefault();
+                toggleTimerPause();
+                return;
+            }
+        }
+
         if (event.code === 'Space' || event.key === ' ' || event.keyCode === 32) {
             const modalElem = document.getElementById('question-modal');
             if (modalElem && modalElem.classList.contains('active')) {
@@ -3481,12 +3581,41 @@
         window.judgeOnlineAnswer = judgeOnlineAnswer;
         window.isOnlineGame = () => isOnlineGame;
         window.getHostNetworkClient = () => hostNetworkClient;
+        window.toggleTimerPause = toggleTimerPause;
+        window.pauseTimer = pauseTimer;
+        window.resumeTimer = resumeTimer;
+        window.isTimerPaused = () => isGlobalTimerPaused;
     }
 
     function onAppReady() {
         initTheme();
         showSubScreen('sub-menu-main');
         generateStarrySky();
+
+        // Stage 5: Steamworks & Gamepad initialization
+        if (typeof SteamIntegration !== 'undefined') {
+            try {
+                window.steamIntegration = new SteamIntegration();
+                window.steamIntegration.init().then(isSteam => {
+                    if (isSteam) {
+                        const user = window.steamIntegration.getCurrentUser();
+                        console.log('[SteamIntegration] Active Steam session:', user.personaName);
+                    }
+                    window.steamIntegration.updateGameStatus({ activity: 'В главном меню' });
+                }).catch(e => console.warn('[SteamIntegration] init error:', e));
+            } catch (e) {
+                console.warn('[SteamIntegration] Error:', e);
+            }
+        }
+
+        if (typeof GamepadManager !== 'undefined') {
+            try {
+                window.gamepadManager = new GamepadManager();
+                window.gamepadManager.init();
+            } catch (e) {
+                console.warn('[GamepadManager] init error:', e);
+            }
+        }
     }
 
     if (document.readyState === 'loading') {

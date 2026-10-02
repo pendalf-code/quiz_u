@@ -3,9 +3,18 @@
   "version": "1.0.0",
   "description": "Интерактивная командная викторина 'Город Ю'",
   "scripts": {
-    "test": "node --test tests/**/*.test.js"
+    "test": "node --test tests/**/*.test.js",
+    "tauri": "tauri",
+    "build:desktop": "tauri build",
+    "dev:desktop": "tauri dev"
   },
-  "keywords": ["quiz", "jeopardy", "game"],
+  "keywords": [
+    "quiz",
+    "jeopardy",
+    "game",
+    "steam",
+    "steam-deck"
+  ],
   "author": "",
   "license": "ISC"
 }
