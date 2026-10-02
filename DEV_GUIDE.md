@@ -96,17 +96,24 @@ quiz_u/
 
 ---
 
-## 4. Git Workflow и контроль релизов
+## 4. Git Workflow и модель ветвления 🌿
 
-1. **Ветка разработки:** По умолчанию работаем в ветке **`dev`**.
-2. **Атомарные коммиты:**
+1. **Базовая ветка сетевой разработки:**
+   * Все разработки мультиплеера ведутся от базовой ветки **`feature/online-multiplayer`** (в репозитории: `feature/online-multiplayer` / `feature/online-miltiplayer`).
+2. **Ветвление под каждую фичу:**
+   * Для каждой новой функциональности или подзадачи **обязательно создается отдельная ветка, ответвленная от базовой ветки `feature/online-multiplayer`**:
+     * `git checkout feature/online-multiplayer`
+     * `git checkout -b feature/online-multiplayer/<feature-name>` (например: `feature/online-multiplayer/host-lobby`, `feature/online-multiplayer/mobile-buzzer`, `feature/online-multiplayer/reconnect-token`).
+3. **Слияние фич в базовую ветку:**
+   * После реализации фичи и полного прохождения тестов (`npm test`), подветка фичи вливается обратно в `feature/online-multiplayer`.
+4. **Атомарные коммиты:**
    * Каждому логическому блоку изменений — отдельный коммит:
      * `feat(core): extract GameStateMachine logic`
      * `feat(server): implement room lifecycle and buzz arbitration`
      * `docs: update ROADMAP.md progress for stage 1`
-3. **Процедура перед пушем:**
+5. **Процедура перед пушем:**
    * Шаг 1: Успешный прогон `npm test`.
    * Шаг 2: Обновление чекбоксов и лога в [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md).
    * Шаг 3: **Формирование и вывод саммари пользователю** (согласно п. 1.2).
    * Шаг 4: Ожидание подтверждения пользователя перед выполнением `git push`.
-4. **Чистота репозитория:** Запрещено коммитить `node_modules`, временные дампы, файлы логов и IDE-кэш.
+6. **Чистота репозитория:** Запрещено коммитить `node_modules`, временные дампы, файлы логов и IDE-кэш.
