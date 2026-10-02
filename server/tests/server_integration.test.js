@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const http = require('http');
 const { WebSocket } = require('ws');
 const { server, wss, roomManager } = require('../src/server');
-const { MSG_TYPES, createMessage, parseMessage } = require('../src/protocol');
+const { MSG_TYPES, ERROR_CODES, createMessage, parseMessage } = require('../src/protocol');
 
 test('Server: Real WebSocket Integration Test', async (t) => {
     let port;
@@ -84,6 +84,11 @@ test('Server: Real WebSocket Integration Test', async (t) => {
         const p1StateMsg = await waitForMessage(p1Ws, MSG_TYPES.ROOM_STATE);
         assert.equal(p1StateMsg.payload.roomCode, roomCode);
         assert.equal(p1StateMsg.payload.self.name, 'Кот Матроскин');
+
+        // 2b. Attempt to start game with only 1 player -> must fail with NOT_ENOUGH_PLAYERS (TASK-05)
+        hostWs.send(createMessage(MSG_TYPES.HOST_START_GAME));
+        const errTooFew = await waitForMessage(hostWs, MSG_TYPES.ERROR);
+        assert.equal(errTooFew.payload.code, ERROR_CODES.NOT_ENOUGH_PLAYERS);
 
         // 3. Connect Player 2 WS
         const p2Ws = new WebSocket(wsUrl);

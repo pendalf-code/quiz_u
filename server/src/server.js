@@ -215,10 +215,17 @@ function handleClientMessage(ws, message) {
             const res = room.startGame();
             if (!res.success) {
                 ws.send(createMessage(MSG_TYPES.ERROR, {
-                    code: ERROR_CODES.INVALID_ACTION,
+                    code: res.errorCode || ERROR_CODES.INVALID_ACTION,
                     message: res.message
                 }));
             }
+            break;
+        }
+
+        case MSG_TYPES.HOST_SET_LOCAL_HOST: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.setHostOnPC(Boolean(payload && payload.isHostOnPC));
             break;
         }
 
@@ -348,10 +355,16 @@ function handleClientMessage(ws, message) {
 }
 
 function handleClientDisconnect(ws) {
-    if (ws.roomCode && ws.playerId) {
+    if (ws.roomCode) {
         const room = roomManager.getRoom(ws.roomCode);
         if (room) {
-            room.removePlayer(ws.playerId);
+            if (ws.playerId) {
+                room.removePlayer(ws.playerId);
+            }
+            if (room.hostWs === ws) {
+                room.hostWs = null;
+                room.broadcastRoomState();
+            }
         }
     }
 }

@@ -24,6 +24,11 @@ class Room {
             ...options
         };
 
+        // Determine if local PC is treated as host
+        this.isHostOnPC = options.isHostOnPC !== undefined
+            ? Boolean(options.isHostOnPC)
+            : (options.requireMobileHost ? false : true);
+
         this.players = new Map(); // playerId -> PlayerData
         this.stateMachine = new GameStateMachine();
         this.scoreManager = new ScoreManager();
@@ -82,7 +87,6 @@ class Room {
             }
         }
     }
-
 
     broadcastRoomState() {
         if (this.hostWs && this.hostWs.readyState === 1) {
@@ -289,10 +293,53 @@ class Room {
         return this.currentPack;
     }
 
+    setHostOnPC(isHostOnPC) {
+        this.touch();
+        this.isHostOnPC = Boolean(isHostOnPC);
+        this.broadcastRoomState();
+        return this.isHostOnPC;
+    }
+
+    hasHost() {
+        const hasMobileHost = Boolean(this.hostPlayer && this.hostPlayer.isConnected);
+        const hasDesktopHost = Boolean(this.isHostOnPC && this.hostWs && (this.hostWs.readyState === undefined || this.hostWs.readyState === 1));
+        return hasMobileHost || hasDesktopHost;
+    }
+
+    getActivePlayersCount() {
+        return Array.from(this.players.values()).filter(p => p.isConnected && p.role !== 'host').length;
+    }
+
+    canStartGame() {
+        if (!this.hasHost()) {
+            return {
+                canStart: false,
+                errorCode: ERROR_CODES.HOST_REQUIRED,
+                message: 'Для старта игры требуется ведущий'
+            };
+        }
+        const activeCount = this.getActivePlayersCount();
+        if (activeCount < 2) {
+            return {
+                canStart: false,
+                errorCode: ERROR_CODES.NOT_ENOUGH_PLAYERS,
+                message: 'Для старта игры требуется как минимум 2 игрока'
+            };
+        }
+        return {
+            canStart: true
+        };
+    }
+
     startGame() {
         this.touch();
-        if (this.players.size === 0) {
-            return { success: false, message: 'В комнате нет игроков' };
+        const check = this.canStartGame();
+        if (!check.canStart) {
+            return {
+                success: false,
+                errorCode: check.errorCode,
+                message: check.message
+            };
         }
         this.stateMachine.showBoard();
         this.broadcastRoomState();
@@ -601,11 +648,20 @@ class Room {
                 : this.currentQuestion;
         }
 
+        const startCheck = this.canStartGame();
+        const resolvedHost = this.hostPlayer
+            ? this.sanitizeHost(this.hostPlayer)
+            : (this.isHostOnPC ? { id: 'host_pc', name: 'Ведущий (ПК)', role: 'host', isConnected: true } : null);
+
         return {
             roomCode: this.code,
             state: this.stateMachine.state,
             players: this.getSanitizedPlayers(),
-            host: this.sanitizeHost(this.hostPlayer),
+            host: resolvedHost,
+            hasHost: this.hasHost(),
+            isHostOnPC: this.isHostOnPC,
+            activePlayersCount: this.getActivePlayersCount(),
+            canStartGame: startCheck.canStart,
             currentRoundIndex: this.currentRoundIndex,
             currentCost: this.currentCost,
             activeBuzzerPlayerId: this.activeBuzzerPlayerId,

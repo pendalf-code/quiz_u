@@ -3250,6 +3250,8 @@
     let isOnlineGame = false;
     let hostNetworkClient = null;
     let currentOnlineRoomCode = '';
+        isLocalHostEnabled = false;
+    let isLocalHostEnabled = false;
     let activeOnlineBuzzer = null;
 
     function playBuzzerSound() {
@@ -3340,7 +3342,7 @@
         hostNetworkClient.on('connected', () => {
             if (statusDot) statusDot.className = 'status-indicator status-connected';
             if (statusText) statusText.textContent = 'Подключено к серверу';
-            hostNetworkClient.createRoom();
+            hostNetworkClient.createRoom({ isHostOnPC: isLocalHostEnabled, requireMobileHost: true });
         });
 
         hostNetworkClient.on('disconnected', () => {
@@ -3492,7 +3494,13 @@
                 if (typeof startOnlineGame === 'function') {
                     startOnlineGame();
                 }
+            } else if (!isGameStarted) {
+                renderLobbyPlayers();
             }
+        });
+
+        hostNetworkClient.on('server_error', (payload) => {
+            showSystemModal("⚠️ Ошибка сервера", payload.message || "Не удалось выполнить действие на сервере.");
         });
 
         hostNetworkClient.connect();
@@ -3519,30 +3527,83 @@
         }
     }
 
+    function toggleLocalHost() {
+        isLocalHostEnabled = !isLocalHostEnabled;
+        if (hostNetworkClient) {
+            hostNetworkClient.setLocalHost(isLocalHostEnabled);
+        }
+        renderLobbyPlayers();
+    }
+
     function renderLobbyPlayers() {
         const listEl = document.getElementById('lobby-players-list');
         const countEl = document.getElementById('lobby-players-count');
         const startBtn = document.getElementById('btn-lobby-start-game');
         const hintEl = document.getElementById('lobby-start-hint');
-        if (!listEl) return;
+        const hostBadgeEl = document.getElementById('lobby-host-badge');
+        const playersBadgeEl = document.getElementById('lobby-players-badge');
+        const localHostBtn = document.getElementById('btn-toggle-local-host');
 
         const players = hostNetworkClient ? hostNetworkClient.getPlayersList() : [];
         const activeCount = hostNetworkClient ? hostNetworkClient.getActivePlayersCount() : 0;
+        const host = hostNetworkClient ? hostNetworkClient.getHost() : null;
+        const hasHost = Boolean((host && host.isConnected) || isLocalHostEnabled || (hostNetworkClient && hostNetworkClient.hasHost));
 
         if (countEl) countEl.textContent = `${activeCount} / 8`;
 
-        if (startBtn) {
-            startBtn.disabled = (activeCount < 1);
-        }
-
-        if (hintEl) {
-            if (activeCount === 0) {
-                hintEl.textContent = 'Для старта сетевой игры нужен минимум 1 подключённый игрок';
+        // Update Host Readiness Badge (TASK-05)
+        if (hostBadgeEl) {
+            if (hasHost) {
+                hostBadgeEl.className = 'readiness-badge badge-ready';
+                if (host && host.name && host.id !== 'host_pc') {
+                    hostBadgeEl.textContent = `✅ Подключен (${host.name})`;
+                } else if (isLocalHostEnabled) {
+                    hostBadgeEl.textContent = '✅ Подключен (Этот ПК)';
+                } else {
+                    hostBadgeEl.textContent = '✅ Подключен';
+                }
             } else {
-                hintEl.textContent = `Готово к старту! Подключено игроков: ${activeCount}. Нажмите «Начать игру»`;
+                hostBadgeEl.className = 'readiness-badge badge-warning';
+                hostBadgeEl.textContent = '⚠️ Требуется ведущий';
             }
         }
 
+        // Update Local Host Button state
+        if (localHostBtn) {
+            localHostBtn.classList.toggle('is-active', isLocalHostEnabled);
+            localHostBtn.textContent = isLocalHostEnabled ? '✅ Ведущий на этом ПК (активен)' : '💻 Вести игру с этого ПК';
+        }
+
+        // Update Players Readiness Badge (TASK-05)
+        if (playersBadgeEl) {
+            if (activeCount >= 2) {
+                playersBadgeEl.className = 'readiness-badge badge-ready';
+                playersBadgeEl.textContent = `Игроков: ${activeCount}/2 (минимум 2)`;
+            } else {
+                playersBadgeEl.className = 'readiness-badge badge-warning';
+                playersBadgeEl.textContent = `Игроков: ${activeCount}/2 (минимум 2)`;
+            }
+        }
+
+        // Validation for Start Button (TASK-05: requires host AND at least 2 players)
+        const canStart = hasHost && (activeCount >= 2);
+        if (startBtn) {
+            startBtn.disabled = !canStart;
+        }
+
+        if (hintEl) {
+            if (!hasHost && activeCount < 2) {
+                hintEl.textContent = '⚠️ Для старта игры требуется подключить ведущего и минимум 2 игрока';
+            } else if (!hasHost) {
+                hintEl.textContent = '⚠️ Для старта игры требуется подключить ведущего (отсканируйте QR-код со смартфона или выберите «Вести с этого ПК»)';
+            } else if (activeCount < 2) {
+                hintEl.textContent = `⚠️ Для старта сетевой игры требуется минимум 2 игрока (сейчас: ${activeCount})`;
+            } else {
+                hintEl.textContent = `✅ Готово к старту! Подключено игроков: ${activeCount}. Нажмите «Начать игру»`;
+            }
+        }
+
+        if (!listEl) return;
         listEl.innerHTML = '';
         if (players.length === 0) {
             listEl.innerHTML = `
@@ -3595,9 +3656,15 @@
             showSystemModal("⚠️ Нет вопросов", "Пакет вопросов не выбран или пуст. Выберите пак перед началом игры.");
             return;
         }
-        const activePlayers = hostNetworkClient.getPlayersList().filter(p => p.isConnected);
-        if (activePlayers.length === 0) {
-            showSystemModal("⚠️ Нет игроков", "Для начала сетевой игры подключите хотя бы одного игрока через QR-код.");
+        const host = hostNetworkClient.getHost();
+        const hasHost = Boolean((host && host.isConnected) || isLocalHostEnabled || (hostNetworkClient && hostNetworkClient.hasHost));
+        if (!hasHost) {
+            showSystemModal("⚠️ Требуется ведущий", "Для начала сетевой игры требуется подключить ведущего со смартфона (роль «Ведущий») или включить «Вести игру с этого ПК».");
+            return;
+        }
+        const activePlayers = hostNetworkClient.getPlayersList().filter(p => p.isConnected && p.role !== 'host');
+        if (activePlayers.length < 2) {
+            showSystemModal("⚠️ Недостаточно игроков", `Для начала сетевой игры требуется минимум 2 подключённых игрока (сейчас: ${activePlayers.length}).`);
             return;
         }
 
@@ -3648,6 +3715,7 @@
         window.leaveOnlineLobby = leaveOnlineLobby;
         window.reconnectHostLobby = reconnectHostLobby;
         window.startOnlineGame = startOnlineGame;
+        window.toggleLocalHost = toggleLocalHost;
         window.copyRoomCode = copyRoomCode;
         window.judgeOnlineAnswer = judgeOnlineAnswer;
         window.isOnlineGame = () => isOnlineGame;

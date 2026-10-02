@@ -41,8 +41,10 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
     });
 
     await t.test('Anti-Cheat: players never receive question answer "a" or "a_img"', () => {
-        const mockPlayerWs = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
-        room.addPlayer('Игрок 1', '🦊', mockPlayerWs);
+        const mockPlayerWs1 = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
+        const mockPlayerWs2 = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
+        room.addPlayer('Игрок 1', '🦊', mockPlayerWs1);
+        room.addPlayer('Игрок 2', '🐼', mockPlayerWs2);
 
         const secretQuestion = {
             q: 'Назовите столицу Франции?',
@@ -52,7 +54,8 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
             type: 'normal'
         };
 
-        room.startGame();
+        const startRes = room.startGame();
+        assert.equal(startRes.success, true);
         room.selectQuestion(0, 0, secretQuestion);
 
         // Check host messages: host receives full answer
@@ -61,7 +64,7 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         assert.equal(hostQuestionMsg.payload.question.a, 'Париж (СЕКРЕТНЫЙ ОТВЕТ)');
 
         // Check player messages: answer fields MUST BE STRIPPED
-        const playerQuestionMsg = mockPlayerWs.messages.find(m => m.type === 'QUESTION_ACTIVE');
+        const playerQuestionMsg = mockPlayerWs1.messages.find(m => m.type === 'QUESTION_ACTIVE');
         assert.ok(playerQuestionMsg, 'Player must receive QUESTION_ACTIVE');
         assert.equal(playerQuestionMsg.payload.question.q, 'Назовите столицу Франции?');
         assert.equal(playerQuestionMsg.payload.question.a, undefined, 'Anti-Cheat: question.a must NOT be present on player client');
@@ -75,7 +78,8 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         const p1 = room.addPlayer('Игрок 1', '🦊', p1Ws).player;
         const p2 = room.addPlayer('Игрок 2', '🐼', p2Ws).player;
 
-        room.startGame();
+        const startRes = room.startGame();
+        assert.equal(startRes.success, true);
         room.selectQuestion(0, 0, { q: 'Вопрос на 500', a: 'Ответ', price: 500 });
 
         // Buzzer not active during reading
@@ -126,6 +130,7 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         const hostWs2 = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
         const reconnectWs = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
         const playerWs = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
+        const playerWs2 = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
 
         // 1. Initial Host Registration
         const hostJoin1 = room.addPlayer('Ведущий Максим', '🎙️', hostWs1, null, 'host');
@@ -162,9 +167,12 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         // 6. Anti-Cheat: Host receives answers, Players do not
         const regularPlayerJoin = room.addPlayer('Игрок Борис', '🐱', playerWs, null, 'player');
         assert.equal(regularPlayerJoin.success, true);
+        const regularPlayerJoin2 = room.addPlayer('Игрок Виктор', '🐶', playerWs2, null, 'player');
+        assert.equal(regularPlayerJoin2.success, true);
 
         const secretQ = { q: 'Вопрос ведущему', a: 'Секретный ответ', price: 200, type: 'normal' };
-        room.startGame();
+        const startRes = room.startGame();
+        assert.equal(startRes.success, true);
         room.selectQuestion(0, 0, secretQ);
 
         const hostQuestionMsg = reconnectWs.messages.find(m => m.type === 'QUESTION_ACTIVE');
@@ -174,5 +182,65 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         const playerQuestionMsg = playerWs.messages.find(m => m.type === 'QUESTION_ACTIVE');
         assert.ok(playerQuestionMsg, 'Player must receive QUESTION_ACTIVE');
         assert.equal(playerQuestionMsg.payload.question.a, undefined, 'Player must NOT see secret answer');
+    });
+
+    await t.test('TASK-05: Start Game Validation (Host requirement and minimum 2 players)', () => {
+        // A. Room requiring mobile host (isHostOnPC: false) without host
+        const noHostRoom = new Room('NOHS', mockHostWs, { isHostOnPC: false, requireMobileHost: true });
+        const p1Ws = { messages: [], readyState: 1, send(d) {} };
+        const p2Ws = { messages: [], readyState: 1, send(d) {} };
+        noHostRoom.addPlayer('Игрок 1', '🐱', p1Ws);
+        noHostRoom.addPlayer('Игрок 2', '🐶', p2Ws);
+
+        assert.equal(noHostRoom.hasHost(), false);
+        const startNoHost = noHostRoom.startGame();
+        assert.equal(startNoHost.success, false);
+        assert.equal(startNoHost.errorCode, 'HOST_REQUIRED');
+        assert.ok(startNoHost.message.includes('требуется ведущий'));
+
+        // When mobile host connects, start succeeds
+        const hostWs = { messages: [], readyState: 1, send(d) {} };
+        noHostRoom.addPlayer('Ведущий', '🎙️', hostWs, null, 'host');
+        assert.equal(noHostRoom.hasHost(), true);
+        const startWithHost = noHostRoom.startGame();
+        assert.equal(startWithHost.success, true);
+
+        // B. Room with host but fewer than 2 players
+        const underpopulatedRoom = new Room('FEWP', mockHostWs, { isHostOnPC: true });
+        assert.equal(underpopulatedRoom.getActivePlayersCount(), 0);
+        const startZero = underpopulatedRoom.startGame();
+        assert.equal(startZero.success, false);
+        assert.equal(startZero.errorCode, 'NOT_ENOUGH_PLAYERS');
+        assert.ok(startZero.message.includes('минимум 2 игрока'));
+
+        // 1 player is still not enough
+        underpopulatedRoom.addPlayer('Один Игрок', '🦊', p1Ws);
+        assert.equal(underpopulatedRoom.getActivePlayersCount(), 1);
+        const startOne = underpopulatedRoom.startGame();
+        assert.equal(startOne.success, false);
+        assert.equal(startOne.errorCode, 'NOT_ENOUGH_PLAYERS');
+
+        // 2 players satisfy condition
+        underpopulatedRoom.addPlayer('Второй Игрок', '🐼', p2Ws);
+        assert.equal(underpopulatedRoom.getActivePlayersCount(), 2);
+        const startTwo = underpopulatedRoom.startGame();
+        assert.equal(startTwo.success, true);
+
+        // C. Snapshot exposes readiness metadata
+        const snapshot = underpopulatedRoom.getStateSnapshot();
+        assert.equal(typeof snapshot.hasHost, 'boolean');
+        assert.equal(snapshot.activePlayersCount, 2);
+        assert.equal(snapshot.canStartGame, true);
+
+        // D. Local Host Toggle on PC
+        const toggleRoom = new Room('TOGG', mockHostWs, { isHostOnPC: false, requireMobileHost: true });
+        toggleRoom.addPlayer('Игрок 1', '🐱', p1Ws);
+        toggleRoom.addPlayer('Игрок 2', '🐶', p2Ws);
+        assert.equal(toggleRoom.hasHost(), false);
+        toggleRoom.setHostOnPC(true);
+        assert.equal(toggleRoom.hasHost(), true);
+        assert.equal(toggleRoom.isHostOnPC, true);
+        const toggleStart = toggleRoom.startGame();
+        assert.equal(toggleStart.success, true);
     });
 });

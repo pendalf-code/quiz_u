@@ -607,6 +607,24 @@
                             <span class="lobby-players-count" id="lobby-players-count">0 / 8</span>
                         </div>
 
+                        <!-- Readiness Status Indicators (TASK-05) -->
+                        <div class="lobby-readiness-panel" id="lobby-readiness-panel">
+                            <div class="readiness-chip" id="chip-readiness-host">
+                                <span class="readiness-chip-label">Ведущий:</span>
+                                <span class="readiness-badge badge-warning" id="lobby-host-badge">⚠️ Требуется ведущий</span>
+                            </div>
+                            <div class="readiness-chip" id="chip-readiness-players">
+                                <span class="readiness-chip-label">Игроки:</span>
+                                <span class="readiness-badge badge-warning" id="lobby-players-badge">Игроков: 0/2 (минимум 2)</span>
+                            </div>
+                        </div>
+
+                        <div class="lobby-host-local-row">
+                            <button type="button" class="btn-toggle-local-host" id="btn-toggle-local-host" onclick="toggleLocalHost()">
+                                💻 Вести игру с этого ПК
+                            </button>
+                        </div>
+
                         <div class="lobby-players-list" id="lobby-players-list">
                             <div class="lobby-players-empty" id="lobby-players-empty">
                                 <div class="lobby-empty-icon">⏳</div>
