@@ -34,7 +34,8 @@
                 <div class="menu-logo">ГОРОД Ю</div>
                 <div class="menu-subtitle">Место, где раскрываются таланты и создаётся будущее!</div>
                 <div class="setup-actions" style="flex-direction: column; gap: 18px; align-items: center;">
-                    <button class="btn menu-main-btn btn-menu-play" onclick="checkSavedGame()">▶️ Играть</button>
+                    <button class="btn menu-main-btn btn-menu-play" onclick="checkSavedGame()">▶️ Локальная игра (один экран)</button>
+                    <button class="btn menu-main-btn btn-menu-online" onclick="openOnlineLobby()">🌐 Создать онлайн-комнату (Jackbox-режим)</button>
                     <button class="btn menu-main-btn btn-menu-packs" onclick="openPrepareQuestionsChoice()">🛠️ Подготовить вопросы</button>
                     <button class="btn menu-main-btn btn-menu-rules" onclick="showJeopardyRules()">📖 Правила игры</button>
                     <button class="btn menu-main-btn btn-menu-settings" onclick="showSubScreen('sub-menu-settings')">⚙️ Настройки</button>
@@ -556,6 +557,84 @@
                 </div>
             </div>
 
+            <!-- Sub-screen: Онлайн-комната (Хост-лобби Jackbox-режима) -->
+            <div id="sub-menu-online-lobby" style="display: none; width: 100%;">
+                <div class="online-lobby-header">
+                    <button class="btn btn-secondary btn-back-lobby" onclick="leaveOnlineLobby()">
+                        ← В главное меню
+                    </button>
+                    <h2 class="online-lobby-title">🌐 Онлайн-комната (Jackbox-режим)</h2>
+                    <div class="online-server-status" id="lobby-server-status">
+                        <span class="status-indicator status-connecting" id="lobby-status-dot"></span>
+                        <span class="status-text" id="lobby-status-text">Подключение...</span>
+                    </div>
+                </div>
+
+                <div class="online-lobby-grid">
+                    <!-- Left Column: Room Code & QR -->
+                    <div class="lobby-card lobby-connect-card">
+                        <div class="lobby-card-title">📱 Подключение со смартфонов</div>
+                        <div class="lobby-code-badge">
+                            <span class="lobby-code-label">КОД КОМНАТЫ</span>
+                            <div class="lobby-room-code" id="lobby-room-code">----</div>
+                            <button class="btn-copy-code" id="btn-copy-room-code" onclick="copyRoomCode()" title="Скопировать код">📋 Скопировать</button>
+                        </div>
+
+                        <div class="lobby-qr-wrapper">
+                            <div id="lobby-qr-code" class="lobby-qr-container"></div>
+                        </div>
+
+                        <div class="lobby-join-instructions">
+                            <span>Отсканируйте камерой смартфона или перейдите по ссылке:</span>
+                            <a id="lobby-join-url" class="lobby-join-link" href="#" target="_blank">http://localhost:8080/mobile/</a>
+                        </div>
+
+                        <div class="lobby-server-input-group">
+                            <label for="lobby-server-url-input">Сервер WebSocket:</label>
+                            <div class="lobby-server-row">
+                                <input type="text" id="lobby-server-url-input" class="lobby-input" placeholder="ws://localhost:8080">
+                                <button class="btn btn-secondary btn-reconnect-server" onclick="reconnectHostLobby()">Подключить</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Players List & Pack Selection & Game Start -->
+                    <div class="lobby-card lobby-players-card">
+                        <div class="lobby-card-title-row">
+                            <div class="lobby-card-title">👥 Подключённые игроки</div>
+                            <span class="lobby-players-count" id="lobby-players-count">0 / 8</span>
+                        </div>
+
+                        <div class="lobby-players-list" id="lobby-players-list">
+                            <div class="lobby-players-empty" id="lobby-players-empty">
+                                <div class="lobby-empty-icon">⏳</div>
+                                <div class="lobby-empty-title">Ожидание подключения игроков...</div>
+                                <div class="lobby-empty-sub">Игроки подключаются через QR-код со своих смартфонов</div>
+                            </div>
+                        </div>
+
+                        <!-- Pack info block -->
+                        <div class="lobby-pack-info-card">
+                            <div class="lobby-pack-info-header">
+                                <span class="lobby-pack-label">📦 Выбранный пак вопросов:</span>
+                                <button class="btn-mini btn-change-pack" onclick="openPrepareQuestionsChoice()">Сменить пак</button>
+                            </div>
+                            <div class="lobby-pack-name" id="lobby-active-pack-title">Загрузка пака...</div>
+                        </div>
+
+                        <!-- Footer Start Action -->
+                        <div class="lobby-actions-footer">
+                            <button id="btn-lobby-start-game" class="btn btn-primary btn-lobby-start" onclick="startOnlineGame()" disabled>
+                                ▶️ Начать игру
+                            </button>
+                            <div class="lobby-start-hint" id="lobby-start-hint">
+                                Для старта сетевой игры нужен минимум 1 подключённый игрок
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="team-setup-container" style="display: none; width: 100%;">
                 <h3>⭐ Настройка команд перед игрой</h3>
                 <div class="setup-actions team-setup-actions-vertical" style="margin-top: 30px; margin-bottom: 35px;">
@@ -666,6 +745,12 @@
              style="display: none; width: 100%; max-width: 880px; aspect-ratio: 16/9; margin: 0 auto 20px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.4);">
             <iframe id="modal-answer-iframe" src="" style="width:100%; height:100%; border:none;"
                     allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        </div>
+
+        <!-- Online Buzzer Notification & Answering Player Banner -->
+        <div id="online-buzzer-banner" class="online-buzzer-banner" style="display: none;">
+            <div class="online-buzzer-icon" id="online-buzzer-icon">🔔</div>
+            <div class="online-buzzer-text" id="online-buzzer-text">Ожидание нажатия кнопки на смартфонах...</div>
         </div>
 
         <div id="teams-modal-list" style="width: 100%; margin-top: 20px;"></div>
@@ -838,6 +923,11 @@
 <script src="js/core/PackParser.js"></script>
 <script src="js/core/ScoreManager.js"></script>
 <script src="js/core/GameStateMachine.js"></script>
+
+<!-- Network & QR Modules -->
+<script src="js/net/Protocol.js"></script>
+<script src="js/net/qrcode.min.js"></script>
+<script src="js/net/NetworkClient.js"></script>
 
 <!-- KaTeX Math Renderer with offline fallback -->
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
