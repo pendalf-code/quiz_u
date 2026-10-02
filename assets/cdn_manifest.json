@@ -1,0 +1,388 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-10-02T15:34:27.770Z",
+  "cdnBaseUrl": "https://test-cdn.quizu.app",
+  "totalFiles": 63,
+  "totalSizeBytes": 30986270,
+  "totalSizeFormatted": "29.55 MB",
+  "assets": {
+    "assets/a_img/123.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/123.jpg",
+      "sizeBytes": 123285,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/a_img/balenca.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/balenca.jfif",
+      "sizeBytes": 18086,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/a_img/dr.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/dr.png",
+      "sizeBytes": 5025,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/a_img/emu.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/emu.jpg",
+      "sizeBytes": 1389565,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/a_img/essentuki2.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/essentuki2.jfif",
+      "sizeBytes": 13671,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/a_img/ivanushki.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/ivanushki.jpg",
+      "sizeBytes": 59386,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/a_img/otlomi2.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/otlomi2.jfif",
+      "sizeBytes": 9061,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/a_img/tabletki.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/tabletki.jfif",
+      "sizeBytes": 42558,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/a_img/tesla.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/tesla.png",
+      "sizeBytes": 4475,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/a_img/this_is_fine_a.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/this_is_fine_a.jpg",
+      "sizeBytes": 36113,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/a_img/vinogradniki.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/a_img/vinogradniki.jfif",
+      "sizeBytes": 75559,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/background.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/background.jpg",
+      "sizeBytes": 10984220,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/music/bremen.mp3": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/music/bremen.mp3",
+      "sizeBytes": 4148706,
+      "type": "audio",
+      "ext": ".mp3"
+    },
+    "assets/music/horse.mp3": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/music/horse.mp3",
+      "sizeBytes": 28915,
+      "type": "audio",
+      "ext": ".mp3"
+    },
+    "assets/music/t_rex.mp3": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/music/t_rex.mp3",
+      "sizeBytes": 39868,
+      "type": "audio",
+      "ext": ".mp3"
+    },
+    "assets/music/viper.mp3": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/music/viper.mp3",
+      "sizeBytes": 1314238,
+      "type": "audio",
+      "ext": ".mp3"
+    },
+    "assets/q_img/123.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/123.jpg",
+      "sizeBytes": 123285,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/arg.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/arg.png",
+      "sizeBytes": 5523,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/q_img/balenciaga.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/balenciaga.jpg",
+      "sizeBytes": 19617,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/dreame.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/dreame.png",
+      "sizeBytes": 9538,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/q_img/emo.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/emo.jfif",
+      "sizeBytes": 15058,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/q_img/essentuki.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/essentuki.jpg",
+      "sizeBytes": 54169,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/fr.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/fr.png",
+      "sizeBytes": 304,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/q_img/gr.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/gr.png",
+      "sizeBytes": 4189,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/q_img/hlev.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/hlev.jfif",
+      "sizeBytes": 54706,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/q_img/hom.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/hom.jfif",
+      "sizeBytes": 30279,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/q_img/images (3).jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/images (3).jfif",
+      "sizeBytes": 41840,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/q_img/images.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/images.jfif",
+      "sizeBytes": 47422,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/q_img/Kaseta.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/Kaseta.jpg",
+      "sizeBytes": 31172,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/kipr.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/kipr.png",
+      "sizeBytes": 6960,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/q_img/korova.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/korova.jfif",
+      "sizeBytes": 12498,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/q_img/meme_anakin_padme.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_anakin_padme.png",
+      "sizeBytes": 780741,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/q_img/meme_boromir.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_boromir.jpg",
+      "sizeBytes": 30671,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_clown.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_clown.jpg",
+      "sizeBytes": 211145,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_disaster_girl.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_disaster_girl.jpg",
+      "sizeBytes": 28992,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_distracted_bf.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_distracted_bf.jpg",
+      "sizeBytes": 96791,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_doge_cheems.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_doge_cheems.png",
+      "sizeBytes": 220113,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/q_img/meme_drake.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_drake.jpg",
+      "sizeBytes": 92771,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_epic_handshake.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_epic_handshake.jpg",
+      "sizeBytes": 93130,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_getting_paid.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_getting_paid.png",
+      "sizeBytes": 161952,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/q_img/meme_harold.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_harold.jpg",
+      "sizeBytes": 30850,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_roll_safe.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_roll_safe.jpg",
+      "sizeBytes": 30728,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_sad_escobar.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_sad_escobar.jpg",
+      "sizeBytes": 50676,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_same_picture.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_same_picture.jpg",
+      "sizeBytes": 210042,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_spiderman.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_spiderman.jpg",
+      "sizeBytes": 65845,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_this_is_fine.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_this_is_fine.jpg",
+      "sizeBytes": 51090,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_two_buttons.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_two_buttons.jpg",
+      "sizeBytes": 64963,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_uno_draw25.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_uno_draw25.jpg",
+      "sizeBytes": 29275,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/meme_woman_cat.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/meme_woman_cat.jpg",
+      "sizeBytes": 32637,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/nokia.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/nokia.jpg",
+      "sizeBytes": 70356,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/otlomi.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/otlomi.jpg",
+      "sizeBytes": 73786,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/pulp_fiction_briefcase_scene.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/pulp_fiction_briefcase_scene.jpg",
+      "sizeBytes": 100267,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/tabletki.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/tabletki.jfif",
+      "sizeBytes": 42558,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/q_img/tesla.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/tesla.jpg",
+      "sizeBytes": 10583,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/this_is_fine_q.jpg": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/this_is_fine_q.jpg",
+      "sizeBytes": 39198,
+      "type": "image",
+      "ext": ".jpg"
+    },
+    "assets/q_img/turkey.png": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/turkey.png",
+      "sizeBytes": 3192,
+      "type": "image",
+      "ext": ".png"
+    },
+    "assets/q_img/Van gog.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/Van gog.jfif",
+      "sizeBytes": 55075,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/q_img/сrabli.jfif": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/q_img/сrabli.jfif",
+      "sizeBytes": 30430,
+      "type": "other",
+      "ext": ".jfif"
+    },
+    "assets/video/flower.mp4": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/video/flower.mp4",
+      "sizeBytes": 1128375,
+      "type": "video",
+      "ext": ".mp4"
+    },
+    "assets/video/friday.mp4": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/video/friday.mp4",
+      "sizeBytes": 515198,
+      "type": "video",
+      "ext": ".mp4"
+    },
+    "assets/video/full_reklama.mp4": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/video/full_reklama.mp4",
+      "sizeBytes": 4499974,
+      "type": "video",
+      "ext": ".mp4"
+    },
+    "assets/video/mov_bbb.mp4": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/video/mov_bbb.mp4",
+      "sizeBytes": 788493,
+      "type": "video",
+      "ext": ".mp4"
+    },
+    "assets/video/short_reklama.mp4": {
+      "cdnUrl": "https://test-cdn.quizu.app/assets/video/short_reklama.mp4",
+      "sizeBytes": 2597082,
+      "type": "video",
+      "ext": ".mp4"
+    }
+  }
+}
