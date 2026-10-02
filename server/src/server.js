@@ -1,47 +1,53 @@
 /**
- * Quiz U - Authoritative WebSocket Server & Static HTTP Host
+ * Quiz U - Authoritative Multiplayer Game Room Server
+ * Node.js WebSocket + HTTP Server
  */
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
+
 const RoomManager = require('./RoomManager');
 const { MSG_TYPES, ERROR_CODES, createMessage, parseMessage } = require('./protocol');
 
 const PORT = process.env.PORT || 8080;
-const HOST = process.env.HOST || '0.0.0.0';
+const ROOT_DIR = path.resolve(__dirname, '../../');
 
-const roomManager = new RoomManager();
-
-// MIME Types for static hosting
 const MIME_TYPES = {
     '.html': 'text/html; charset=UTF-8',
-    '.js': 'application/javascript; charset=UTF-8',
     '.css': 'text/css; charset=UTF-8',
+    '.js': 'application/javascript; charset=UTF-8',
     '.json': 'application/json; charset=UTF-8',
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
-    '.gif': 'image/gif',
+    '.webp': 'image/webp',
     '.svg': 'image/svg+xml',
     '.ico': 'image/x-icon',
     '.mp3': 'audio/mpeg',
-    '.mp4': 'video/mp4',
-    '.ogg': 'audio/ogg',
-    '.webm': 'video/webm',
     '.wav': 'audio/wav',
     '.woff2': 'font/woff2'
 };
 
-const ROOT_DIR = path.resolve(__dirname, '../../');
+const roomManager = new RoomManager();
 
-// HTTP Request Handler
+// HTTP Static Files & Health Check Server
 const server = http.createServer((req, res) => {
-    const hostHeader = req.headers.host || 'localhost';
-    const url = new URL(req.url, `http://${hostHeader}`);
+    // CORS headers for local LAN play
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // Health-check endpoint
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+    }
+
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+
+    // Health check endpoint
     if (url.pathname === '/health') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ status: 'ok', time: Date.now() }));
@@ -125,11 +131,11 @@ wss.on('connection', (ws) => {
         if (ws.roomCode) {
             const room = roomManager.getRoom(ws.roomCode);
             if (room) {
-                if (ws.isHost) {
-                    // Host disconnected; keep room for a while for reconnection
-                    room.touch();
-                } else if (ws.playerId) {
+                if (ws.playerId) {
                     room.removePlayer(ws.playerId);
+                } else if (ws.isHost) {
+                    // Host screen disconnected; keep room for a while for reconnection
+                    room.touch();
                 }
             }
         }
@@ -207,7 +213,7 @@ function handleClientMessage(ws, message) {
             break;
         }
 
-        // --- PLAYER ACTIONS ---
+        // --- PLAYER / PARTICIPANT ACTIONS ---
         case MSG_TYPES.PLAYER_JOIN: {
             const room = roomManager.getRoom(payload.roomCode);
             if (!room) {
@@ -218,7 +224,8 @@ function handleClientMessage(ws, message) {
                 return;
             }
 
-            const joinResult = room.addPlayer(payload.name, payload.avatar, ws, payload.sessionToken);
+            const requestedRole = payload.role === 'host' ? 'host' : 'player';
+            const joinResult = room.addPlayer(payload.name, payload.avatar, ws, payload.sessionToken, requestedRole);
             if (!joinResult.success) {
                 ws.send(createMessage(MSG_TYPES.ERROR, {
                     code: joinResult.error,
@@ -229,13 +236,15 @@ function handleClientMessage(ws, message) {
 
             ws.roomCode = room.code;
             ws.playerId = joinResult.player.id;
-            ws.isHost = false;
+            ws.isHost = (joinResult.role === 'host');
 
-            // Send initial state to the joined player (without answers!)
+            const isHostClient = ws.isHost;
+            // Send initial state to the joined client (for host: full question; for player: answers stripped)
             ws.send(createMessage(MSG_TYPES.ROOM_STATE, {
-                ...room.getStateSnapshot(true),
-                self: room.sanitizePlayer(joinResult.player),
-                sessionToken: joinResult.player.sessionToken
+                ...room.getStateSnapshot(!isHostClient),
+                self: isHostClient ? room.sanitizeHost(joinResult.player) : room.sanitizePlayer(joinResult.player),
+                sessionToken: joinResult.player.sessionToken,
+                role: joinResult.role || 'player'
             }));
             break;
         }
@@ -250,11 +259,11 @@ function handleClientMessage(ws, message) {
                 return;
             }
 
-            const buzzResult = room.handleBuzz(ws.playerId);
-            if (!buzzResult.success) {
+            const res = room.handleBuzz(ws.playerId);
+            if (!res.success) {
                 ws.send(createMessage(MSG_TYPES.ERROR, {
-                    code: buzzResult.error,
-                    message: buzzResult.message
+                    code: res.error,
+                    message: res.message
                 }));
             }
             break;
@@ -263,36 +272,33 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.PLAYER_SUBMIT_ANSWER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.playerId) return;
-            room.submitAnswer(ws.playerId, payload ? payload.answerText : '');
+            room.handleAnswerSubmit(ws.playerId, payload.answerText);
             break;
         }
 
         case MSG_TYPES.PLAYER_AUCTION_BET: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.playerId) return;
-            room.handleAuctionBet(ws.playerId, payload ? payload.amount : 0);
+            room.handleAuctionBet(ws.playerId, payload.amount);
             break;
         }
 
         case MSG_TYPES.PLAYER_CAT_TRANSFER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.playerId) return;
-            room.handleCatTransfer(ws.playerId, payload ? payload.targetPlayerId : null);
+            room.handleCatTransfer(ws.playerId, payload.targetPlayerId);
             break;
         }
 
+        // --- SYSTEM ---
         case MSG_TYPES.PING: {
-            ws.send(createMessage(MSG_TYPES.PONG));
+            ws.send(createMessage(MSG_TYPES.PONG, { time: Date.now() }));
             break;
         }
-
-        default:
-            console.warn('Unknown message type:', type);
-            break;
     }
 }
 
-// Heartbeat ping interval (every 25 seconds)
+// Heartbeat interval to check alive connections
 const heartbeatInterval = setInterval(() => {
     wss.clients.forEach((ws) => {
         if (ws.isAlive === false) {
@@ -301,36 +307,33 @@ const heartbeatInterval = setInterval(() => {
         ws.isAlive = false;
         ws.ping();
     });
-}, 25000);
-if (heartbeatInterval.unref) {
-    heartbeatInterval.unref();
-}
+}, 30000);
+if (heartbeatInterval.unref) heartbeatInterval.unref();
 
 wss.on('close', () => {
     clearInterval(heartbeatInterval);
 });
 
-// Graceful shutdown
-function shutdown() {
-    console.log('Shutting down server...');
-    clearInterval(heartbeatInterval);
-    roomManager.destroy();
-    wss.close(() => {
-        server.close(() => {
-            console.log('Server stopped.');
-            process.exit(0);
-        });
-    });
-}
-
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
-
-// Start listening if run directly
+// Start Server if run directly
 if (require.main === module) {
-    server.listen(PORT, HOST, () => {
-        console.log(`Quiz U WebSocket Server listening on http://${HOST}:${PORT}`);
+    server.listen(PORT, () => {
+        console.log(`Quiz U Server running at http://localhost:${PORT}`);
+        console.log(`Mobile buzzer controller available at http://localhost:${PORT}/mobile/`);
     });
+
+    const shutdown = () => {
+        console.log('\nShutting down server gracefully...');
+        clearInterval(heartbeatInterval);
+        roomManager.destroy();
+        wss.close(() => {
+            server.close(() => {
+                process.exit(0);
+            });
+        });
+    };
+
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
 }
 
 module.exports = { server, wss, roomManager };

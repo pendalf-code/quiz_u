@@ -53,7 +53,7 @@
                     <div class="brand-logo">
                         <div class="logo-icon">🎮</div>
                         <h1 class="brand-title">QUIZ <span>U</span></h1>
-                        <p class="brand-subtitle">Мобильный пульт игрока</p>
+                        <p class="brand-subtitle">Мобильный пульт викторины</p>
                     </div>
 
                     <!-- Карточка быстрого повторного входа (если есть сессия) -->
@@ -86,6 +86,27 @@
                             >
                         </div>
 
+                        <!-- Выбор роли: Игрок или Ведущий (TASK-03) -->
+                        <div class="form-group">
+                            <label class="form-label">Ваша роль в игре</label>
+                            <div class="role-selector" id="role-selector" role="radiogroup" aria-label="Выбор роли">
+                                <button type="button" class="role-btn selected" data-role="player" id="btn-role-player" role="radio" aria-checked="true">
+                                    <span class="role-icon">🎯</span>
+                                    <div class="role-info">
+                                        <span class="role-title">Я игрок</span>
+                                        <span class="role-desc">Отвечаю с баззера</span>
+                                    </div>
+                                </button>
+                                <button type="button" class="role-btn" data-role="host" id="btn-role-host" role="radio" aria-checked="false">
+                                    <span class="role-icon">🎙️</span>
+                                    <div class="role-info">
+                                        <span class="role-title">Я ведущий</span>
+                                        <span class="role-desc">Управляю игрой</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label for="player-name-input">Ваше имя / никнейм</label>
                             <input 
@@ -114,7 +135,7 @@
                                 <button type="button" class="avatar-btn" data-avatar="⚡">⚡</button>
                                 <button type="button" class="avatar-btn" data-avatar="🎯">🎯</button>
                                 <button type="button" class="avatar-btn" data-avatar="👾">👾</button>
-                                <button type="button" class="avatar-btn" data-avatar="👑">👑</button>
+                                <button type="button" class="avatar-btn" data-avatar="🎙️">🎙️</button>
                             </div>
                         </div>
 
@@ -198,7 +219,7 @@
                                 type="text" 
                                 id="answer-input" 
                                 class="form-input text-center text-lg" 
-                                placeholder="Ваш вариант ответа..."
+                                placeholder="Ваш вариант ответа..." 
                                 autocomplete="off"
                                 autocorrect="off"
                                 spellcheck="false"

@@ -13,8 +13,9 @@ const PackParser = require('../../js/core/PackParser');
 class Room {
     constructor(code, hostWs, options = {}) {
         this.code = code.toUpperCase();
-        this.hostWs = hostWs;
+        this.hostWs = hostWs; // Big screen / PC socket
         this.hostToken = crypto.randomUUID();
+        this.hostPlayer = null; // Mobile host: { id, name, avatar, ws, sessionToken, role: 'host', isConnected, joinedAt }
         this.options = {
             maxPlayers: options.maxPlayers || 8,
             readingTime: options.readingTime || 7,
@@ -50,8 +51,12 @@ class Room {
     }
 
     sendToHost(type, payload) {
+        const msg = createMessage(type, payload);
         if (this.hostWs && this.hostWs.readyState === 1 /* OPEN */) {
-            this.hostWs.send(createMessage(type, payload));
+            this.hostWs.send(msg);
+        }
+        if (this.hostPlayer && this.hostPlayer.ws && this.hostPlayer.ws.readyState === 1 /* OPEN */) {
+            this.hostPlayer.ws.send(msg);
         }
     }
 
@@ -66,6 +71,9 @@ class Room {
         const msg = createMessage(type, payload);
         if (this.hostWs && this.hostWs.readyState === 1) {
             this.hostWs.send(msg);
+        }
+        if (this.hostPlayer && this.hostPlayer.ws && this.hostPlayer.ws.readyState === 1) {
+            this.hostPlayer.ws.send(msg);
         }
         for (const player of this.players.values()) {
             if (player.ws && player.ws.readyState === 1) {
@@ -83,13 +91,61 @@ class Room {
         }
     }
 
-    addPlayer(name, avatar, ws, sessionToken = null) {
+    addPlayer(name, avatar, ws, sessionToken = null, role = 'player') {
         this.touch();
         const trimmedName = (name || '').trim();
         if (!trimmedName) {
             return { success: false, error: ERROR_CODES.INVALID_PAYLOAD, message: 'Имя игрока не может быть пустым' };
         }
 
+        // --- HOST ROLE LOGIC ---
+        if (role === 'host') {
+            // Check if reconnecting by sessionToken
+            if (this.hostPlayer) {
+                if (sessionToken && this.hostPlayer.sessionToken === sessionToken) {
+                    this.hostPlayer.ws = ws;
+                    this.hostPlayer.isConnected = true;
+                    this.hostPlayer.name = trimmedName;
+                    if (avatar) this.hostPlayer.avatar = avatar;
+                    this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
+                        player: this.sanitizeHost(this.hostPlayer),
+                        role: 'host',
+                        isReconnect: true
+                    });
+                    return { success: true, player: this.hostPlayer, role: 'host', isReconnect: true };
+                }
+
+                // Host already exists in room
+                return {
+                    success: false,
+                    error: ERROR_CODES.HOST_ALREADY_EXISTS,
+                    message: 'Роль ведущего в этой комнате уже занята. Пожалуйста, войдите как игрок.'
+                };
+            }
+
+            const hostId = 'h_' + crypto.randomBytes(4).toString('hex');
+            const token = crypto.randomUUID();
+            this.hostPlayer = {
+                id: hostId,
+                name: trimmedName,
+                avatar: avatar || '🎙️',
+                ws,
+                sessionToken: token,
+                role: 'host',
+                isConnected: true,
+                joinedAt: Date.now()
+            };
+
+            this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
+                player: this.sanitizeHost(this.hostPlayer),
+                role: 'host',
+                isReconnect: false
+            });
+
+            return { success: true, player: this.hostPlayer, role: 'host', isReconnect: false };
+        }
+
+        // --- PLAYER ROLE LOGIC ---
         // Check if reconnecting by sessionToken
         if (sessionToken) {
             for (const [id, existing] of this.players.entries()) {
@@ -100,10 +156,11 @@ class Room {
                     existing.avatar = avatar || existing.avatar;
                     this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
                         player: this.sanitizePlayer(existing),
+                        role: 'player',
                         isReconnect: true
                     });
                     this.syncScoreManagerTeams();
-                    return { success: true, player: existing, isReconnect: true };
+                    return { success: true, player: existing, role: 'player', isReconnect: true };
                 }
             }
         }
@@ -112,7 +169,10 @@ class Room {
             return { success: false, error: ERROR_CODES.ROOM_FULL, message: 'Комната заполнена' };
         }
 
-        // Check duplicate name
+        // Check duplicate name against host and active players
+        if (this.hostPlayer && this.hostPlayer.name.toLowerCase() === trimmedName.toLowerCase() && this.hostPlayer.isConnected) {
+            return { success: false, error: ERROR_CODES.NAME_ALREADY_TAKEN, message: 'Имя уже занято в этой комнате' };
+        }
         for (const existing of this.players.values()) {
             if (existing.name.toLowerCase() === trimmedName.toLowerCase() && existing.isConnected) {
                 return { success: false, error: ERROR_CODES.NAME_ALREADY_TAKEN, message: 'Имя уже занято в этой комнате' };
@@ -127,6 +187,7 @@ class Room {
             avatar: avatar || '🐱',
             ws,
             sessionToken: token,
+            role: 'player',
             score: 0,
             isConnected: true,
             joinedAt: Date.now()
@@ -137,21 +198,34 @@ class Room {
 
         this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
             player: this.sanitizePlayer(newPlayer),
+            role: 'player',
             isReconnect: false
         });
 
-        return { success: true, player: newPlayer, isReconnect: false };
+        return { success: true, player: newPlayer, role: 'player', isReconnect: false };
     }
 
     removePlayer(playerId) {
         this.touch();
+        if (this.hostPlayer && this.hostPlayer.id === playerId) {
+            this.hostPlayer.isConnected = false;
+            this.hostPlayer.ws = null;
+            this.broadcastToAll(MSG_TYPES.PLAYER_LEFT, {
+                playerId,
+                name: this.hostPlayer.name,
+                role: 'host'
+            });
+            return;
+        }
+
         const player = this.players.get(playerId);
         if (player) {
             player.isConnected = false;
             player.ws = null;
             this.broadcastToAll(MSG_TYPES.PLAYER_LEFT, {
                 playerId,
-                name: player.name
+                name: player.name,
+                role: 'player'
             });
         }
     }
@@ -165,11 +239,23 @@ class Room {
         this.scoreManager.setTeams(teams);
     }
 
+    sanitizeHost(host) {
+        if (!host) return null;
+        return {
+            id: host.id,
+            name: host.name,
+            avatar: host.avatar,
+            role: 'host',
+            isConnected: host.isConnected
+        };
+    }
+
     sanitizePlayer(player) {
         return {
             id: player.id,
             name: player.name,
             avatar: player.avatar,
+            role: player.role || 'player',
             score: player.score,
             isConnected: player.isConnected
         };
@@ -207,7 +293,7 @@ class Room {
         const qType = (questionData && questionData.type) ? questionData.type : 'normal';
         this.stateMachine.startQuestion(this.currentCost, qType);
 
-        // Send full question to host
+        // Send full question to host (both PC screen and mobile host)
         this.sendToHost(MSG_TYPES.QUESTION_ACTIVE, {
             themeIdx,
             questionIdx,
@@ -260,60 +346,66 @@ class Room {
         }
 
         if (this.buzzedPlayers.has(playerId)) {
-            return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Вы уже нажимали кнопку на этот вопрос' };
+            return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Вы уже отвечали на этот вопрос' };
         }
 
         const player = this.players.get(playerId);
-        if (!player || !player.isConnected) {
-            return { success: false, error: ERROR_CODES.NOT_AUTHORIZED, message: 'Игрок не найден' };
+        if (!player) {
+            return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Игрок не найден' };
         }
 
-        // Arbiter: Lock first buzzing player
-        this.activeBuzzerPlayerId = playerId;
+        // Lock first buzzer winner
         this.buzzedPlayers.add(playerId);
+        this.activeBuzzerPlayerId = playerId;
         this.stateMachine.registerBuzz(playerId);
 
         this.broadcastToAll(MSG_TYPES.BUZZ_LOCKED, {
-            playerId: player.id,
+            playerId,
             playerName: player.name,
+            cost: this.currentCost,
             answerTime: this.options.answerTime
         });
 
-        // Start answer countdown
+        // Start answer countdown timer
         if (this.answerTimer) clearTimeout(this.answerTimer);
         this.answerTimer = setTimeout(() => {
             this.handleAnswerTimeout();
         }, (this.options.answerTime || 5) * 1000);
         if (this.answerTimer.unref) this.answerTimer.unref();
 
-        return { success: true, player: this.sanitizePlayer(player) };
+        return { success: true, winner: player };
     }
 
-    submitAnswer(playerId, answerText) {
+    handleAnswerSubmit(playerId, answerText) {
         this.touch();
-        const player = this.players.get(playerId);
-        if (!player) return { success: false, error: ERROR_CODES.NOT_AUTHORIZED };
+        if (this.stateMachine.state !== 'ANSWERING' || this.activeBuzzerPlayerId !== playerId) {
+            return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Сейчас не ваша очередь отвечать' };
+        }
 
-        this.broadcastToAll(MSG_TYPES.ANSWER_SUBMITTED, {
+        const player = this.players.get(playerId);
+        if (!player) return { success: false, error: ERROR_CODES.INVALID_ACTION };
+
+        // Forward answer to host
+        this.sendToHost(MSG_TYPES.ANSWER_SUBMITTED, {
             playerId,
             playerName: player.name,
-            answerText: (answerText || '').trim()
+            answerText
         });
+
         return { success: true };
     }
 
     handleAuctionBet(playerId, amount) {
         this.touch();
         const player = this.players.get(playerId);
-        if (!player) return { success: false, error: ERROR_CODES.NOT_AUTHORIZED };
+        if (!player) return { success: false, error: ERROR_CODES.INVALID_ACTION };
 
-        const betAmount = Math.max(0, parseInt(amount, 10) || 0);
         this.broadcastToAll(MSG_TYPES.AUCTION_BET_MADE, {
             playerId,
             playerName: player.name,
-            amount: betAmount
+            amount: Number(amount) || 0
         });
-        return { success: true, amount: betAmount };
+        return { success: true };
     }
 
     handleCatTransfer(playerId, targetPlayerId) {
@@ -438,6 +530,7 @@ class Room {
             roomCode: this.code,
             state: this.stateMachine.state,
             players: this.getSanitizedPlayers(),
+            host: this.sanitizeHost(this.hostPlayer),
             currentRoundIndex: this.currentRoundIndex,
             currentCost: this.currentCost,
             activeBuzzerPlayerId: this.activeBuzzerPlayerId,
@@ -450,6 +543,7 @@ class Room {
         if (this.answerTimer) clearTimeout(this.answerTimer);
         if (this.readingTimer) clearTimeout(this.readingTimer);
         this.players.clear();
+        this.hostPlayer = null;
         this.hostWs = null;
     }
 }

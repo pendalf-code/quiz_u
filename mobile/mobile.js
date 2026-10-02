@@ -1,6 +1,6 @@
 /**
  * Quiz U — Mobile Client Controller
- * Manages WebSocket connection, screens, buzzer tactile feedback, and room interaction.
+ * Manages WebSocket connection, screens, buzzer tactile feedback, roles (Host/Player), and room interaction.
  */
 
 (function () {
@@ -36,6 +36,9 @@
         joinForm: document.getElementById('join-form'),
         roomCodeInput: document.getElementById('room-code-input'),
         playerNameInput: document.getElementById('player-name-input'),
+        roleSelector: document.getElementById('role-selector'),
+        btnRolePlayer: document.getElementById('btn-role-player'),
+        btnRoleHost: document.getElementById('btn-role-host'),
         avatarGrid: document.getElementById('avatar-grid'),
         joinError: document.getElementById('join-error'),
         reconnectBanner: document.getElementById('reconnect-banner'),
@@ -88,6 +91,7 @@
 
     // State
     const state = {
+        selectedRole: 'player', // 'player' | 'host' (TASK-03)
         selectedAvatar: '🐱',
         currentScreen: 'join',
         selfPlayer: null,
@@ -110,6 +114,7 @@
     const STORAGE_KEYS = {
         ROOM: 'quiz_u_room_code',
         NAME: 'quiz_u_player_name',
+        ROLE: 'quiz_u_role',
         AVATAR: 'quiz_u_avatar',
         TOKEN: 'quiz_u_session_token',
         THEME: 'quiz_u_theme'
@@ -234,13 +239,16 @@
         }
 
         state.selfPlayer = player;
-        elements.headerAvatar.textContent = player.avatar || '🐱';
-        elements.headerName.textContent = player.name || 'Игрок';
-        elements.headerScore.textContent = `${player.score || 0} очков`;
+        const isHost = (player.role === 'host' || state.selectedRole === 'host');
+        elements.headerAvatar.textContent = player.avatar || (isHost ? '🎙️' : '🐱');
+
+        const roleSuffix = isHost ? ' (Ведущий)' : '';
+        elements.headerName.textContent = (player.name || 'Игрок') + roleSuffix;
+        elements.headerScore.textContent = isHost ? '🎙️ Пульт' : `${player.score || 0} очков`;
         elements.headerPlayerBadge.classList.remove('hidden');
 
         if (elements.waitingScore) {
-            elements.waitingScore.textContent = player.score || 0;
+            elements.waitingScore.textContent = isHost ? '🎙️ Пульт' : (player.score || 0);
         }
         if (elements.auctionBalance) {
             elements.auctionBalance.textContent = player.score || 0;
@@ -376,15 +384,16 @@
 
         sorted.forEach((p, idx) => {
             const isMe = state.selfPlayer && p.id === state.selfPlayer.id;
+            const isHost = (p.role === 'host');
             const row = document.createElement('div');
             row.className = `player-row${isMe ? ' is-me' : ''}`;
             row.innerHTML = `
                 <div class="player-row-left">
                     <span>${idx + 1}.</span>
-                    <span>${p.avatar || '🐱'}</span>
-                    <span>${escapeHtml(p.name)}</span>
+                    <span>${p.avatar || (isHost ? '🎙️' : '🐱')}</span>
+                    <span>${escapeHtml(p.name)}${isHost ? ' (Ведущий)' : ''}</span>
                 </div>
-                <div class="player-row-score">${p.score || 0}</div>
+                <div class="player-row-score">${isHost ? '🎙️' : (p.score || 0)}</div>
             `;
             elements.waitingPlayersList.appendChild(row);
         });
@@ -396,7 +405,7 @@
         state.selectedCatTargetId = null;
         elements.btnConfirmCat.disabled = true;
 
-        const otherPlayers = (players || []).filter(p => !state.selfPlayer || p.id !== state.selfPlayer.id);
+        const otherPlayers = (players || []).filter(p => (!state.selfPlayer || p.id !== state.selfPlayer.id) && p.role !== 'host');
 
         if (otherPlayers.length === 0) {
             elements.catPlayersList.innerHTML = '<div style="color:var(--text-muted); padding:10px;">Нет других игроков</div>';
@@ -440,7 +449,6 @@
     // =========================================================================
     function getWebSocketUrl() {
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // In local development or hosted static, connect to current host
         return `${protocol}//${location.host}`;
     }
 
@@ -454,7 +462,8 @@
 
         netClient = new NetworkClient({
             url: wsUrl,
-            isHost: false,
+            isHost: state.selectedRole === 'host',
+            role: state.selectedRole,
             autoReconnect: true,
             maxReconnectAttempts: 10
         });
@@ -469,7 +478,8 @@
                     state.roomCode,
                     state.selfPlayer.name,
                     state.selectedAvatar,
-                    state.sessionToken
+                    state.sessionToken,
+                    state.selectedRole
                 );
             }
         });
@@ -484,6 +494,14 @@
             elements.joinError.classList.remove('hidden');
             haptic('error');
             showToast(payload.message || 'Ошибка', 'error');
+
+            // If host role was taken, automatically switch role selector to player
+            if (payload.code === 'HOST_ALREADY_EXISTS') {
+                if (typeof selectRole === 'function') {
+                    selectRole('player');
+                }
+            }
+            showScreen('join');
         });
 
         netClient.on('room_state', (payload) => {
@@ -493,6 +511,15 @@
                 updatePlayerBadge(payload.self);
                 localStorage.setItem(STORAGE_KEYS.NAME, payload.self.name);
                 localStorage.setItem(STORAGE_KEYS.AVATAR, payload.self.avatar);
+                if (payload.self.role) {
+                    state.selectedRole = payload.self.role;
+                    localStorage.setItem(STORAGE_KEYS.ROLE, payload.self.role);
+                }
+            }
+
+            if (payload.role) {
+                state.selectedRole = payload.role;
+                localStorage.setItem(STORAGE_KEYS.ROLE, payload.role);
             }
 
             if (payload.sessionToken) {
@@ -506,6 +533,13 @@
             }
 
             renderPlayersList(payload.players);
+
+            // Update description based on role
+            if (state.selectedRole === 'host') {
+                elements.waitingDesc.textContent = 'Вы подключены как ведущий викторины. Ожидание запуска игры...';
+            } else {
+                elements.waitingDesc.textContent = 'Ведущий выбирает вопрос на табло...';
+            }
 
             // Handle Room States
             switch (payload.state) {
@@ -569,6 +603,7 @@
             } else {
                 setBuzzerState('locked-out');
             }
+            showScreen('buzzer');
         });
 
         netClient.on('buzz_locked', (payload) => {
@@ -581,51 +616,43 @@
                 elements.answerInput.value = '';
                 elements.answerInput.focus();
                 startAnswerTimer(payload.answerTime || 5);
-                showToast('ВЫ ОТВЕЧАЕТЕ!', 'success');
             } else {
                 haptic('buzz_lost');
                 setBuzzerState('other', { playerName: payload.playerName });
-                showToast(`Отвечает: ${payload.playerName}`, 'info');
+                showScreen('buzzer');
             }
         });
 
-        netClient.on('answer_timeout', (payload) => {
+        netClient.on('buzz_reset', () => {
+            if (state.isEligibleForBuzzer) {
+                setBuzzerState('ready');
+            }
+            showScreen('buzzer');
+        });
+
+        netClient.on('answer_timeout', () => {
             stopAnswerTimer();
             haptic('error');
-            const isMe = state.selfPlayer && payload.playerId === state.selfPlayer.id;
-            if (isMe) {
-                state.isEligibleForBuzzer = false;
-                setBuzzerState('locked-out');
-                showToast('Время вышло! Очки списаны.', 'error');
-                showScreen('buzzer');
-            } else {
-                showToast(payload.message || 'Время ответа истекло', 'info');
-            }
+            showToast('Время на ответ вышло!', 'error');
+            setBuzzerState('locked');
+            showScreen('buzzer');
         });
 
         netClient.on('score_updated', (payload) => {
             if (payload.players) {
                 renderPlayersList(payload.players);
             }
-
             if (state.selfPlayer && payload.playerId === state.selfPlayer.id) {
                 state.selfPlayer.score = payload.newScore;
                 updatePlayerBadge(state.selfPlayer);
-
-                if (payload.delta > 0) {
-                    haptic('success');
-                    showToast(`+${payload.delta} очков! Верно! 🎉`, 'success');
-                } else if (payload.delta < 0) {
-                    haptic('error');
-                    showToast(`${payload.delta} очков. Неверно. ❌`, 'error');
-                }
             }
         });
 
         netClient.on('player_joined', (payload) => {
-            if (netClient.lastState && netClient.lastState.players) {
-                renderPlayersList(netClient.getPlayersList());
+            if (payload.player) {
+                showToast(`Вошёл: ${payload.player.name}${payload.role === 'host' ? ' (Ведущий)' : ''}`, 'info', 2000);
             }
+            renderPlayersList(netClient.getPlayersList());
         });
 
         netClient.on('player_left', () => {
@@ -638,10 +665,53 @@
         });
     }
 
+    // Role Selection Helper (available in outer scope)
+    function selectRole(role) {
+        state.selectedRole = role === 'host' ? 'host' : 'player';
+        localStorage.setItem(STORAGE_KEYS.ROLE, state.selectedRole);
+
+        if (elements.btnRolePlayer && elements.btnRoleHost) {
+            if (state.selectedRole === 'host') {
+                elements.btnRoleHost.classList.add('selected');
+                elements.btnRoleHost.setAttribute('aria-checked', 'true');
+                elements.btnRolePlayer.classList.remove('selected');
+                elements.btnRolePlayer.setAttribute('aria-checked', 'false');
+
+                // Host default avatar if still cat
+                if (state.selectedAvatar === '🐱') {
+                    state.selectedAvatar = '🎙️';
+                    document.querySelectorAll('.avatar-btn').forEach(b => {
+                        b.classList.toggle('selected', b.dataset.avatar === '🎙️');
+                    });
+                }
+            } else {
+                elements.btnRolePlayer.classList.add('selected');
+                elements.btnRolePlayer.setAttribute('aria-checked', 'true');
+                elements.btnRoleHost.classList.remove('selected');
+                elements.btnRoleHost.setAttribute('aria-checked', 'false');
+
+                if (state.selectedAvatar === '🎙️') {
+                    state.selectedAvatar = '🐱';
+                    document.querySelectorAll('.avatar-btn').forEach(b => {
+                        b.classList.toggle('selected', b.dataset.avatar === '🐱');
+                    });
+                }
+            }
+        }
+    }
+
     // =========================================================================
     // UI Event Handlers
     // =========================================================================
     function setupEventHandlers() {
+        // Role Selector buttons (TASK-03)
+        if (elements.btnRolePlayer) {
+            elements.btnRolePlayer.addEventListener('click', () => selectRole('player'));
+        }
+        if (elements.btnRoleHost) {
+            elements.btnRoleHost.addEventListener('click', () => selectRole('host'));
+        }
+
         // Avatar selection
         elements.avatarGrid.addEventListener('click', (e) => {
             const btn = e.target.closest('.avatar-btn');
@@ -671,10 +741,16 @@
             }
 
             state.roomCode = roomCode;
-            state.selfPlayer = { name: playerName, avatar: state.selectedAvatar, score: 0 };
+            state.selfPlayer = {
+                name: playerName,
+                avatar: state.selectedAvatar,
+                role: state.selectedRole,
+                score: 0
+            };
 
             localStorage.setItem(STORAGE_KEYS.ROOM, roomCode);
             localStorage.setItem(STORAGE_KEYS.NAME, playerName);
+            localStorage.setItem(STORAGE_KEYS.ROLE, state.selectedRole);
             localStorage.setItem(STORAGE_KEYS.AVATAR, state.selectedAvatar);
 
             elements.joinError.classList.add('hidden');
@@ -684,7 +760,7 @@
             if (!netClient || !netClient.isConnected) {
                 initNetworkClient();
             } else {
-                netClient.joinRoom(roomCode, playerName, state.selectedAvatar, state.sessionToken);
+                netClient.joinRoom(roomCode, playerName, state.selectedAvatar, state.sessionToken, state.selectedRole);
             }
 
             showScreen('waiting');
@@ -695,13 +771,15 @@
         elements.btnReconnectQuick.addEventListener('click', () => {
             const savedRoom = localStorage.getItem(STORAGE_KEYS.ROOM);
             const savedName = localStorage.getItem(STORAGE_KEYS.NAME);
+            const savedRole = localStorage.getItem(STORAGE_KEYS.ROLE) || 'player';
             const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
             const savedAvatar = localStorage.getItem(STORAGE_KEYS.AVATAR) || '🐱';
 
             if (savedRoom && savedName) {
                 state.roomCode = savedRoom;
                 state.sessionToken = savedToken;
-                state.selfPlayer = { name: savedName, avatar: savedAvatar, score: 0 };
+                selectRole(savedRole);
+                state.selfPlayer = { name: savedName, avatar: savedAvatar, role: savedRole, score: 0 };
 
                 updateRoomBadge(savedRoom);
                 updatePlayerBadge(state.selfPlayer);
@@ -709,7 +787,7 @@
                 if (!netClient || !netClient.isConnected) {
                     initNetworkClient();
                 } else {
-                    netClient.joinRoom(savedRoom, savedName, savedAvatar, savedToken);
+                    netClient.joinRoom(savedRoom, savedName, savedAvatar, savedToken, savedRole);
                 }
 
                 showScreen('waiting');
@@ -834,8 +912,13 @@
         // Restore saved player preferences
         const savedRoom = localStorage.getItem(STORAGE_KEYS.ROOM);
         const savedName = localStorage.getItem(STORAGE_KEYS.NAME);
+        const savedRole = localStorage.getItem(STORAGE_KEYS.ROLE);
         const savedAvatar = localStorage.getItem(STORAGE_KEYS.AVATAR);
         const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+
+        if (savedRole) {
+            selectRole(savedRole);
+        }
 
         if (savedAvatar) {
             state.selectedAvatar = savedAvatar;
@@ -855,8 +938,8 @@
         // Show reconnect banner if existing session data is found
         if (savedToken && savedRoom && savedName) {
             state.sessionToken = savedToken;
-            elements.reconnectAvatar.textContent = savedAvatar || '🐱';
-            elements.reconnectName.textContent = savedName;
+            elements.reconnectAvatar.textContent = savedAvatar || (savedRole === 'host' ? '🎙️' : '🐱');
+            elements.reconnectName.textContent = savedName + (savedRole === 'host' ? ' (Ведущий)' : '');
             elements.reconnectRoom.textContent = `Комната: ${savedRoom}`;
             elements.reconnectBanner.classList.remove('hidden');
         }
