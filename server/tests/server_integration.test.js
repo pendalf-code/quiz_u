@@ -131,4 +131,18 @@ test('Server: Real WebSocket Integration Test', async (t) => {
         p2Ws.close();
         hostWs.close();
     });
+
+    await t.test('HTTP server correctly serves question packs with percent-encoded Cyrillic paths', async () => {
+        // Test standard encoded Cyrillic path
+        const packPath = encodeURI('/паки вопросов/01_Мультфильмы_и_Сказки/001_Золотая классика Союзмультфильма.json');
+        const res = await fetch(`http://127.0.0.1:${port}${packPath}`);
+        assert.equal(res.status, 200, `Expected 200 for ${packPath}, got ${res.status}`);
+        const packJson = await res.json();
+        assert.ok(packJson.themes || packJson.rounds || Array.isArray(packJson), 'Pack JSON should contain themes or rounds');
+    });
+
+    await t.test('HTTP server rejects path traversal attempts with 403 Forbidden', async () => {
+        const res = await fetch(`http://127.0.0.1:${port}/..%2fpackage.json`);
+        assert.equal(res.status, 403);
+    });
 });

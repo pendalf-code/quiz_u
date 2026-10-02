@@ -200,7 +200,7 @@ class Room {
         this.currentThemeIndex = themeIdx;
         this.currentQuestionIndex = questionIdx;
         this.currentQuestion = questionData;
-        this.currentCost = (questionData && questionData.price) ? questionData.price : 100;
+        this.currentCost = (questionData && (questionData.cost !== undefined ? questionData.cost : questionData.price)) ? Number(questionData.cost !== undefined ? questionData.cost : questionData.price) : 100;
         this.activeBuzzerPlayerId = null;
         this.buzzedPlayers.clear();
 

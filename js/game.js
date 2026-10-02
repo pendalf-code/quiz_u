@@ -1199,7 +1199,11 @@
     };
 
     function backToMainMenu() {
-        showSubScreen('sub-menu-main');
+        if (isOnlineGame) {
+            showSubScreen('sub-menu-online-lobby');
+        } else {
+            showSubScreen('sub-menu-main');
+        }
     }
 
     function openDevMenu() {
@@ -1614,6 +1618,10 @@
     }
 
     function saveTeamsFromSetup() {
+        if (!gameData || gameData.length === 0) {
+            showSystemModal("❌ ОШИБКА ЗАПУСКА", "Вопросы не загружены. Пожалуйста, выберите пак в каталоге или загрузите свой JSON-файл.");
+            return;
+        }
         const inputs = document.querySelectorAll('#team-inputs .team-input');
         let tempTeams = [];
         let hasEmptyFields = false;
@@ -1737,12 +1745,22 @@
         try {
             const parsed = JSON.parse(document.getElementById('json-editor').value);
             gameData = normalizeGameData(parsed);
+            window.gameData = gameData;
             localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
             currentRoundIndex = 0;
-            teams = [{name: "Команда 1", score: 0}, {name: "Команда 2", score: 0}];
-            clearTeamInputs();
-            showSubScreen('team-setup-container');
-            showSystemModal("📥 ПАКЕТ ЗАГРУЖЕН", "Новый пакет вопросов успешно импортирован!");
+            if (isOnlineGame) {
+                if (hostNetworkClient && hostNetworkClient.isConnected) {
+                    hostNetworkClient.setPack(gameData);
+                }
+                updateLobbyPackDisplay();
+                showSubScreen('sub-menu-online-lobby');
+                showSystemModal("📥 ПАКЕТ ЗАГРУЖЕН", "Новый пакет вопросов успешно импортирован для онлайн-игры!");
+            } else {
+                teams = [{name: "Команда 1", score: 0}, {name: "Команда 2", score: 0}];
+                clearTeamInputs();
+                showSubScreen('team-setup-container');
+                showSystemModal("📥 ПАКЕТ ЗАГРУЖЕН", "Новый пакет вопросов успешно импортирован!");
+            }
         } catch (e) {
             showSystemModal("❌ ОШИБКА JSON КОДА", "Не удалось прочитать пакет: " + e.message);
         }
@@ -3278,12 +3296,12 @@
         const titleEl = document.getElementById('lobby-active-pack-title');
         if (!titleEl) return;
         if (gameData && gameData.length > 0) {
+            const title = window.currentPackTitle ? `«${window.currentPackTitle}»` : 'Выбранный пак';
             const firstRound = gameData[0];
-            const roundName = firstRound?.roundName || 'Раунд 1';
             const themeCount = firstRound?.themes?.length || 0;
-            titleEl.textContent = `Готов к игре (${gameData.length} раунд(ов), ${themeCount} тем)`;
+            titleEl.textContent = `${title} (${gameData.length} раунд(ов), ${themeCount} тем в 1-м раунде)`;
         } else {
-            titleEl.textContent = 'Стандартный пак викторины';
+            titleEl.textContent = 'Пакет не выбран (выберите в каталоге)';
         }
     }
 
@@ -3527,6 +3545,10 @@
 
     function startOnlineGame() {
         if (!hostNetworkClient) return;
+        if (!gameData || gameData.length === 0) {
+            showSystemModal("⚠️ Нет вопросов", "Пакет вопросов не выбран или пуст. Выберите пак перед началом игры.");
+            return;
+        }
         const activePlayers = hostNetworkClient.getPlayersList().filter(p => p.isConnected);
         if (activePlayers.length === 0) {
             showSystemModal("⚠️ Нет игроков", "Для начала сетевой игры подключите хотя бы одного игрока через QR-код.");
@@ -3584,6 +3606,7 @@
         window.judgeOnlineAnswer = judgeOnlineAnswer;
         window.isOnlineGame = () => isOnlineGame;
         window.getHostNetworkClient = () => hostNetworkClient;
+        window.updateLobbyPackDisplay = updateLobbyPackDisplay;
         window.toggleTimerPause = toggleTimerPause;
         window.pauseTimer = pauseTimer;
         window.resumeTimer = resumeTimer;
@@ -3594,6 +3617,25 @@
         initTheme();
         showSubScreen('sub-menu-main');
         generateStarrySky();
+
+        if (!gameData || gameData.length === 0) {
+            if (typeof AVAILABLE_PACKS !== 'undefined' && AVAILABLE_PACKS.length > 0) {
+                const firstPack = AVAILABLE_PACKS[0];
+                if (typeof loadPackJsonData === 'function') {
+                    loadPackJsonData(firstPack).then(rounds => {
+                        if (rounds && rounds.length > 0) {
+                            gameData = rounds;
+                            window.gameData = gameData;
+                            window.currentPackTitle = firstPack.title;
+                            try {
+                                localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+                            } catch (e) {}
+                            updateLobbyPackDisplay();
+                        }
+                    }).catch(e => console.warn('Could not auto-load default pack:', e));
+                }
+            }
+        }
 
         // Stage 5: Steamworks & Gamepad initialization
         if (typeof SteamIntegration !== 'undefined') {

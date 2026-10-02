@@ -78,8 +78,9 @@
                         if (typeof q.a !== 'string' || q.a.trim().length === 0) {
                             errors.push(`Отсутствует ответ на вопрос #${qIdx + 1} в теме "${themeName}"`);
                         }
-                        if (typeof q.cost !== 'number' || isNaN(q.cost) || q.cost <= 0) {
-                            errors.push(`Некорректная стоимость (${q.cost}) вопроса #${qIdx + 1} в теме "${themeName}"`);
+                        const costVal = q.cost !== undefined ? q.cost : q.price;
+                        if (typeof costVal !== 'number' || isNaN(costVal) || costVal <= 0) {
+                            errors.push(`Некорректная стоимость (${costVal}) вопроса #${qIdx + 1} в теме "${themeName}"`);
                         }
                     });
                 });
@@ -109,7 +110,7 @@
                     name: theme.name,
                     questions: (theme.questions || []).map(q => {
                         const sanitized = {
-                            cost: q.cost,
+                            cost: q.cost !== undefined ? q.cost : q.price,
                             q: q.q,
                             type: q.type || 'normal',
                             hasMedia: !!(q.img || q.music || q.video)
@@ -133,7 +134,7 @@
             if (!question) return null;
             const safe = {
                 q: question.q,
-                cost: question.cost,
+                cost: question.cost !== undefined ? question.cost : question.price,
                 type: question.type || 'normal'
             };
             if (question.img) safe.img = question.img;

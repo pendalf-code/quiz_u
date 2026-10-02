@@ -541,6 +541,8 @@ async function selectPackToPlay(packId) {
             throw new Error('Файл пака не содержит раундов с вопросами');
         }
 
+        window.currentPackTitle = pack.title;
+
         // Clear previous in-progress game save
         if (typeof clearGameState === 'function') {
             clearGameState();
@@ -561,14 +563,31 @@ async function selectPackToPlay(packId) {
             currentRoundIndex = 0;
         }
 
-        if (typeof showTeamSetup === 'function') {
-            showTeamSetup();
-        } else if (typeof showSubScreen === 'function') {
-            showSubScreen('team-setup-container');
-        }
+        const isOnline = (typeof window.isOnlineGame === 'function' && window.isOnlineGame());
+        if (isOnline) {
+            const hostClient = (typeof window.getHostNetworkClient === 'function') ? window.getHostNetworkClient() : null;
+            if (hostClient && hostClient.isConnected) {
+                hostClient.setPack(roundsData);
+            }
+            if (typeof window.updateLobbyPackDisplay === 'function') {
+                window.updateLobbyPackDisplay();
+            }
+            if (typeof showSubScreen === 'function') {
+                showSubScreen('sub-menu-online-lobby');
+            }
+            if (typeof showSystemModal === 'function') {
+                showSystemModal('Пак загружен! 🎉', `Пак «${pack.title}» успешно выбран для сетевой игры!\nВсе подключенные игроки получат обновленную информацию.`);
+            }
+        } else {
+            if (typeof showTeamSetup === 'function') {
+                showTeamSetup();
+            } else if (typeof showSubScreen === 'function') {
+                showSubScreen('team-setup-container');
+            }
 
-        if (typeof showSystemModal === 'function') {
-            showSystemModal('Пак загружен! 🎉', `Пак «${pack.title}» успешно загружен из JSON-файла!\nВыберите команды и приступайте к игре.`);
+            if (typeof showSystemModal === 'function') {
+                showSystemModal('Пак загружен! 🎉', `Пак «${pack.title}» успешно загружен из JSON-файла!\nВыберите команды и приступайте к игре.`);
+            }
         }
     } catch (err) {
         console.error('Error loading pack:', err);

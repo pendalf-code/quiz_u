@@ -28,6 +28,9 @@ const MIME_TYPES = {
     '.ico': 'image/x-icon',
     '.mp3': 'audio/mpeg',
     '.mp4': 'video/mp4',
+    '.ogg': 'audio/ogg',
+    '.webm': 'video/webm',
+    '.wav': 'audio/wav',
     '.woff2': 'font/woff2'
 };
 
@@ -35,7 +38,8 @@ const ROOT_DIR = path.resolve(__dirname, '../../');
 
 // HTTP Request Handler
 const server = http.createServer((req, res) => {
-    const url = new URL(req.url, `http://${req.headers.host}`);
+    const hostHeader = req.headers.host || 'localhost';
+    const url = new URL(req.url, `http://${hostHeader}`);
 
     // Health-check endpoint
     if (url.pathname === '/health') {
@@ -52,22 +56,33 @@ const server = http.createServer((req, res) => {
     }
 
     // Static files hosting for host and mobile clients
-    let reqPath = url.pathname;
+    let reqPath;
+    try {
+        reqPath = decodeURIComponent(url.pathname);
+    } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=UTF-8' });
+        res.end('Bad Request');
+        return;
+    }
+
     if (reqPath === '/' || reqPath === '/mobile' || reqPath === '/mobile/') {
         reqPath = reqPath.startsWith('/mobile') ? '/mobile/index.html' : '/index.html';
     }
-    let filePath = path.join(ROOT_DIR, reqPath);
+
+    // Normalize safe file path relative to ROOT_DIR
+    const filePath = path.resolve(ROOT_DIR, '.' + reqPath);
+    const rel = path.relative(ROOT_DIR, filePath);
 
     // Prevent directory traversal attacks
-    if (!filePath.startsWith(ROOT_DIR)) {
-        res.writeHead(403, { 'Content-Type': 'text/plain' });
+    if (rel.startsWith('..') || path.isAbsolute(rel)) {
+        res.writeHead(403, { 'Content-Type': 'text/plain; charset=UTF-8' });
         res.end('Forbidden');
         return;
     }
 
     fs.stat(filePath, (err, stats) => {
         if (err || !stats.isFile()) {
-            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
             res.end('File Not Found');
             return;
         }
@@ -129,7 +144,7 @@ function handleClientMessage(ws, message) {
     const { type, payload } = message;
 
     switch (type) {
-        // --- HOST ACTIONS ---\
+        // --- HOST ACTIONS ---
         case MSG_TYPES.HOST_CREATE_ROOM: {
             const room = roomManager.createRoom(ws, payload ? payload.options : {});
             ws.isHost = true;
