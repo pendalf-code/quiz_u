@@ -41,6 +41,13 @@
 * **Относительные пути:** Только `/` (например: `assets/music/track.mp3`). Никаких абсолютных путей ОС.
 * **Тестирование:** `npm test` (`node --test tests/**/*.test.js`) должен проходить без ошибок после каждого изменения.
 
+### 1.5. Строгая модель ветвления: ЗАПРЕТ на слияния в `main` и `dev` 🌿🚫
+* **`main` и `dev` ЗАМОРОЖЕНЫ:** В ветки `main` и `dev` изменения сетевого мультиплеера **НЕ вливаются**! Они остаются нетронутыми для классической оффлайн-версии игры.
+* **Базовая ветка для всей сетевой разработки — `feature/online-multiplayer`:**
+  - Любые фичи и этапы сетевого режима разрабатываются в ветках, отпочкованных **строго от `feature/online-multiplayer`** (например: `feature/online-multiplayer/host-lobby`, `feature/online-multiplayer/mobile-client`).
+  - Все готовые и протестированные фичи вливаются **строго обратно в `feature/online-multiplayer`**.
+  - **Категорически запрещено** выполнять слияние сетевых веток в `dev` или `main`.
+
 ---
 
 ## 2. Архитектура и границы модулей
@@ -54,7 +61,8 @@ quiz_u/
 │   │   └── PackParser.js      # Валидация и нормализация пакетов вопросов
 │   ├── net/                   # СЕТЕВОЙ КЛИЕНТ
 │   │   ├── NetworkClient.js   # WebSocket, Reconnect, Heartbeat, очередь сообщений
-│   │   └── Protocol.js        # Константы сообщений (ROOM_CREATE, BUZZ, ANSWER...)
+│   │   ├── Protocol.js        # Константы сообщений (ROOM_CREATE, BUZZ, ANSWER...)
+│   │   └── qrcode.min.js      # Генератор QR-кода для лобби хоста
 │   ├── game.js                # Host UI & Рендерер ведущего экрана
 │   ├── catalog.js             # Каталог паков
 │   └── packs_data.js          # Локальная база паков
@@ -67,6 +75,7 @@ quiz_u/
 │   └── src/
 │       ├── Room.js            # Игровой цикл комнаты, таймеры, античит
 │       ├── RoomManager.js     # Пул комнат, генерация 4-значных кодов
+│       ├── protocol.js        # Протокол сообщений WebSocket
 │       └── server.js          # HTTP + WebSocket сервер
 ├── tests/                     # АВТОТЕСТЫ (Node.js test runner)
 ├── PLAN.md                    # Концепция и архитектура
@@ -99,20 +108,24 @@ quiz_u/
 ## 4. Git Workflow и модель ветвления 🌿
 
 1. **Базовая ветка сетевой разработки:**
-   * Все разработки мультиплеера ведутся от базовой ветки **`feature/online-multiplayer`** (в репозитории: `feature/online-multiplayer` / `feature/online-miltiplayer`).
-2. **Ветвление под каждую фичу:**
-   * Для каждой новой функциональности или подзадачи **обязательно создается отдельная ветка, ответвленная от базовой ветки `feature/online-multiplayer`**:
+   * Вся разработка мультиплеера ведётся исключительно в базовой ветке **`feature/online-multiplayer`**.
+   * Ветки `main` и `dev` **заморожены** и не принимают сетевые коммиты.
+2. **Ветвление под каждую фичу/этап:**
+   * Для каждого этапа создаётся отдельная ветка от базовой:
      * `git checkout feature/online-multiplayer`
-     * `git checkout -b feature/online-multiplayer/<feature-name>` (например: `feature/online-multiplayer/host-lobby`, `feature/online-multiplayer/mobile-buzzer`, `feature/online-multiplayer/reconnect-token`).
+     * `git checkout -b feature/online-multiplayer/<feature-name>` (например: `feature/online-multiplayer/host-lobby`, `feature/online-multiplayer/mobile-client`).
 3. **Слияние фич в базовую ветку:**
-   * После реализации фичи и полного прохождения тестов (`npm test`), подветка фичи вливается обратно в `feature/online-multiplayer`.
+   * После реализации фичи и успешного прохождения всех тестов (`npm test`), подветка фичи вливается **строго обратно в `feature/online-multiplayer`**:
+     * `git checkout feature/online-multiplayer`
+     * `git merge feature/online-multiplayer/<feature-name> --no-ff`
 4. **Атомарные коммиты:**
    * Каждому логическому блоку изменений — отдельный коммит:
      * `feat(core): extract GameStateMachine logic`
      * `feat(server): implement room lifecycle and buzz arbitration`
-     * `docs: update ROADMAP.md progress for stage 1`
+     * `feat(host): implement host online lobby and QR code`
+     * `docs: update ROADMAP.md progress for stage 3`
 5. **Процедура перед пушем:**
-   * Шаг 1: Успешный прогон `npm test`.
+   * Шаг 1: Успешный прогон `npm test` и `server/tests`.
    * Шаг 2: Обновление чекбоксов и лога в [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md).
    * Шаг 3: **Формирование и вывод саммари пользователю** (согласно п. 1.2).
    * Шаг 4: Ожидание подтверждения пользователя перед выполнением `git push`.
