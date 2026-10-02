@@ -17,6 +17,8 @@
 <body>
 
 <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Переключить тему">☀️</button>
+<button class="fullscreen-toggle-btn" id="fullscreen-toggle" onclick="toggleFullscreen()" title="Полноэкранный режим (F11)">⛶</button>
+<div id="gamepad-toast" class="gamepad-toast" style="display: none;"></div>
 
 <div class="city-bg">
     <div class="sun-container"></div>
@@ -934,6 +936,8 @@
 <script src="js/packs_data.js"></script>
 <script src="js/catalog.js"></script>
 <script src="js/math_render.js"></script>
+<script src="js/desktop/SteamIntegration.js"></script>
+<script src="js/desktop/GamepadManager.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>
