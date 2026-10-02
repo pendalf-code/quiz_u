@@ -855,6 +855,11 @@
     }
 
     function checkSavedGame() {
+        isOnlineGame = false;
+        if (hostNetworkClient) {
+            hostNetworkClient.disconnect();
+            hostNetworkClient = null;
+        }
         const saved = localStorage.getItem('quiz_save_state');
         if (saved) {
             showSystemModal(
@@ -1061,7 +1066,7 @@
 
     function showSubScreen(screenId) {
         stopFireworks();
-        ['sub-menu-main', 'sub-menu-prepare-choice', 'sub-menu-packs-catalog', 'sub-menu-editor', 'sub-menu-settings', 'sub-menu-dev', 'team-setup-container', 'sub-menu-first-turn'].forEach(id => {
+        ['sub-menu-main', 'sub-menu-online-lobby', 'sub-menu-prepare-choice', 'sub-menu-packs-catalog', 'sub-menu-editor', 'sub-menu-settings', 'sub-menu-dev', 'team-setup-container', 'sub-menu-first-turn'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
@@ -1077,7 +1082,7 @@
         const mainBox = document.getElementById('main-app-box');
         if (mainBox) {
             mainBox.style.display = 'flex';
-            mainBox.style.maxWidth = (screenId === 'sub-menu-editor' || screenId === 'sub-menu-packs-catalog' || screenId === 'sub-menu-prepare-choice') ? '1520px' : '1050px';
+            mainBox.style.maxWidth = (screenId === 'sub-menu-editor' || screenId === 'sub-menu-packs-catalog' || screenId === 'sub-menu-prepare-choice' || screenId === 'sub-menu-online-lobby') ? '1520px' : '1050px';
         }
         const target = document.getElementById(screenId);
         if (target) target.style.display = 'block';
@@ -1874,6 +1879,21 @@
         currentCost = question.cost;
         activeTeamIdxForQuestion = null;
         auctionBets = {};
+
+        if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+            activeOnlineBuzzer = null;
+            const banner = document.getElementById('online-buzzer-banner');
+            if (banner) {
+                banner.style.display = 'flex';
+                banner.className = 'online-buzzer-banner';
+                const text = document.getElementById('online-buzzer-text');
+                if (text) text.textContent = '⏳ Чтение вопроса... Кнопка активируется после таймера';
+            }
+            hostNetworkClient.selectQuestion(currentThemeIdx, currentQuestionIdx, question);
+        } else {
+            const banner = document.getElementById('online-buzzer-banner');
+            if (banner) banner.style.display = 'none';
+        }
         isAnswerTimerActive = false;
 
         const timerElem = document.getElementById('timer'), hintElem = document.getElementById('timer-hint');
@@ -2365,6 +2385,14 @@
                         hintElemInner.style.color = "#ff7675";
                     }
                     playStartThinkingSound();
+                    if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+                        hostNetworkClient.activateBuzzer();
+                        const banner = document.getElementById('online-buzzer-banner');
+                        if (banner) {
+                            const text = document.getElementById('online-buzzer-text');
+                            if (text) text.textContent = '🔔 Кнопка активна! Игроки могут отвечать со смартфонов';
+                        }
+                    }
                 } else {
                     stopTimer();
                     playTimeUpSound();
@@ -2576,6 +2604,9 @@
         stopTimer();
         stopQuestionAudio();
         isAnswerTimerActive = false;
+
+        const onlineBanner = document.getElementById('online-buzzer-banner');
+        if (onlineBanner) onlineBanner.style.display = 'none';
 
         const timerElem = document.getElementById('timer');
         const hintElem = document.getElementById('timer-hint');
@@ -3089,6 +3120,367 @@
 
             container.appendChild(star);
         }
+    }
+
+
+    // --------------------------------------------------------------------------
+    // Online Multiplayer (Jackbox Mode) Logic
+    // --------------------------------------------------------------------------
+    let isOnlineGame = false;
+    let hostNetworkClient = null;
+    let currentOnlineRoomCode = '';
+    let activeOnlineBuzzer = null;
+
+    function playBuzzerSound() {
+        if (!configEnableSound) return;
+        try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, now);
+            osc.frequency.setValueAtTime(880, now + 0.08);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.35);
+        } catch (e) {
+            playStartThinkingSound();
+        }
+    }
+
+    function openOnlineLobby() {
+        isOnlineGame = true;
+        showSubScreen('sub-menu-online-lobby');
+        updateLobbyPackDisplay();
+        initHostNetwork();
+    }
+
+    function leaveOnlineLobby() {
+        if (hostNetworkClient) {
+            hostNetworkClient.disconnect();
+            hostNetworkClient = null;
+        }
+        isOnlineGame = false;
+        currentOnlineRoomCode = '';
+        activeOnlineBuzzer = null;
+        showSubScreen('sub-menu-main');
+    }
+
+    function updateLobbyPackDisplay() {
+        const titleEl = document.getElementById('lobby-active-pack-title');
+        if (!titleEl) return;
+        if (gameData && gameData.length > 0) {
+            const firstRound = gameData[0];
+            const roundName = firstRound?.roundName || 'Раунд 1';
+            const themeCount = firstRound?.themes?.length || 0;
+            titleEl.textContent = `Готов к игре (${gameData.length} раунд(ов), ${themeCount} тем)`;
+        } else {
+            titleEl.textContent = 'Стандартный пак викторины';
+        }
+    }
+
+    function initHostNetwork() {
+        const statusDot = document.getElementById('lobby-status-dot');
+        const statusText = document.getElementById('lobby-status-text');
+        const urlInput = document.getElementById('lobby-server-url-input');
+
+        if (statusDot) statusDot.className = 'status-indicator status-connecting';
+        if (statusText) statusText.textContent = 'Подключение...';
+
+        const proto = (window.location && window.location.protocol === 'https:') ? 'wss:' : 'ws:';
+        const host = (window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+        const port = (window.location && window.location.port) ? window.location.port : '8080';
+        const defaultWsUrl = `${proto}//${host}:${port}`;
+
+        if (urlInput && !urlInput.value) {
+            urlInput.value = defaultWsUrl;
+        }
+        const wsUrl = (urlInput && urlInput.value) ? urlInput.value.trim() : defaultWsUrl;
+
+        if (hostNetworkClient) {
+            hostNetworkClient.disconnect();
+            hostNetworkClient = null;
+        }
+
+        if (typeof NetworkClient === 'undefined') {
+            console.error('NetworkClient is not defined!');
+            if (statusDot) statusDot.className = 'status-indicator status-error';
+            if (statusText) statusText.textContent = 'Ошибка: NetworkClient не найден';
+            return;
+        }
+
+        hostNetworkClient = new NetworkClient({ url: wsUrl, isHost: true });
+
+        hostNetworkClient.on('connected', () => {
+            if (statusDot) statusDot.className = 'status-indicator status-connected';
+            if (statusText) statusText.textContent = 'Подключено к серверу';
+            hostNetworkClient.createRoom();
+        });
+
+        hostNetworkClient.on('disconnected', () => {
+            if (statusDot) statusDot.className = 'status-indicator status-error';
+            if (statusText) statusText.textContent = 'Отключено от сервера';
+        });
+
+        hostNetworkClient.on('error', (err) => {
+            if (statusDot) statusDot.className = 'status-indicator status-error';
+            if (statusText) statusText.textContent = 'Ошибка соединения';
+            console.warn('Host Network Error:', err);
+        });
+
+        hostNetworkClient.on('room_created', (data) => {
+            currentOnlineRoomCode = data.roomCode;
+            const codeEl = document.getElementById('lobby-room-code');
+            if (codeEl) codeEl.textContent = data.roomCode;
+
+            const origin = (window.location && window.location.origin)
+                ? window.location.origin
+                : `http://${host}:${port}`;
+            const joinUrl = `${origin}/mobile/?room=${data.roomCode}`;
+
+            const linkEl = document.getElementById('lobby-join-url');
+            if (linkEl) {
+                linkEl.textContent = joinUrl;
+                linkEl.href = joinUrl;
+            }
+
+            renderLobbyQRCode(joinUrl);
+            renderLobbyPlayers();
+        });
+
+        hostNetworkClient.on('player_joined', () => {
+            renderLobbyPlayers();
+        });
+
+        hostNetworkClient.on('player_left', () => {
+            renderLobbyPlayers();
+        });
+
+        hostNetworkClient.on('score_updated', (data) => {
+            if (teams && Array.isArray(teams)) {
+                const team = teams.find(t => t.id === data.playerId || t.name === data.playerName);
+                if (team) {
+                    team.score = data.newScore;
+                    updateTeamsPanel();
+                }
+            }
+        });
+
+        hostNetworkClient.on('buzz_locked', (payload) => {
+            activeOnlineBuzzer = payload;
+            playBuzzerSound();
+
+            const banner = document.getElementById('online-buzzer-banner');
+            if (banner) {
+                banner.style.display = 'flex';
+                banner.className = 'online-buzzer-banner buzzer-answering';
+                const text = document.getElementById('online-buzzer-text');
+                if (text) text.innerHTML = `📢 Отвечает: <b>${payload.playerName}</b>!`;
+            }
+
+            const teamIdx = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
+            if (teamIdx !== -1) {
+                activeTeamIdxForQuestion = teamIdx;
+            }
+
+            const btnArea = document.getElementById('modal-buttons-area');
+            const questionModal = document.getElementById('question-modal');
+            if (btnArea && questionModal && questionModal.classList.contains('active')) {
+                btnArea.innerHTML = `
+                    <div class="host-online-controls">
+                        <button class="btn btn-judge-correct" onclick="judgeOnlineAnswer(true)">
+                            ✅ Зачесть (+${currentCost})
+                        </button>
+                        <button class="btn btn-judge-wrong" onclick="judgeOnlineAnswer(false)">
+                            ❌ Отклонить (-${currentCost})
+                        </button>
+                        <button class="btn btn-check" onclick="showAnswer()">
+                            Показать ответ
+                        </button>
+                    </div>
+                `;
+            }
+        });
+
+        hostNetworkClient.on('buzzer_ready', () => {
+            activeOnlineBuzzer = null;
+            const banner = document.getElementById('online-buzzer-banner');
+            if (banner) {
+                banner.style.display = 'flex';
+                banner.className = 'online-buzzer-banner';
+                const text = document.getElementById('online-buzzer-text');
+                if (text) text.textContent = '🔔 Кнопка активна! Игроки могут нажимать на смартфонах';
+            }
+        });
+
+        hostNetworkClient.on('answer_timeout', () => {
+            activeOnlineBuzzer = null;
+            const banner = document.getElementById('online-buzzer-banner');
+            if (banner) {
+                banner.className = 'online-buzzer-banner';
+                const text = document.getElementById('online-buzzer-text');
+                if (text) text.textContent = '⏰ Время на ответ вышло!';
+            }
+        });
+
+        hostNetworkClient.connect();
+    }
+
+    function renderLobbyQRCode(url) {
+        const container = document.getElementById('lobby-qr-code');
+        if (!container) return;
+        container.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+            try {
+                new QRCode(container, {
+                    text: url,
+                    width: 178,
+                    height: 178,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: 2
+                });
+            } catch (err) {
+                console.warn('QR Code generation warning:', err);
+                container.innerHTML = `<a href="${url}" target="_blank" style="font-size: 13px; color: #2563eb; word-break: break-all;">${url}</a>`;
+            }
+        }
+    }
+
+    function renderLobbyPlayers() {
+        const listEl = document.getElementById('lobby-players-list');
+        const countEl = document.getElementById('lobby-players-count');
+        const startBtn = document.getElementById('btn-lobby-start-game');
+        const hintEl = document.getElementById('lobby-start-hint');
+        if (!listEl) return;
+
+        const players = hostNetworkClient ? hostNetworkClient.getPlayersList() : [];
+        const activeCount = hostNetworkClient ? hostNetworkClient.getActivePlayersCount() : 0;
+
+        if (countEl) countEl.textContent = `${activeCount} / 8`;
+
+        if (startBtn) {
+            startBtn.disabled = (activeCount < 1);
+        }
+
+        if (hintEl) {
+            if (activeCount === 0) {
+                hintEl.textContent = 'Для старта сетевой игры нужен минимум 1 подключённый игрок';
+            } else {
+                hintEl.textContent = `Готово к старту! Подключено игроков: ${activeCount}. Нажмите «Начать игру»`;
+            }
+        }
+
+        listEl.innerHTML = '';
+        if (players.length === 0) {
+            listEl.innerHTML = `
+                <div class="lobby-players-empty" id="lobby-players-empty">
+                    <div class="lobby-empty-icon">⏳</div>
+                    <div class="lobby-empty-title">Ожидание подключения игроков...</div>
+                    <div class="lobby-empty-sub">Игроки подключаются через QR-код со своих смартфонов</div>
+                </div>
+            `;
+            return;
+        }
+
+        players.forEach(p => {
+            const chip = document.createElement('div');
+            chip.className = 'lobby-player-chip';
+            chip.innerHTML = `
+                <div class="lobby-player-avatar">${p.avatar || '🎮'}</div>
+                <div class="lobby-player-info">
+                    <div class="lobby-player-name">${p.name || 'Игрок'}</div>
+                    <div class="lobby-player-status">
+                        ${p.isConnected ? '🟢 В сети (готов)' : '🔴 Отключен'}
+                    </div>
+                </div>
+            `;
+            listEl.appendChild(chip);
+        });
+    }
+
+    function copyRoomCode() {
+        if (!currentOnlineRoomCode) return;
+        const btn = document.getElementById('btn-copy-room-code');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(currentOnlineRoomCode).then(() => {
+                if (btn) {
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ Скопировано!';
+                    setTimeout(() => { btn.textContent = originalText; }, 2000);
+                }
+            }).catch(() => {});
+        }
+    }
+
+    function reconnectHostLobby() {
+        initHostNetwork();
+    }
+
+    function startOnlineGame() {
+        if (!hostNetworkClient) return;
+        const activePlayers = hostNetworkClient.getPlayersList().filter(p => p.isConnected);
+        if (activePlayers.length === 0) {
+            showSystemModal("⚠️ Нет игроков", "Для начала сетевой игры подключите хотя бы одного игрока через QR-код.");
+            return;
+        }
+
+        teams = activePlayers.map(p => ({
+            id: p.id,
+            name: p.name,
+            score: p.score || 0,
+            avatar: p.avatar || '🎮'
+        }));
+
+        hostNetworkClient.setPack(gameData);
+        hostNetworkClient.startGame();
+
+        finalizeGameStartWithFirstTurn(0);
+    }
+
+    function judgeOnlineAnswer(isCorrect) {
+        if (!isOnlineGame || !hostNetworkClient) return;
+        hostNetworkClient.judgeAnswer(isCorrect);
+
+        if (activeOnlineBuzzer) {
+            const teamIdx = teams.findIndex(t => t.id === activeOnlineBuzzer.playerId || t.name === activeOnlineBuzzer.playerName);
+            if (teamIdx !== -1) {
+                const delta = isCorrect ? currentCost : -currentCost;
+                changeTeamScore(teamIdx, delta);
+            }
+        }
+
+        if (isCorrect) {
+            showAnswer();
+        } else {
+            const banner = document.getElementById('online-buzzer-banner');
+            if (banner) {
+                banner.className = 'online-buzzer-banner';
+                const text = document.getElementById('online-buzzer-text');
+                if (text) text.textContent = '❌ Неверно! Кнопка снова активна для остальных игроков';
+            }
+            const btnArea = document.getElementById('modal-buttons-area');
+            if (btnArea) {
+                btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
+            }
+        }
+    }
+
+    // Expose online functions to window
+    if (typeof window !== 'undefined') {
+        window.openOnlineLobby = openOnlineLobby;
+        window.leaveOnlineLobby = leaveOnlineLobby;
+        window.reconnectHostLobby = reconnectHostLobby;
+        window.startOnlineGame = startOnlineGame;
+        window.copyRoomCode = copyRoomCode;
+        window.judgeOnlineAnswer = judgeOnlineAnswer;
+        window.isOnlineGame = () => isOnlineGame;
+        window.getHostNetworkClient = () => hostNetworkClient;
     }
 
     function onAppReady() {
