@@ -1,0 +1,296 @@
+/**
+ * Quiz U - Authoritative WebSocket Server & Static HTTP Host
+ */
+
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { WebSocketServer } = require('ws');
+const RoomManager = require('./RoomManager');
+const { MSG_TYPES, ERROR_CODES, createMessage, parseMessage } = require('./protocol');
+
+const PORT = process.env.PORT || 8080;
+const HOST = process.env.HOST || '0.0.0.0';
+
+const roomManager = new RoomManager();
+
+// MIME Types for static hosting
+const MIME_TYPES = {
+    '.html': 'text/html; charset=UTF-8',
+    '.js': 'application/javascript; charset=UTF-8',
+    '.css': 'text/css; charset=UTF-8',
+    '.json': 'application/json; charset=UTF-8',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml',
+    '.ico': 'image/x-icon',
+    '.mp3': 'audio/mpeg',
+    '.mp4': 'video/mp4',
+    '.woff2': 'font/woff2'
+};
+
+const ROOT_DIR = path.resolve(__dirname, '../../');
+
+// HTTP Request Handler
+const server = http.createServer((req, res) => {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+
+    // Health-check endpoint
+    if (url.pathname === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', time: Date.now() }));
+        return;
+    }
+
+    // Room Server Stats
+    if (url.pathname === '/api/stats') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(roomManager.getStats()));
+        return;
+    }
+
+    // Static files hosting for host and mobile clients
+    let filePath = path.join(ROOT_DIR, url.pathname === '/' ? 'index.html' : url.pathname);
+
+    // Prevent directory traversal attacks
+    if (!filePath.startsWith(ROOT_DIR)) {
+        res.writeHead(403, { 'Content-Type': 'text/plain' });
+        res.end('Forbidden');
+        return;
+    }
+
+    fs.stat(filePath, (err, stats) => {
+        if (err || !stats.isFile()) {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('File Not Found');
+            return;
+        }
+
+        const ext = path.extname(filePath).toLowerCase();
+        const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+
+        res.writeHead(200, { 'Content-Type': contentType });
+        fs.createReadStream(filePath).pipe(res);
+    });
+});
+
+// WebSocket Server
+const wss = new WebSocketServer({ server });
+
+wss.on('connection', (ws) => {
+    ws.isAlive = true;
+    ws.roomCode = null;
+    ws.playerId = null;
+    ws.isHost = false;
+
+    ws.on('pong', () => {
+        ws.isAlive = true;
+    });
+
+    ws.on('message', (data) => {
+        const message = parseMessage(data);
+        if (!message) {
+            ws.send(createMessage(MSG_TYPES.ERROR, {
+                code: ERROR_CODES.INVALID_PAYLOAD,
+                message: 'Некорректный JSON формат сообщения'
+            }));
+            return;
+        }
+
+        handleClientMessage(ws, message);
+    });
+
+    ws.on('close', () => {
+        if (ws.roomCode) {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (room) {
+                if (ws.isHost) {
+                    // Host disconnected; keep room for a while for reconnection
+                    room.touch();
+                } else if (ws.playerId) {
+                    room.removePlayer(ws.playerId);
+                }
+            }
+        }
+    });
+
+    ws.on('error', (err) => {
+        console.error('WebSocket connection error:', err.message);
+    });
+});
+
+function handleClientMessage(ws, message) {
+    const { type, payload } = message;
+
+    switch (type) {
+        // --- HOST ACTIONS ---
+        case MSG_TYPES.HOST_CREATE_ROOM: {
+            const room = roomManager.createRoom(ws, payload ? payload.options : {});
+            ws.isHost = true;
+            ws.roomCode = room.code;
+
+            ws.send(createMessage(MSG_TYPES.ROOM_CREATED, {
+                roomCode: room.code,
+                hostToken: room.hostToken,
+                state: room.getStateSnapshot(false)
+            }));
+            break;
+        }
+
+        case MSG_TYPES.HOST_SET_PACK: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.setPack(payload.pack);
+            ws.send(createMessage(MSG_TYPES.ROOM_STATE, room.getStateSnapshot(false)));
+            break;
+        }
+
+        case MSG_TYPES.HOST_START_GAME: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            const res = room.startGame();
+            if (!res.success) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_ACTION,
+                    message: res.message
+                }));
+            }
+            break;
+        }
+
+        case MSG_TYPES.HOST_SELECT_QUESTION: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.selectQuestion(payload.themeIdx, payload.questionIdx, payload.question);
+            break;
+        }
+
+        case MSG_TYPES.HOST_ACTIVATE_BUZZER: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.activateBuzzer();
+            break;
+        }
+
+        case MSG_TYPES.HOST_JUDGE_ANSWER: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.judgeAnswer(payload.isCorrect);
+            break;
+        }
+
+        case MSG_TYPES.HOST_UPDATE_SCORE: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.updatePlayerScore(payload.playerId, payload.delta);
+            break;
+        }
+
+        // --- PLAYER ACTIONS ---
+        case MSG_TYPES.PLAYER_JOIN: {
+            const room = roomManager.getRoom(payload.roomCode);
+            if (!room) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.ROOM_NOT_FOUND,
+                    message: 'Комната с таким кодом не найдена'
+                }));
+                return;
+            }
+
+            const joinResult = room.addPlayer(payload.name, payload.avatar, ws, payload.sessionToken);
+            if (!joinResult.success) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: joinResult.error,
+                    message: joinResult.message
+                }));
+                return;
+            }
+
+            ws.roomCode = room.code;
+            ws.playerId = joinResult.player.id;
+            ws.isHost = false;
+
+            // Send initial state to the joined player (without answers!)
+            ws.send(createMessage(MSG_TYPES.ROOM_STATE, {
+                ...room.getStateSnapshot(true),
+                self: room.sanitizePlayer(joinResult.player),
+                sessionToken: joinResult.player.sessionToken
+            }));
+            break;
+        }
+
+        case MSG_TYPES.PLAYER_BUZZ: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.playerId) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_ACTION,
+                    message: 'Вы не находитесь в комнате'
+                }));
+                return;
+            }
+
+            const buzzResult = room.handleBuzz(ws.playerId);
+            if (!buzzResult.success) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: buzzResult.error,
+                    message: buzzResult.message
+                }));
+            }
+            break;
+        }
+
+        case MSG_TYPES.PING: {
+            ws.send(createMessage(MSG_TYPES.PONG));
+            break;
+        }
+
+        default:
+            console.warn('Unknown message type:', type);
+            break;
+    }
+}
+
+// Heartbeat ping interval (every 25 seconds)
+const heartbeatInterval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+        if (ws.isAlive === false) {
+            return ws.terminate();
+        }
+        ws.isAlive = false;
+        ws.ping();
+    });
+}, 25000);
+if (heartbeatInterval.unref) {
+    heartbeatInterval.unref();
+}
+
+wss.on('close', () => {
+    clearInterval(heartbeatInterval);
+});
+
+// Graceful shutdown
+function shutdown() {
+    console.log('Shutting down server...');
+    clearInterval(heartbeatInterval);
+    roomManager.destroy();
+    wss.close(() => {
+        server.close(() => {
+            console.log('Server stopped.');
+            process.exit(0);
+        });
+    });
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+// Start listening if run directly
+if (require.main === module) {
+    server.listen(PORT, HOST, () => {
+        console.log(`Quiz U WebSocket Server listening on http://${HOST}:${PORT}`);
+    });
+}
+
+module.exports = { server, wss, roomManager };

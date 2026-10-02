@@ -8,6 +8,9 @@
     let answerCountdownInterval = null;
 
     function normalizeGameData(data) {
+        if (typeof PackParser !== 'undefined' && typeof PackParser.normalizeGameData === 'function') {
+            return PackParser.normalizeGameData(data);
+        }
         if (!data) return [];
         if (Array.isArray(data)) return data;
         if (typeof data === 'object') {
@@ -48,6 +51,10 @@
     let auctionBets = {};
     let teams = [{name: "Команда 1", score: 0}, {name: "Команда 2", score: 0}];
     let gameStats = {};
+    const coreScoreManager = (typeof ScoreManager !== 'undefined') ? new ScoreManager(teams) : null;
+    const coreGameStateMachine = (typeof GameStateMachine !== 'undefined') ? new GameStateMachine() : null;
+    window.coreScoreManager = coreScoreManager;
+    window.coreGameStateMachine = coreGameStateMachine;
 
     function initTheme() {
         const saved = localStorage.getItem('quiz_theme') || 'dark';
@@ -2624,11 +2631,18 @@
     }
 
     function changeTeamScore(teamIdx, amount) {
-        teams[teamIdx].score += amount;
-        if (!gameStats[teamIdx]) gameStats[teamIdx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
-
-        if (amount > 0) gameStats[teamIdx].correct++;
-        else if (amount < 0) gameStats[teamIdx].wrong++;
+        if (coreScoreManager) {
+            coreScoreManager.teams = teams;
+            coreScoreManager.gameStats = gameStats;
+            coreScoreManager.changeScore(teamIdx, amount);
+            teams = coreScoreManager.teams;
+            gameStats = coreScoreManager.gameStats;
+        } else {
+            teams[teamIdx].score += amount;
+            if (!gameStats[teamIdx]) gameStats[teamIdx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
+            if (amount > 0) gameStats[teamIdx].correct++;
+            else if (amount < 0) gameStats[teamIdx].wrong++;
+        }
 
         updateTeamsPanel();
         renderModalTeamsList();
@@ -2865,7 +2879,13 @@
 
     function passTurnToNextTeam() {
         if (!teams || teams.length === 0) return;
-        currentTurnTeamIdx = (currentTurnTeamIdx + 1) % teams.length;
+        if (coreScoreManager) {
+            coreScoreManager.teams = teams;
+            coreScoreManager.currentTurnIndex = currentTurnTeamIdx;
+            currentTurnTeamIdx = coreScoreManager.passTurn();
+        } else {
+            currentTurnTeamIdx = (currentTurnTeamIdx + 1) % teams.length;
+        }
         updateTurnDisplay();
         updateTeamsPanel();
         saveGameState();

@@ -1,0 +1,22 @@
+{
+  "name": "quiz-u-server",
+  "version": "1.0.0",
+  "description": "Authoritative WebSocket room server for Quiz U (Jackbox-style online party quiz)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test tests/**/*.test.js"
+  },
+  "keywords": [
+    "quiz",
+    "websocket",
+    "jackbox-style",
+    "party-game"
+  ],
+  "author": "Quiz U Team",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
