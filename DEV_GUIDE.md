@@ -5,6 +5,7 @@
 > 📁 **Связанные документы:**
 > * [PLAN.md](file:///C:/Users/user/IdeaProjects/quiz_u/PLAN.md) — общая архитектура, стек и концепция.
 > * [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md) — пошаговый трекер задач и детальные инструкции по каждому этапу.
+> * [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) — оперативный трекер фичей, улучшений и баг-фикса.
 > * [DESIGN_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DESIGN_GUIDE.md) — Steam Direct, ассеты, вишлисты и маркетинг в соцсетях.
 > * [.aiassistant/rules/code style rules.md](file:///C:/Users/user/IdeaProjects/quiz_u/.aiassistant/rules/code%20style%20rules.md) — базовые правила кодовой базы.
 
@@ -12,12 +13,12 @@
 
 ## 1. Главные правила и инварианты
 
-### 1.1. Обязательное регулярное обновление `ROADMAP.md` ⚠️
-* При начале любой задачи из [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md) **обязательно переключай статус этапа/подзадачи** в актуальное состояние (`В процессе` / `Выполнено`).
+### 1.1. Обязательное регулярное обновление `ROADMAP.md` и `TASKS.md` ⚠️
+* При начале любой задачи из [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md) или [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) **обязательно переключай статус этапа/подзадачи** в актуальное состояние (`В процессе` / `Выполнено`).
 * По завершении этапа или подзадачи:
   1. Отмечай чекбоксы `[x]`;
   2. Заполняй раздел «Лог изменений этапа» (какие файлы созданы, изменены, какие тесты пройдены);
-  3. Если в процессе работы вскрылись технические нюансы или потребовались уточнения — дополняй соответствующий блок в [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md).
+  3. Если в процессе работы вскрылись технические нюансы или потребовались уточнения — дополняй соответствующий блок в [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md) и [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md).
 
 ### 1.2. Обязательное саммари перед пушем кода (Pre-Push Summary) 📢
 * **Никогда не пушить код в удаленный репозиторий без явного одобрения пользователя.**
@@ -25,7 +26,7 @@
   1. **Что сделано:** краткий и четкий перечень реализованных фич, исправлений или рефакторинга;
   2. **Список затронутых файлов:** таблица или список созданных/модифицированных файлов с описанием их роли;
   3. **Статус верификации:** результаты запуска автотестов (`npm test`), подтверждение отсутствия регрессий в оффлайн-режиме и корректности отображения тем (Dark/Light);
-  4. **Состояние ROADMAP:** ссылка на обновленный статус в [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md);
+  4. **Состояние ROADMAP & TASKS:** ссылка на обновленный статус в [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md) и [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md);
   5. **Дальнейшие шаги:** что рекомендуется делать на следующем этапе.
 
 ### 1.3. Сохранение оффлайн-режима («Двойной режим»)
@@ -70,7 +71,7 @@ quiz_u/
 │   ├── index.html             # Разметка экрана игрока
 │   ├── mobile.css             # Mobile-First стили, тач-кнопка Buzzer
 │   └── mobile.js              # Обработка тач-событий, вибрации и сетевых событий
-├── server/                    # АВТОРИТАРНЫЙ СЕРВЕР КОМНАТ
+├── server/                    # АВТОРИТЕТНЫЙ СЕРВЕР КОМНАТ
 │   ├── package.json           # Зависимости сервера (ws, dotenv)
 │   └── src/
 │       ├── Room.js            # Игровой цикл комнаты, таймеры, античит
@@ -80,6 +81,7 @@ quiz_u/
 ├── tests/                     # АВТОТЕСТЫ (Node.js test runner)
 ├── PLAN.md                    # Концепция и архитектура
 ├── DEV_GUIDE.md               # Данная инструкция для AI
+├── TASKS.md                   # Оперативный трекер задач, фичей и багов
 ├── DESIGN_GUIDE.md            # Steam Direct, ассеты и SMM-маркетинг
 └── ROADMAP.md                 # Поэтапный план и трекер прогресса
 ```
@@ -126,7 +128,7 @@ quiz_u/
      * `docs: update ROADMAP.md progress for stage 3`
 5. **Процедура перед пушем:**
    * Шаг 1: Успешный прогон `npm test` и `server/tests`.
-   * Шаг 2: Обновление чекбоксов и лога в [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md).
+   * Шаг 2: Обновление чекбоксов и лога в [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md) и [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md).
    * Шаг 3: **Формирование и вывод саммари пользователю** (согласно п. 1.2).
    * Шаг 4: Ожидание подтверждения пользователя перед выполнением `git push`.
 6. **Чистота репозитория:** Запрещено коммитить `node_modules`, временные дампы, файлы логов и IDE-кэш.
