@@ -19,8 +19,10 @@ class NetworkClient {
         this.roomCode = null;
         this.hostToken = null;
         this.isHost = options.isHost !== false;
+        this.role = options.role || (this.isHost ? 'host' : 'player');
         this.isConnected = false;
         this.selfPlayer = null;
+        this.connectedHost = null;
         this.sessionToken = options.sessionToken || null;
         this.listeners = new Map();
         this.reconnectAttempts = 0;
@@ -61,21 +63,12 @@ class NetworkClient {
     }
 
     /**
-     * Connect to the WebSocket server
-     * @param {string} [serverUrl]
-     * @returns {Promise<NetworkClient>}
+     * Connection management
      */
-    connect(serverUrl) {
-        if (serverUrl) {
-            this.url = serverUrl;
-        }
-
+    connect(url = null) {
+        if (url) this.url = url;
         if (!this.url) {
             return Promise.reject(new Error('WebSocket URL is required'));
-        }
-
-        if (!this.WebSocketClass) {
-            return Promise.reject(new Error('WebSocket implementation is not available'));
         }
 
         if (this.isConnected && this.ws && this.ws.readyState === 1) {
@@ -156,6 +149,9 @@ class NetworkClient {
 
             case MSG.PLAYER_JOINED:
                 if (payload.player) {
+                    if (payload.role === 'host' || payload.player.role === 'host') {
+                        this.connectedHost = payload.player;
+                    }
                     this.connectedPlayers.set(payload.player.id, payload.player);
                 }
                 this.emit('player_joined', payload);
@@ -167,6 +163,9 @@ class NetworkClient {
                     if (existing) {
                         existing.isConnected = false;
                     }
+                    if (this.connectedHost && this.connectedHost.id === payload.playerId) {
+                        this.connectedHost.isConnected = false;
+                    }
                 }
                 this.emit('player_left', payload);
                 break;
@@ -174,11 +173,17 @@ class NetworkClient {
             case MSG.ROOM_STATE:
                 this.lastState = payload;
                 this._syncPlayersFromState(payload);
+                if (payload.host) {
+                    this.connectedHost = payload.host;
+                }
                 if (payload.self) {
                     this.selfPlayer = payload.self;
                 }
                 if (payload.sessionToken) {
                     this.sessionToken = payload.sessionToken;
+                }
+                if (payload.role) {
+                    this.role = payload.role;
                 }
                 this.emit('room_state', payload);
                 break;
@@ -237,8 +242,11 @@ class NetworkClient {
     }
 
     _syncPlayersFromState(state) {
+        if (state && state.host) {
+            this.connectedHost = state.host;
+            this.connectedPlayers.set(state.host.id, state.host);
+        }
         if (state && Array.isArray(state.players)) {
-            this.connectedPlayers.clear();
             for (const p of state.players) {
                 this.connectedPlayers.set(p.id, p);
             }
@@ -295,13 +303,15 @@ class NetworkClient {
     /**
      * Player Actions
      */
-    joinRoom(roomCode, name, avatar, sessionToken) {
+    joinRoom(roomCode, name, avatar, sessionToken, role = 'player') {
         this.roomCode = (roomCode || '').toUpperCase().trim();
+        this.role = role || 'player';
         return this.send(MSG.PLAYER_JOIN, {
             roomCode: this.roomCode,
             name,
             avatar,
-            sessionToken: sessionToken || this.sessionToken
+            sessionToken: sessionToken || this.sessionToken,
+            role: this.role
         });
     }
 
@@ -325,8 +335,12 @@ class NetworkClient {
         return Array.from(this.connectedPlayers.values());
     }
 
+    getHost() {
+        return this.connectedHost || Array.from(this.connectedPlayers.values()).find(p => p.role === 'host') || null;
+    }
+
     getActivePlayersCount() {
-        return Array.from(this.connectedPlayers.values()).filter(p => p.isConnected).length;
+        return Array.from(this.connectedPlayers.values()).filter(p => p.isConnected && p.role !== 'host').length;
     }
 
     disconnect() {
@@ -345,6 +359,7 @@ class NetworkClient {
         this.roomCode = null;
         this.hostToken = null;
         this.selfPlayer = null;
+        this.connectedHost = null;
         this.connectedPlayers.clear();
     }
 }

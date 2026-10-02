@@ -50,6 +50,7 @@ const ERROR_CODES = {
     ROOM_FULL: 'ROOM_FULL',
     GAME_ALREADY_STARTED: 'GAME_ALREADY_STARTED',
     NAME_ALREADY_TAKEN: 'NAME_ALREADY_TAKEN',
+    HOST_ALREADY_EXISTS: 'HOST_ALREADY_EXISTS',
     INVALID_ACTION: 'INVALID_ACTION',
     NOT_AUTHORIZED: 'NOT_AUTHORIZED',
     INVALID_PAYLOAD: 'INVALID_PAYLOAD'
@@ -75,19 +76,21 @@ function parseMessage(rawMessage) {
     }
 }
 
-const QuizProtocol = {
-    MSG_TYPES,
-    ERROR_CODES,
-    createMessage,
-    parseMessage
-};
-
+// Browser & Node.js Universal Export
 if (typeof window !== 'undefined') {
-    window.QuizProtocol = QuizProtocol;
-    window.MSG_TYPES = MSG_TYPES;
-    window.ERROR_CODES = ERROR_CODES;
+    window.Protocol = {
+        MSG_TYPES,
+        ERROR_CODES,
+        createMessage,
+        parseMessage
+    };
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = QuizProtocol;
+    module.exports = {
+        MSG_TYPES,
+        ERROR_CODES,
+        createMessage,
+        parseMessage
+    };
 }
