@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0d1117">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="description" content="Quiz U — Мобильный веб-пульт игрока">
+    <meta name="description" content="Quiz U — Мобильный веб-пульт игрока и ведущего">
     <title>Quiz U — Мобильный пульт</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="icon-192.svg">
@@ -148,7 +148,7 @@
                 </div>
             </section>
 
-            <!-- ЭКРАН 2: Ожидание вопроса / раунда -->
+            <!-- ЭКРАН 2: Ожидание вопроса / раунда (для игрока) -->
             <section class="screen" id="screen-waiting">
                 <div class="waiting-card">
                     <div class="waiting-pulse-orb">
@@ -174,7 +174,7 @@
                 </div>
             </section>
 
-            <!-- ЭКРАН 3: Большая кнопка «ОТВЕТИТЬ» (Buzzer) -->
+            <!-- ЭКРАН 3: Большая кнопка «ОТВЕТИТЬ» (Buzzer для игрока) -->
             <section class="screen" id="screen-buzzer">
                 <div class="buzzer-container">
                     <div class="question-info-bar">
@@ -198,7 +198,7 @@
                 </div>
             </section>
 
-            <!-- ЭКРАН 4: Ввод ответа (если нажал первым) -->
+            <!-- ЭКРАН 4: Ввод ответа игроком (если нажал первым) -->
             <section class="screen" id="screen-answer">
                 <div class="answer-card">
                     <div class="answer-header">
@@ -302,6 +302,106 @@
                     <button type="button" class="btn btn-primary btn-block btn-lg" id="btn-confirm-cat" disabled>
                         ПЕРЕДАТЬ ВОПРОС
                     </button>
+                </div>
+            </section>
+
+            <!-- ЭКРАН 7: Персональный пульт Ведущего с ответами и управлением игрой (TASK-04) -->
+            <section class="screen" id="screen-host">
+                <div class="host-container">
+                    <!-- Заголовок пульта ведущего с бейджем статуса -->
+                    <div class="host-header-card">
+                        <div class="host-badge-row">
+                            <span class="host-role-badge">🎙️ Пульт Ведущего</span>
+                            <span class="host-state-badge" id="host-state-badge">Ожидание</span>
+                        </div>
+                        <div class="host-meta-row">
+                            <span class="host-pack-info" id="host-theme-badge">Тема: —</span>
+                            <span class="host-cost-info" id="host-cost-badge">100 очков</span>
+                        </div>
+                    </div>
+
+                    <!-- Карточка вопроса и секретного ответа -->
+                    <div class="host-question-card" id="host-question-card">
+                        <div class="host-card-label">Текст вопроса для зачитывания:</div>
+                        <div class="host-question-text" id="host-question-text">
+                            Вопрос не выбран. Ожидайте открытия вопроса на табло.
+                        </div>
+
+                        <!-- Секретный правильный ответ (скрыт от игроков!) -->
+                        <div class="host-secret-box" id="host-secret-box">
+                            <div class="secret-label">💡 Правильный ответ:</div>
+                            <div class="secret-answer-text" id="host-secret-answer">—</div>
+                            <div class="secret-comment-text hidden" id="host-secret-comment"></div>
+                        </div>
+
+                        <!-- Индикатор активного отвечающего игрока -->
+                        <div class="host-answering-banner hidden" id="host-answering-banner">
+                            <div class="answering-pulse">🔔</div>
+                            <div class="answering-info">
+                                <div class="answering-name" id="host-answering-name">Отвечает: Игрок</div>
+                                <div class="answering-subtext" id="host-answering-subtext">Слушайте ответ вслух или ждите ввода...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Пульт кнопок управления игрой на телефоне -->
+                    <div class="host-controls-panel">
+                        <div class="host-controls-title">🎮 Управление игрой</div>
+
+                        <!-- Группа 1: Быстрое судейство ответа -->
+                        <div class="host-btn-row judging-row">
+                            <button type="button" class="btn btn-judge-accept" id="btn-host-judge-correct" disabled>
+                                <span class="btn-icon">✅</span>
+                                <span class="btn-text" id="btn-host-judge-correct-text">Зачесть (+100)</span>
+                            </button>
+                            <button type="button" class="btn btn-judge-reject" id="btn-host-judge-wrong" disabled>
+                                <span class="btn-icon">❌</span>
+                                <span class="btn-text" id="btn-host-judge-wrong-text">Отклонить (-100)</span>
+                            </button>
+                        </div>
+
+                        <!-- Группа 2: Управление таймером и баззером -->
+                        <div class="host-btn-row timing-row">
+                            <button type="button" class="btn btn-host-secondary" id="btn-host-open-buzzer" disabled>
+                                <span class="btn-icon">⚡</span>
+                                <span class="btn-text">Открыть баззер</span>
+                            </button>
+                            <button type="button" class="btn btn-host-secondary" id="btn-host-pause">
+                                <span class="btn-icon" id="host-pause-icon">⏸️</span>
+                                <span class="btn-text" id="host-pause-text">Пауза</span>
+                            </button>
+                        </div>
+
+                        <!-- Группа 3: Управление экраном ТВ и ходом игры -->
+                        <div class="host-btn-row flow-row">
+                            <button type="button" class="btn btn-host-action" id="btn-host-show-answer">
+                                <span class="btn-icon">👁️</span>
+                                <span class="btn-text">Показать ответ на ТВ</span>
+                            </button>
+                            <button type="button" class="btn btn-host-action" id="btn-host-close-question">
+                                <span class="btn-icon">➡️</span>
+                                <span class="btn-text">К табло</span>
+                            </button>
+                        </div>
+
+                        <!-- Кнопка старта игры из лобби -->
+                        <div class="host-lobby-action" id="host-lobby-action">
+                            <button type="button" class="btn btn-primary btn-block btn-lg" id="btn-host-start-game">
+                                🚀 НАЧАТЬ ИГРУ
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Список игроков с быстрой корректировкой счёта -->
+                    <div class="host-players-panel">
+                        <div class="host-players-header">
+                            <span class="host-players-title">👥 Игроки и счёт</span>
+                            <span class="host-players-count" id="host-players-count">0 игроков</span>
+                        </div>
+                        <div class="host-players-list" id="host-players-list">
+                            <!-- Заполняется динамически -->
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>

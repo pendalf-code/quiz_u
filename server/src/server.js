@@ -1,110 +1,151 @@
 /**
- * Quiz U - Authoritative Multiplayer Game Room Server
- * Node.js WebSocket + HTTP Server
+ * Quiz U - Authoritative Game Room Server
+ * Features:
+ * - WebSocket Server with heartbeat ping/pong
+ * - Authoritative room state, buzz race arbitration & anti-cheat
+ * - Static file serving for /mobile web app
+ * - JSON question packs serving with percent-encoded Cyrillic support
  */
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
-
-const RoomManager = require('./RoomManager');
 const { MSG_TYPES, ERROR_CODES, createMessage, parseMessage } = require('./protocol');
+const RoomManager = require('./RoomManager');
 
 const PORT = process.env.PORT || 8080;
-const ROOT_DIR = path.resolve(__dirname, '../../');
-
-const MIME_TYPES = {
-    '.html': 'text/html; charset=UTF-8',
-    '.css': 'text/css; charset=UTF-8',
-    '.js': 'application/javascript; charset=UTF-8',
-    '.json': 'application/json; charset=UTF-8',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.webp': 'image/webp',
-    '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon',
-    '.mp3': 'audio/mpeg',
-    '.wav': 'audio/wav',
-    '.woff2': 'font/woff2'
-};
+const rootDir = path.resolve(__dirname, '..', '..');
+const mobileDir = path.join(rootDir, 'mobile');
+const packsDir = path.join(rootDir, 'паки вопросов');
 
 const roomManager = new RoomManager();
 
-// HTTP Static Files & Health Check Server
+// MIME Types Map
+const MIME_TYPES = {
+    '.html': 'text/html; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.svg': 'image/svg+xml',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.ico': 'image/x-icon',
+    '.mp3': 'audio/mpeg',
+    '.mp4': 'video/mp4'
+};
+
+// HTTP Server: Handles static files and question pack requests
 const server = http.createServer((req, res) => {
-    // CORS headers for local LAN play
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-        res.writeHead(204);
-        res.end();
-        return;
-    }
-
-    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-
-    // Health check endpoint
-    if (url.pathname === '/health') {
+    // Health Check Endpoint
+    if (req.url === '/health' || req.url === '/healthz') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ status: 'ok', time: Date.now() }));
-        return;
+        return res.end(JSON.stringify({ status: 'ok', uptime: process.uptime() }));
     }
 
-    // Room Server Stats
-    if (url.pathname === '/api/stats') {
+    // Stats Endpoint (Rooms count, active connections)
+    if (req.url === '/stats' || req.url === '/api/stats') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(roomManager.getStats()));
-        return;
+        const stats = roomManager.getStats();
+        return res.end(JSON.stringify({
+            status: 'ok',
+            totalRooms: stats.totalRooms,
+            totalPlayers: stats.totalPlayers,
+            activePlayers: stats.activePlayers,
+            timestamp: Date.now()
+        }));
     }
 
-    // Static files hosting for host and mobile clients
-    let reqPath;
+    // Decode percent-encoded URLs (e.g., %D0%BF%D0%B0%D0%BA%D0%B8)
+    let decodedUrl;
     try {
-        reqPath = decodeURIComponent(url.pathname);
-    } catch (e) {
-        res.writeHead(400, { 'Content-Type': 'text/plain; charset=UTF-8' });
-        res.end('Bad Request');
-        return;
+        decodedUrl = decodeURIComponent(req.url);
+    } catch {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end('Bad Request');
     }
 
-    if (reqPath === '/' || reqPath === '/mobile' || reqPath === '/mobile/') {
-        reqPath = reqPath.startsWith('/mobile') ? '/mobile/index.html' : '/index.html';
+    const cleanPath = decodedUrl.split('?')[0];
+
+    // Global Path Traversal Protection
+    if (cleanPath.includes('..') || cleanPath.includes('/.') || cleanPath.includes('\\')) {
+        res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end('Forbidden');
     }
 
-    // Normalize safe file path relative to ROOT_DIR
-    const filePath = path.resolve(ROOT_DIR, '.' + reqPath);
-    const rel = path.relative(ROOT_DIR, filePath);
-
-    // Prevent directory traversal attacks
-    if (rel.startsWith('..') || path.isAbsolute(rel)) {
-        res.writeHead(403, { 'Content-Type': 'text/plain; charset=UTF-8' });
-        res.end('Forbidden');
-        return;
+    // Handle /mobile route -> serve mobile web app
+    if (cleanPath === '/mobile' || cleanPath === '/mobile/') {
+        return serveStaticFile(path.join(mobileDir, 'index.html'), res);
     }
 
+    if (cleanPath.startsWith('/mobile/')) {
+        const relativeMobilePath = cleanPath.slice('/mobile/'.length);
+        const resolvedPath = path.resolve(mobileDir, relativeMobilePath);
+
+        // Path Traversal Security Check
+        if (!resolvedPath.startsWith(mobileDir)) {
+            res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+            return res.end('Forbidden');
+        }
+
+        return serveStaticFile(resolvedPath, res);
+    }
+
+    // Handle /js/net/ references from mobile app (Protocol.js, NetworkClient.js)
+    if (cleanPath.startsWith('/js/net/')) {
+        const netFile = cleanPath.slice('/js/net/'.length);
+        const resolvedNetPath = path.resolve(rootDir, 'js', 'net', netFile);
+
+        if (!resolvedNetPath.startsWith(path.resolve(rootDir, 'js', 'net'))) {
+            res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+            return res.end('Forbidden');
+        }
+        return serveStaticFile(resolvedNetPath, res);
+    }
+
+    // Handle question packs static requests
+    if (cleanPath.startsWith('/паки вопросов/')) {
+        const relativePackPath = cleanPath.slice('/паки вопросов/'.length);
+        const resolvedPackPath = path.resolve(packsDir, relativePackPath);
+
+        if (!resolvedPackPath.startsWith(packsDir)) {
+            res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+            return res.end('Forbidden');
+        }
+        return serveStaticFile(resolvedPackPath, res);
+    }
+
+    // Fallback 404
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Not Found');
+});
+
+function serveStaticFile(filePath, res) {
     fs.stat(filePath, (err, stats) => {
         if (err || !stats.isFile()) {
-            res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
-            res.end('File Not Found');
-            return;
+            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+            return res.end('File Not Found');
         }
 
         const ext = path.extname(filePath).toLowerCase();
         const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-        res.writeHead(200, { 'Content-Type': contentType });
-        fs.createReadStream(filePath).pipe(res);
+        res.writeHead(200, {
+            'Content-Type': contentType,
+            'Content-Length': stats.size,
+            'Cache-Control': 'no-cache'
+        });
+
+        const readStream = fs.createReadStream(filePath);
+        readStream.pipe(res);
     });
-});
+}
 
 // WebSocket Server
 const wss = new WebSocketServer({ server });
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
     ws.isAlive = true;
     ws.roomCode = null;
     ws.playerId = null;
@@ -115,34 +156,30 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('message', (data) => {
-        const message = parseMessage(data);
-        if (!message) {
+        try {
+            const message = parseMessage(data);
+            if (!message) {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: 'Некорректный формат сообщения'
+                }));
+            }
+            handleClientMessage(ws, message);
+        } catch (err) {
+            console.error('Error handling WS message:', err);
             ws.send(createMessage(MSG_TYPES.ERROR, {
-                code: ERROR_CODES.INVALID_PAYLOAD,
-                message: 'Некорректный JSON формат сообщения'
+                code: ERROR_CODES.INVALID_ACTION,
+                message: 'Внутренняя ошибка сервера'
             }));
-            return;
         }
-
-        handleClientMessage(ws, message);
     });
 
     ws.on('close', () => {
-        if (ws.roomCode) {
-            const room = roomManager.getRoom(ws.roomCode);
-            if (room) {
-                if (ws.playerId) {
-                    room.removePlayer(ws.playerId);
-                } else if (ws.isHost) {
-                    // Host screen disconnected; keep room for a while for reconnection
-                    room.touch();
-                }
-            }
-        }
+        handleClientDisconnect(ws);
     });
 
     ws.on('error', (err) => {
-        console.error('WebSocket connection error:', err.message);
+        console.warn('WS Client error:', err.message);
     });
 });
 
@@ -206,6 +243,28 @@ function handleClientMessage(ws, message) {
             break;
         }
 
+        case MSG_TYPES.HOST_SHOW_ANSWER: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.showAnswer();
+            break;
+        }
+
+        case MSG_TYPES.HOST_TOGGLE_PAUSE: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.togglePause(payload && payload.isPaused);
+            break;
+        }
+
+        case MSG_TYPES.HOST_CLOSE_QUESTION:
+        case MSG_TYPES.HOST_PASS_QUESTION: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.closeQuestion();
+            break;
+        }
+
         case MSG_TYPES.HOST_UPDATE_SCORE: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
@@ -251,21 +310,8 @@ function handleClientMessage(ws, message) {
 
         case MSG_TYPES.PLAYER_BUZZ: {
             const room = roomManager.getRoom(ws.roomCode);
-            if (!room || !ws.playerId) {
-                ws.send(createMessage(MSG_TYPES.ERROR, {
-                    code: ERROR_CODES.INVALID_ACTION,
-                    message: 'Вы не находитесь в комнате'
-                }));
-                return;
-            }
-
-            const res = room.handleBuzz(ws.playerId);
-            if (!res.success) {
-                ws.send(createMessage(MSG_TYPES.ERROR, {
-                    code: res.error,
-                    message: res.message
-                }));
-            }
+            if (!room || !ws.playerId) return;
+            room.handleBuzz(ws.playerId);
             break;
         }
 
@@ -290,10 +336,22 @@ function handleClientMessage(ws, message) {
             break;
         }
 
-        // --- SYSTEM ---
         case MSG_TYPES.PING: {
-            ws.send(createMessage(MSG_TYPES.PONG, { time: Date.now() }));
+            ws.send(createMessage(MSG_TYPES.PONG, { timestamp: Date.now() }));
             break;
+        }
+
+        default:
+            console.warn('Unknown message type:', type);
+            break;
+    }
+}
+
+function handleClientDisconnect(ws) {
+    if (ws.roomCode && ws.playerId) {
+        const room = roomManager.getRoom(ws.roomCode);
+        if (room) {
+            room.removePlayer(ws.playerId);
         }
     }
 }
@@ -301,7 +359,7 @@ function handleClientMessage(ws, message) {
 // Heartbeat interval to check alive connections
 const heartbeatInterval = setInterval(() => {
     wss.clients.forEach((ws) => {
-        if (ws.isAlive === false) {
+        if (!ws.isAlive) {
             return ws.terminate();
         }
         ws.isAlive = false;
@@ -314,26 +372,12 @@ wss.on('close', () => {
     clearInterval(heartbeatInterval);
 });
 
-// Start Server if run directly
+// Start Server if launched directly
 if (require.main === module) {
-    server.listen(PORT, () => {
-        console.log(`Quiz U Server running at http://localhost:${PORT}`);
-        console.log(`Mobile buzzer controller available at http://localhost:${PORT}/mobile/`);
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log(`Quiz U Server running at http://localhost:${PORT}/`);
+        console.log(`Mobile Remote accessible at http://localhost:${PORT}/mobile/`);
     });
-
-    const shutdown = () => {
-        console.log('\nShutting down server gracefully...');
-        clearInterval(heartbeatInterval);
-        roomManager.destroy();
-        wss.close(() => {
-            server.close(() => {
-                process.exit(0);
-            });
-        });
-    };
-
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
 }
 
 module.exports = { server, wss, roomManager };

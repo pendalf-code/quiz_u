@@ -3449,6 +3449,52 @@
             }
         });
 
+        // Remote Host Game Controls (TASK-04)
+        hostNetworkClient.on('judge_result', (payload) => {
+            if (payload.playerId) {
+                const teamIdx = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
+                if (teamIdx !== -1) {
+                    const delta = payload.isCorrect ? payload.cost : -payload.cost;
+                    changeTeamScore(teamIdx, delta);
+                }
+            }
+            if (payload.isCorrect) {
+                showAnswer();
+            } else {
+                const banner = document.getElementById('online-buzzer-banner');
+                if (banner) {
+                    banner.className = 'online-buzzer-banner';
+                    const text = document.getElementById('online-buzzer-text');
+                    if (text) text.textContent = '❌ Неверно! Кнопка снова активна для остальных игроков';
+                }
+            }
+        });
+
+        hostNetworkClient.on('show_answer', () => {
+            showAnswer();
+        });
+
+        hostNetworkClient.on('game_paused', (payload) => {
+            if (payload.isPaused) {
+                pauseTimer();
+            } else {
+                resumeTimer();
+            }
+        });
+
+        hostNetworkClient.on('question_closed', () => {
+            closeSystemModal(true);
+        });
+
+        hostNetworkClient.on('room_state', (payload) => {
+            if (payload.state === 'BOARD' && !isGameStarted) {
+                // If remote host pressed 'Start Game' in lobby
+                if (typeof startOnlineGame === 'function') {
+                    startOnlineGame();
+                }
+            }
+        });
+
         hostNetworkClient.connect();
     }
 

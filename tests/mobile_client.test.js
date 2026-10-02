@@ -68,6 +68,49 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
         assert.ok(html.includes('id="btn-confirm-cat"'), '#btn-confirm-cat must exist');
     });
 
+    test('TASK-04: Host screen remote controls UI elements, buttons, and styles exist', () => {
+        const html = fs.readFileSync(htmlPath, 'utf8');
+        // Screen 7 elements
+        assert.ok(html.includes('id="screen-host"'), 'Host screen #screen-host must exist');
+        assert.ok(html.includes('id="host-question-text"'), '#host-question-text container must exist');
+        assert.ok(html.includes('id="host-secret-box"'), '#host-secret-box must exist');
+        assert.ok(html.includes('id="host-secret-answer"'), '#host-secret-answer element must exist');
+        assert.ok(html.includes('id="host-answering-banner"'), '#host-answering-banner must exist');
+        // Control buttons
+        assert.ok(html.includes('id="btn-host-judge-correct"'), '#btn-host-judge-correct must exist');
+        assert.ok(html.includes('id="btn-host-judge-wrong"'), '#btn-host-judge-wrong must exist');
+        assert.ok(html.includes('id="btn-host-open-buzzer"'), '#btn-host-open-buzzer must exist');
+        assert.ok(html.includes('id="btn-host-pause"'), '#btn-host-pause must exist');
+        assert.ok(html.includes('id="btn-host-show-answer"'), '#btn-host-show-answer must exist');
+        assert.ok(html.includes('id="btn-host-close-question"'), '#btn-host-close-question must exist');
+        assert.ok(html.includes('id="btn-host-start-game"'), '#btn-host-start-game must exist');
+        assert.ok(html.includes('id="host-players-list"'), '#host-players-list must exist');
+
+        const css = fs.readFileSync(cssPath, 'utf8');
+        assert.ok(css.includes('#screen-host'), '#screen-host styles must exist in mobile.css');
+        assert.ok(css.includes('.host-secret-box'), '.host-secret-box styles must exist in mobile.css');
+        assert.ok(css.includes('.btn-judge-accept'), '.btn-judge-accept styles must exist in mobile.css');
+        assert.ok(css.includes('.btn-judge-reject'), '.btn-judge-reject styles must exist in mobile.css');
+        assert.ok(css.includes('.score-step-btn'), '.score-step-btn styles must exist in mobile.css');
+
+        const js = fs.readFileSync(jsPath, 'utf8');
+        assert.ok(js.includes('updateHostScreen('), 'updateHostScreen method must exist in mobile.js');
+        assert.ok(js.includes('renderHostPlayersList('), 'renderHostPlayersList method must exist in mobile.js');
+        assert.ok(js.includes('btnHostJudgeCorrect'), 'btnHostJudgeCorrect listener must exist in mobile.js');
+        assert.ok(js.includes('btnHostPause'), 'btnHostPause listener must exist in mobile.js');
+    });
+
+    test('TASK-04: NetworkClient exposes host remote control methods', () => {
+        const client = new NetworkClient({ url: 'ws://127.0.0.1:8080', isHost: true });
+        assert.equal(typeof client.showAnswer, 'function', 'showAnswer method must exist');
+        assert.equal(typeof client.togglePause, 'function', 'togglePause method must exist');
+        assert.equal(typeof client.closeQuestion, 'function', 'closeQuestion method must exist');
+        assert.equal(typeof client.updateScore, 'function', 'updateScore method must exist');
+        assert.equal(typeof client.judgeAnswer, 'function', 'judgeAnswer method must exist');
+        assert.equal(typeof client.activateBuzzer, 'function', 'activateBuzzer method must exist');
+        assert.equal(typeof client.startGame, 'function', 'startGame method must exist');
+    });
+
     test('TASK-03: Role selection UI elements and styles exist in mobile files', () => {
         const html = fs.readFileSync(htmlPath, 'utf8');
         assert.ok(html.includes('id="role-selector"'), 'Role selector container must exist');

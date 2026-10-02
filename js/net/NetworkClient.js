@@ -231,6 +231,22 @@ class NetworkClient {
                 this.emit('score_updated', payload);
                 break;
 
+            case MSG.JUDGE_RESULT:
+                this.emit('judge_result', payload);
+                break;
+
+            case MSG.GAME_PAUSED:
+                this.emit('game_paused', payload);
+                break;
+
+            case MSG.SHOW_ANSWER:
+                this.emit('show_answer', payload);
+                break;
+
+            case MSG.QUESTION_CLOSED:
+                this.emit('question_closed', payload);
+                break;
+
             case MSG.ERROR:
                 this.emit('server_error', payload);
                 break;
@@ -296,6 +312,18 @@ class NetworkClient {
         return this.send(MSG.HOST_JUDGE_ANSWER, { isCorrect: Boolean(isCorrect) });
     }
 
+    showAnswer() {
+        return this.send(MSG.HOST_SHOW_ANSWER, {});
+    }
+
+    togglePause(isPaused = null) {
+        return this.send(MSG.HOST_TOGGLE_PAUSE, { isPaused });
+    }
+
+    closeQuestion() {
+        return this.send(MSG.HOST_CLOSE_QUESTION, {});
+    }
+
     updateScore(playerId, delta) {
         return this.send(MSG.HOST_UPDATE_SCORE, { playerId, delta: Number(delta) || 0 });
     }
@@ -353,7 +381,7 @@ class NetworkClient {
             try {
                 this.ws.close();
             } catch {}
-                this.ws = null;
+            this.ws = null;
         }
         this.isConnected = false;
         this.roomCode = null;

@@ -368,6 +368,161 @@
     }
 
     // =========================================================================
+    // Host Screen Management & Rendering (TASK-04)
+    // =========================================================================
+    function updateHostScreen(roomState, meta = {}) {
+        if (roomState) state.roomState = roomState;
+        const currentRoomState = state.roomState || 'LOBBY';
+
+        // State Badge
+        if (elements.hostStateBadge) {
+            const stateLabels = {
+                'INIT': 'Инициализация',
+                'LOBBY': 'Ожидание игроков',
+                'BOARD': 'Выбор вопроса',
+                'QUESTION_READING': 'Зачитывание вопроса',
+                'BUZZ_ACTIVE': 'Кнопка открыта!',
+                'ANSWERING': 'Игрок отвечает',
+                'AUCTION_BETTING': 'Аукцион',
+                'CAT_CHOOSING': 'Кот в мешке',
+                'ROUND_END': 'Конец раунда',
+                'GAME_OVER': 'Игра завершена'
+            };
+            elements.hostStateBadge.textContent = stateLabels[currentRoomState] || currentRoomState;
+        }
+
+        // Meta (Theme & Cost)
+        if (elements.hostThemeBadge) {
+            const theme = meta.themeName || (state.activeQuestion && (state.activeQuestion.theme || state.activeQuestion.themeName)) || '—';
+            elements.hostThemeBadge.textContent = `Тема: ${theme}`;
+        }
+        if (elements.hostCostBadge) {
+            elements.hostCostBadge.textContent = `${state.currentCost} очков`;
+        }
+
+        // Lobby action button (Start Game)
+        if (elements.hostLobbyAction) {
+            if (currentRoomState === 'LOBBY' || currentRoomState === 'INIT') {
+                elements.hostLobbyAction.style.display = 'block';
+            } else {
+                elements.hostLobbyAction.style.display = 'none';
+            }
+        }
+
+        // Question text and secret answer card
+        if (elements.hostQuestionText) {
+            if (state.activeQuestion && (state.activeQuestion.q || state.activeQuestion.text)) {
+                elements.hostQuestionText.textContent = state.activeQuestion.q || state.activeQuestion.text;
+            } else if (currentRoomState === 'LOBBY' || currentRoomState === 'INIT') {
+                elements.hostQuestionText.textContent = 'Ожидание игроков. Нажмите «Начать игру», когда все будут готовы.';
+            } else {
+                elements.hostQuestionText.textContent = 'Вопрос не выбран. Ожидайте открытия вопроса на табло.';
+            }
+        }
+
+        if (elements.hostSecretAnswer) {
+            if (state.activeQuestion && (state.activeQuestion.a || state.activeQuestion.answer)) {
+                elements.hostSecretAnswer.textContent = state.activeQuestion.a || state.activeQuestion.answer;
+            } else {
+                elements.hostSecretAnswer.textContent = '—';
+            }
+        }
+
+        if (elements.hostSecretComment) {
+            if (state.activeQuestion && state.activeQuestion.comment) {
+                elements.hostSecretComment.textContent = `💡 Примечание: ${state.activeQuestion.comment}`;
+                elements.hostSecretComment.classList.remove('hidden');
+            } else {
+                elements.hostSecretComment.classList.add('hidden');
+            }
+        }
+
+        // Active Answering Player & Judging Buttons
+        if (state.activeAnsweringPlayer) {
+            if (elements.hostAnsweringBanner) elements.hostAnsweringBanner.classList.remove('hidden');
+            if (elements.hostAnsweringName) elements.hostAnsweringName.textContent = `Отвечает: ${state.activeAnsweringPlayer.playerName || 'Игрок'}`;
+            if (elements.hostAnsweringSubtext) {
+                elements.hostAnsweringSubtext.textContent = meta.answerText
+                    ? `Ответ игрока: «${meta.answerText}»`
+                    : 'Слушайте ответ вслух или ждите ввода...';
+            }
+            if (elements.btnHostJudgeCorrect) elements.btnHostJudgeCorrect.disabled = false;
+            if (elements.btnHostJudgeWrong) elements.btnHostJudgeWrong.disabled = false;
+            if (elements.btnHostJudgeCorrectText) elements.btnHostJudgeCorrectText.textContent = `Зачесть (+${state.currentCost})`;
+            if (elements.btnHostJudgeWrongText) elements.btnHostJudgeWrongText.textContent = `Отклонить (-${state.currentCost})`;
+        } else {
+            if (elements.hostAnsweringBanner) elements.hostAnsweringBanner.classList.add('hidden');
+            if (elements.btnHostJudgeCorrect) elements.btnHostJudgeCorrect.disabled = true;
+            if (elements.btnHostJudgeWrong) elements.btnHostJudgeWrong.disabled = true;
+        }
+
+        // Buzzer open button
+        if (elements.btnHostOpenBuzzer) {
+            elements.btnHostOpenBuzzer.disabled = (currentRoomState !== 'QUESTION_READING');
+        }
+
+        // Pause button
+        if (elements.btnHostPause) {
+            if (state.isPaused) {
+                if (elements.hostPauseIcon) elements.hostPauseIcon.textContent = '▶️';
+                if (elements.hostPauseText) elements.hostPauseText.textContent = 'Продолжить';
+                elements.btnHostPause.classList.add('paused');
+            } else {
+                if (elements.hostPauseIcon) elements.hostPauseIcon.textContent = '⏸️';
+                if (elements.hostPauseText) elements.hostPauseText.textContent = 'Пауза';
+                elements.btnHostPause.classList.remove('paused');
+            }
+        }
+    }
+
+    function renderHostPlayersList(players) {
+        if (!elements.hostPlayersList) return;
+        elements.hostPlayersList.innerHTML = '';
+
+        const playerList = (players || []).filter(p => p.role !== 'host');
+        if (elements.hostPlayersCount) {
+            elements.hostPlayersCount.textContent = `${playerList.length} игроков`;
+        }
+
+        if (playerList.length === 0) {
+            elements.hostPlayersList.innerHTML = '<div style="color:var(--text-muted); padding:10px; text-align:center;">Ожидание подключения игроков...</div>';
+            return;
+        }
+
+        playerList.forEach((p) => {
+            const row = document.createElement('div');
+            row.className = 'host-player-row';
+            row.innerHTML = `
+                <div class="host-player-info">
+                    <span class="host-player-avatar">${p.avatar || '🐱'}</span>
+                    <span class="host-player-name">${escapeHtml(p.name)}</span>
+                </div>
+                <div class="host-player-actions">
+                    <button type="button" class="score-step-btn minus" data-id="${p.id}" title="Снять 100">-100</button>
+                    <span class="host-player-score">${p.score || 0}</span>
+                    <button type="button" class="score-step-btn plus" data-id="${p.id}" title="Добавить 100">+100</button>
+                </div>
+            `;
+
+            row.querySelector('.minus').addEventListener('click', () => {
+                if (netClient) {
+                    netClient.updateScore(p.id, -100);
+                    haptic('buzz_press');
+                }
+            });
+
+            row.querySelector('.plus').addEventListener('click', () => {
+                if (netClient) {
+                    netClient.updateScore(p.id, 100);
+                    haptic('buzz_press');
+                }
+            });
+
+            elements.hostPlayersList.appendChild(row);
+        });
+    }
+
+    // =========================================================================
     // Standings & Players Lists
     // =========================================================================
     function renderPlayersList(players) {
@@ -704,6 +859,80 @@
     // UI Event Handlers
     // =========================================================================
     function setupEventHandlers() {
+        // Host Phone Remote Controls (TASK-04)
+        if (elements.btnHostJudgeCorrect) {
+            elements.btnHostJudgeCorrect.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.judgeAnswer(true);
+                elements.btnHostJudgeCorrect.disabled = true;
+                elements.btnHostJudgeWrong.disabled = true;
+                haptic('success');
+                showToast(`Ответ зачтён (+${state.currentCost})`, 'success');
+            });
+        }
+
+        if (elements.btnHostJudgeWrong) {
+            elements.btnHostJudgeWrong.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.judgeAnswer(false);
+                elements.btnHostJudgeCorrect.disabled = true;
+                elements.btnHostJudgeWrong.disabled = true;
+                haptic('error');
+                showToast(`Ответ отклонён (-${state.currentCost})`, 'error');
+            });
+        }
+
+        if (elements.btnHostOpenBuzzer) {
+            elements.btnHostOpenBuzzer.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.activateBuzzer();
+                elements.btnHostOpenBuzzer.disabled = true;
+                haptic('buzz_press');
+                showToast('Кнопка открыта для игроков', 'info');
+            });
+        }
+
+        if (elements.btnHostPause) {
+            elements.btnHostPause.addEventListener('click', () => {
+                if (!netClient) return;
+                state.isPaused = !state.isPaused;
+                netClient.togglePause(state.isPaused);
+                updateHostScreen(state.roomState);
+                haptic('buzz_press');
+                showToast(state.isPaused ? 'Игра на паузе' : 'Игра продолжена', 'info');
+            });
+        }
+
+        if (elements.btnHostShowAnswer) {
+            elements.btnHostShowAnswer.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.showAnswer();
+                haptic('buzz_press');
+                showToast('Ответ отображён на ТВ', 'success');
+            });
+        }
+
+        if (elements.btnHostCloseQuestion) {
+            elements.btnHostCloseQuestion.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.closeQuestion();
+                state.activeQuestion = null;
+                state.activeAnsweringPlayer = null;
+                updateHostScreen('BOARD');
+                haptic('buzz_press');
+                showToast('Вопрос закрыт, переход к табло', 'info');
+            });
+        }
+
+        if (elements.btnHostStartGame) {
+            elements.btnHostStartGame.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.startGame();
+                haptic('success');
+                showToast('Запуск игры...', 'success');
+            });
+        }
+
         // Role Selector buttons (TASK-03)
         if (elements.btnRolePlayer) {
             elements.btnRolePlayer.addEventListener('click', () => selectRole('player'));
