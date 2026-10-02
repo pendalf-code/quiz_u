@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0d1117">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Quiz U — Мобильный веб-пульт игрока">
+    <title>Quiz U — Мобильный пульт</title>
+    <link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+    <div class="mobile-app">
+        <!-- Верхняя панель (Хедер) -->
+        <header class="mobile-header" id="mobile-header">
+            <div class="header-left">
+                <div class="conn-indicator" id="conn-indicator" title="Статус сети">
+                    <span class="status-dot disconnected" id="status-dot"></span>
+                    <span class="status-text" id="status-text">Оффлайн</span>
+                </div>
+                <div class="room-badge hidden" id="header-room-badge">
+                    <span class="room-label">Комната</span>
+                    <span class="room-code" id="header-room-code">----</span>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <div class="player-mini-badge hidden" id="header-player-badge">
+                    <span class="player-avatar" id="header-avatar">🐱</span>
+                    <div class="player-details">
+                        <span class="player-name" id="header-name">Игрок</span>
+                        <span class="player-score" id="header-score">0 очков</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="icon-btn theme-btn" id="theme-toggle-btn" aria-label="Сменить тему" title="Сменить тему">
+                    <span class="theme-icon" id="theme-icon">☀️</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Основной контейнер экранов -->
+        <main class="mobile-main">
+            <!-- ЭКРАН 1: Вход в комнату -->
+            <section class="screen active" id="screen-join">
+                <div class="join-card">
+                    <div class="brand-logo">
+                        <div class="logo-icon">🎮</div>
+                        <h1 class="brand-title">QUIZ <span>U</span></h1>
+                        <p class="brand-subtitle">Мобильный пульт игрока</p>
+                    </div>
+
+                    <!-- Карточка быстрого повторного входа (если есть сессия) -->
+                    <div class="reconnect-banner hidden" id="reconnect-banner">
+                        <div class="reconnect-info">
+                            <span class="reconnect-avatar" id="reconnect-avatar">🐱</span>
+                            <div class="reconnect-text">
+                                <span class="reconnect-name" id="reconnect-name">Игрок</span>
+                                <span class="reconnect-room" id="reconnect-room">Комната: ABCD</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="btn-reconnect-quick">
+                            Восстановить сессию
+                        </button>
+                    </div>
+
+                    <form class="join-form" id="join-form" autocomplete="off">
+                        <div class="form-group">
+                            <label for="room-code-input">Код комнаты</label>
+                            <input 
+                                type="text" 
+                                id="room-code-input" 
+                                class="form-input text-center text-uppercase tracking-widest font-mono"
+                                placeholder="ABCD" 
+                                maxlength="4" 
+                                required
+                                autocorrect="off"
+                                autocapitalize="characters"
+                                spellcheck="false"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="player-name-input">Ваше имя / никнейм</label>
+                            <input 
+                                type="text" 
+                                id="player-name-input" 
+                                class="form-input text-center"
+                                placeholder="Например: Знаток" 
+                                maxlength="20" 
+                                required
+                                autocorrect="off"
+                                spellcheck="false"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label>Выберите аватар</label>
+                            <div class="avatar-grid" id="avatar-grid">
+                                <button type="button" class="avatar-btn selected" data-avatar="🐱">🐱</button>
+                                <button type="button" class="avatar-btn" data-avatar="🦊">🦊</button>
+                                <button type="button" class="avatar-btn" data-avatar="🐼">🐼</button>
+                                <button type="button" class="avatar-btn" data-avatar="🦁">🦁</button>
+                                <button type="button" class="avatar-btn" data-avatar="🐸">🐸</button>
+                                <button type="button" class="avatar-btn" data-avatar="🦉">🦉</button>
+                                <button type="button" class="avatar-btn" data-avatar="🦄">🦄</button>
+                                <button type="button" class="avatar-btn" data-avatar="🚀">🚀</button>
+                                <button type="button" class="avatar-btn" data-avatar="⚡">⚡</button>
+                                <button type="button" class="avatar-btn" data-avatar="🎯">🎯</button>
+                                <button type="button" class="avatar-btn" data-avatar="👾">👾</button>
+                                <button type="button" class="avatar-btn" data-avatar="👑">👑</button>
+                            </div>
+                        </div>
+
+                        <div class="form-error hidden" id="join-error"></div>
+
+                        <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-join">
+                            ВОЙТИ В ИГРУ
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ЭКРАН 2: Ожидание вопроса / раунда -->
+            <section class="screen" id="screen-waiting">
+                <div class="waiting-card">
+                    <div class="waiting-pulse-orb">
+                        <div class="pulse-ring ring-1"></div>
+                        <div class="pulse-ring ring-2"></div>
+                        <div class="waiting-icon">⏳</div>
+                    </div>
+
+                    <h2 class="screen-title" id="waiting-title">Внимание на экран!</h2>
+                    <p class="screen-desc" id="waiting-desc">Ведущий выбирает вопрос на табло...</p>
+
+                    <div class="score-card">
+                        <span class="score-label">Ваш текущий счёт</span>
+                        <div class="score-value" id="waiting-score">0</div>
+                    </div>
+
+                    <div class="standings-panel">
+                        <h3 class="standings-title">Игроки в комнате</h3>
+                        <div class="players-list" id="waiting-players-list">
+                            <!-- Заполняется динамически -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ЭКРАН 3: Большая кнопка «ОТВЕТИТЬ» (Buzzer) -->
+            <section class="screen" id="screen-buzzer">
+                <div class="buzzer-container">
+                    <div class="question-info-bar">
+                        <span class="q-cost-badge" id="buzzer-cost-badge">100 очков</span>
+                        <span class="q-status-badge" id="buzzer-status-badge">Зачитывание вопроса</span>
+                    </div>
+
+                    <!-- Гигантская кнопка Buzzer -->
+                    <button type="button" class="giant-buzzer-btn state-locked" id="buzzer-btn" disabled>
+                        <div class="buzzer-inner">
+                            <div class="buzzer-icon" id="buzzer-icon">🔒</div>
+                            <div class="buzzer-text" id="buzzer-text">ВНИМАНИЕ НА ЭКРАН</div>
+                            <div class="buzzer-subtext" id="buzzer-subtext">Ждите открытия кнопки</div>
+                        </div>
+                        <div class="buzzer-wave"></div>
+                    </button>
+
+                    <div class="buzzer-footer-info" id="buzzer-footer-info">
+                        Нажимайте, как только ведущий откроет кнопку!
+                    </div>
+                </div>
+            </section>
+
+            <!-- ЭКРАН 4: Ввод ответа (если нажал первым) -->
+            <section class="screen" id="screen-answer">
+                <div class="answer-card">
+                    <div class="answer-header">
+                        <div class="badge-success">ВЫ ОТВЕЧАЕТЕ!</div>
+                        <div class="timer-countdown" id="answer-timer-num">5</div>
+                    </div>
+
+                    <div class="timer-bar-wrap">
+                        <div class="timer-bar" id="answer-timer-bar"></div>
+                    </div>
+
+                    <p class="answer-cost-hint" id="answer-cost-hint">Ставка: 100 очков</p>
+
+                    <form class="answer-form" id="answer-form">
+                        <div class="form-group">
+                            <label for="answer-input">Введите ваш ответ (или назовите голосом):</label>
+                            <input 
+                                type="text" 
+                                id="answer-input" 
+                                class="form-input text-center text-lg" 
+                                placeholder="Ваш вариант ответа..."
+                                autocomplete="off"
+                                autocorrect="off"
+                                spellcheck="false"
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-block btn-lg" id="btn-submit-answer">
+                            ОТПРАВИТЬ ОТВЕТ
+                        </button>
+                    </form>
+
+                    <div class="voice-hint">
+                        💡 Вы можете просто озвучить ответ ведущему вслух — ведущий сам подтвердит его правильность.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ЭКРАН 5: Управление ставкой для раунда «Аукцион» -->
+            <section class="screen" id="screen-auction">
+                <div class="auction-card">
+                    <div class="auction-header">
+                        <div class="auction-badge">🔥 АУКЦИОН</div>
+                        <h2 class="screen-title">Сделайте вашу ставку</h2>
+                    </div>
+
+                    <div class="auction-info-row">
+                        <div class="info-pill">
+                            <span class="pill-label">Номинал</span>
+                            <span class="pill-value" id="auction-nominal">100</span>
+                        </div>
+                        <div class="info-pill">
+                            <span class="pill-label">Ваш баланс</span>
+                            <span class="pill-value" id="auction-balance">0</span>
+                        </div>
+                    </div>
+
+                    <form class="auction-form" id="auction-form">
+                        <div class="bet-display-wrap">
+                            <button type="button" class="bet-step-btn" id="btn-bet-minus">-100</button>
+                            <input 
+                                type="number" 
+                                id="bet-input" 
+                                class="form-input bet-input text-center" 
+                                value="100" 
+                                min="100" 
+                                step="100"
+                                required
+                            >
+                            <button type="button" class="bet-step-btn" id="btn-bet-plus">+100</button>
+                        </div>
+
+                        <div class="quick-bets-grid">
+                            <button type="button" class="btn-quick-bet" data-add="200">+200</button>
+                            <button type="button" class="btn-quick-bet" data-add="500">+500</button>
+                            <button type="button" class="btn-quick-bet btn-va-bank" id="btn-va-bank">ВА-БАНК!</button>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning btn-block btn-lg" id="btn-submit-bet">
+                            ПОДТВЕРДИТЬ СТАВКУ
+                        </button>
+
+                        <button type="button" class="btn btn-secondary btn-block" id="btn-pass-bet">
+                            ПАС
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ЭКРАН 6: Выбор команды для раунда «Кот в мешке» -->
+            <section class="screen" id="screen-cat">
+                <div class="cat-card">
+                    <div class="cat-icon-wrap">🐱🎁</div>
+                    <h2 class="screen-title">Кот в мешке!</h2>
+                    <p class="screen-desc">Выберите соперника, которому хотите передать вопрос:</p>
+
+                    <div class="cat-players-list" id="cat-players-list">
+                        <!-- Список игроков для передачи -->
+                    </div>
+
+                    <button type="button" class="btn btn-primary btn-block btn-lg" id="btn-confirm-cat" disabled>
+                        ПЕРЕДАТЬ ВОПРОС
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Всплывающее уведомление (Toast) -->
+        <div class="mobile-toast hidden" id="mobile-toast">
+            <span class="toast-icon" id="toast-icon">ℹ️</span>
+            <span class="toast-message" id="toast-message">Уведомление</span>
+        </div>
+    </div>
+
+    <!-- Клиентские скрипты протокола и сетевого взаимодействия -->
+    <script src="../js/net/Protocol.js"></script>
+    <script src="../js/net/NetworkClient.js"></script>
+    <script src="mobile.js"></script>
+</body>
+</html>
