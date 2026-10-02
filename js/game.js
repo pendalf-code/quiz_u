@@ -3250,9 +3250,175 @@
     let isOnlineGame = false;
     let hostNetworkClient = null;
     let currentOnlineRoomCode = '';
-        isLocalHostEnabled = false;
     let isLocalHostEnabled = false;
     let activeOnlineBuzzer = null;
+
+    let currentLobbySettings = {
+        readingTime: parseInt(localStorage.getItem('cfg_reading_time'), 10) >= 0 ? parseInt(localStorage.getItem('cfg_reading_time'), 10) : 7,
+        thinkingTime: parseInt(localStorage.getItem('cfg_thinking_time'), 10) >= 5 ? parseInt(localStorage.getItem('cfg_thinking_time'), 10) : 30,
+        answerTime: parseInt(localStorage.getItem('cfg_answer_time'), 10) >= 1 ? parseInt(localStorage.getItem('cfg_answer_time'), 10) : 5,
+        penaltyEnabled: localStorage.getItem('cfg_penalty_enabled') !== 'false',
+        penaltyMode: localStorage.getItem('cfg_penalty_mode') || 'nominal',
+        penaltyFixedAmount: parseInt(localStorage.getItem('cfg_penalty_fixed_amount'), 10) || 100
+    };
+
+    function getLobbySettings() {
+        return { ...currentLobbySettings };
+    }
+
+    function getPenaltyDeduction(cost) {
+        if (!currentLobbySettings || currentLobbySettings.penaltyEnabled === false) return 0;
+        if (currentLobbySettings.penaltyMode === 'fixed') {
+            return Math.max(0, parseInt(currentLobbySettings.penaltyFixedAmount, 10) || 100);
+        }
+        return Math.max(0, parseInt(cost, 10) || 0);
+    }
+
+    function updateLobbySettingsChips() {
+        const readingChip = document.getElementById('chip-reading-time');
+        const thinkingChip = document.getElementById('chip-thinking-time');
+        const answerChip = document.getElementById('chip-answer-time');
+        const penaltyChip = document.getElementById('chip-penalty');
+
+        if (readingChip) {
+            if (currentLobbySettings.readingTime === 0) {
+                readingChip.textContent = '⏱️ Чтение: 0с (без задержки)';
+            } else {
+                readingChip.textContent = `⏱️ Чтение: ${currentLobbySettings.readingTime}с`;
+            }
+        }
+        if (thinkingChip) {
+            thinkingChip.textContent = `🔔 Таймер: ${currentLobbySettings.thinkingTime}с`;
+        }
+        if (answerChip) {
+            answerChip.textContent = `🗣️ Ответ: ${currentLobbySettings.answerTime}с`;
+        }
+        if (penaltyChip) {
+            if (!currentLobbySettings.penaltyEnabled) {
+                penaltyChip.textContent = '⚠️ Штраф: отключен';
+            } else if (currentLobbySettings.penaltyMode === 'fixed') {
+                penaltyChip.textContent = `⚠️ Штраф: ${currentLobbySettings.penaltyFixedAmount} фикс.`;
+            } else {
+                penaltyChip.textContent = '⚠️ Штраф: номинал';
+            }
+        }
+    }
+
+    function toggleLobbyPenaltyInputs() {
+        const enabledCheckbox = document.getElementById('lobby-setting-penalty-enabled');
+        const modeSelect = document.getElementById('lobby-setting-penalty-mode');
+        const fixedGroup = document.getElementById('lobby-penalty-fixed-group');
+        const fixedAmountInput = document.getElementById('lobby-setting-penalty-fixed-amount');
+
+        const isEnabled = enabledCheckbox ? enabledCheckbox.checked : true;
+        if (modeSelect) {
+            modeSelect.disabled = !isEnabled;
+        }
+        if (fixedGroup) {
+            if (isEnabled && modeSelect && modeSelect.value === 'fixed') {
+                fixedGroup.style.display = 'block';
+            } else {
+                fixedGroup.style.display = 'none';
+            }
+        }
+        if (fixedAmountInput) {
+            fixedAmountInput.disabled = !isEnabled || (modeSelect && modeSelect.value !== 'fixed');
+        }
+    }
+
+    function openLobbySettingsModal(event) {
+        if (event && event.stopPropagation) event.stopPropagation();
+
+        const readingInput = document.getElementById('lobby-setting-reading-time');
+        const thinkingInput = document.getElementById('lobby-setting-thinking-time');
+        const answerInput = document.getElementById('lobby-setting-answer-time');
+        const penaltyCheckbox = document.getElementById('lobby-setting-penalty-enabled');
+        const penaltyModeSelect = document.getElementById('lobby-setting-penalty-mode');
+        const penaltyFixedInput = document.getElementById('lobby-setting-penalty-fixed-amount');
+
+        if (readingInput) readingInput.value = currentLobbySettings.readingTime;
+        if (thinkingInput) thinkingInput.value = currentLobbySettings.thinkingTime;
+        if (answerInput) answerInput.value = currentLobbySettings.answerTime;
+        if (penaltyCheckbox) penaltyCheckbox.checked = Boolean(currentLobbySettings.penaltyEnabled);
+        if (penaltyModeSelect) penaltyModeSelect.value = currentLobbySettings.penaltyMode || 'nominal';
+        if (penaltyFixedInput) penaltyFixedInput.value = currentLobbySettings.penaltyFixedAmount || 100;
+
+        toggleLobbyPenaltyInputs();
+
+        const modal = document.getElementById('lobby-settings-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    function closeLobbySettingsModal() {
+        const modal = document.getElementById('lobby-settings-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    function saveLobbySettings() {
+        const readingInput = document.getElementById('lobby-setting-reading-time');
+        const thinkingInput = document.getElementById('lobby-setting-thinking-time');
+        const answerInput = document.getElementById('lobby-setting-answer-time');
+        const penaltyCheckbox = document.getElementById('lobby-setting-penalty-enabled');
+        const penaltyModeSelect = document.getElementById('lobby-setting-penalty-mode');
+        const penaltyFixedInput = document.getElementById('lobby-setting-penalty-fixed-amount');
+
+        const readingTime = readingInput ? Math.max(0, parseInt(readingInput.value, 10) || 0) : currentLobbySettings.readingTime;
+        const thinkingTime = thinkingInput ? Math.max(5, parseInt(thinkingInput.value, 10) || 30) : currentLobbySettings.thinkingTime;
+        const answerTime = answerInput ? Math.max(1, parseInt(answerInput.value, 10) || 5) : currentLobbySettings.answerTime;
+        const penaltyEnabled = penaltyCheckbox ? Boolean(penaltyCheckbox.checked) : currentLobbySettings.penaltyEnabled;
+        const penaltyMode = (penaltyModeSelect && penaltyModeSelect.value === 'fixed') ? 'fixed' : 'nominal';
+        const penaltyFixedAmount = penaltyFixedInput ? Math.max(10, parseInt(penaltyFixedInput.value, 10) || 100) : currentLobbySettings.penaltyFixedAmount;
+
+        currentLobbySettings = {
+            readingTime,
+            thinkingTime,
+            answerTime,
+            penaltyEnabled,
+            penaltyMode,
+            penaltyFixedAmount
+        };
+
+        configReadingTime = readingTime;
+        configThinkingTime = thinkingTime;
+        configAnswerTime = answerTime;
+
+        try {
+            localStorage.setItem('cfg_reading_time', readingTime);
+            localStorage.setItem('cfg_thinking_time', thinkingTime);
+            localStorage.setItem('cfg_answer_time', answerTime);
+            localStorage.setItem('cfg_penalty_enabled', penaltyEnabled ? 'true' : 'false');
+            localStorage.setItem('cfg_penalty_mode', penaltyMode);
+            localStorage.setItem('cfg_penalty_fixed_amount', penaltyFixedAmount);
+        } catch (e) {}
+
+        updateLobbySettingsChips();
+
+        if (hostNetworkClient) {
+            hostNetworkClient.updateRoomSettings(currentLobbySettings);
+        }
+
+        closeLobbySettingsModal();
+    }
+
+    function syncLobbySettings(options) {
+        if (!options || typeof options !== 'object') return;
+        if (typeof options.readingTime !== 'undefined') currentLobbySettings.readingTime = Math.max(0, parseInt(options.readingTime, 10));
+        if (typeof options.thinkingTime !== 'undefined') currentLobbySettings.thinkingTime = Math.max(5, parseInt(options.thinkingTime, 10));
+        if (typeof options.answerTime !== 'undefined') currentLobbySettings.answerTime = Math.max(1, parseInt(options.answerTime, 10));
+        if (typeof options.penaltyEnabled !== 'undefined') currentLobbySettings.penaltyEnabled = Boolean(options.penaltyEnabled);
+        if (typeof options.penaltyMode !== 'undefined') currentLobbySettings.penaltyMode = options.penaltyMode === 'fixed' ? 'fixed' : 'nominal';
+        if (typeof options.penaltyFixedAmount !== 'undefined') currentLobbySettings.penaltyFixedAmount = Math.max(10, parseInt(options.penaltyFixedAmount, 10));
+
+        configReadingTime = currentLobbySettings.readingTime;
+        configThinkingTime = currentLobbySettings.thinkingTime;
+        configAnswerTime = currentLobbySettings.answerTime;
+
+        updateLobbySettingsChips();
+    }
 
     function playBuzzerSound() {
         if (!configEnableSound) return;
@@ -3280,6 +3446,7 @@
         isOnlineGame = true;
         showSubScreen('sub-menu-online-lobby');
         updateLobbyPackDisplay();
+        updateLobbySettingsChips();
         initHostNetwork();
     }
 
@@ -3342,7 +3509,7 @@
         hostNetworkClient.on('connected', () => {
             if (statusDot) statusDot.className = 'status-indicator status-connected';
             if (statusText) statusText.textContent = 'Подключено к серверу';
-            hostNetworkClient.createRoom({ isHostOnPC: isLocalHostEnabled, requireMobileHost: true });
+            hostNetworkClient.createRoom({ isHostOnPC: isLocalHostEnabled, requireMobileHost: true, ...getLobbySettings() });
         });
 
         hostNetworkClient.on('disconnected', () => {
@@ -3358,6 +3525,9 @@
 
         hostNetworkClient.on('room_created', (data) => {
             currentOnlineRoomCode = data.roomCode;
+            if (data && data.options) {
+                syncLobbySettings(data.options);
+            }
             const codeEl = document.getElementById('lobby-room-code');
             if (codeEl) codeEl.textContent = data.roomCode;
 
@@ -3420,13 +3590,19 @@
                             ✅ Зачесть (+${currentCost})
                         </button>
                         <button class="btn btn-judge-wrong" onclick="judgeOnlineAnswer(false)">
-                            ❌ Отклонить (-${currentCost})
+                            ❌ Отклонить (-${getPenaltyDeduction(currentCost)})
                         </button>
                         <button class="btn btn-check" onclick="showAnswer()">
                             Показать ответ
                         </button>
                     </div>
                 `;
+            }
+        });
+
+        hostNetworkClient.on('room_settings_updated', (payload) => {
+            if (payload && payload.options) {
+                syncLobbySettings(payload.options);
             }
         });
 
@@ -3489,6 +3665,9 @@
         });
 
         hostNetworkClient.on('room_state', (payload) => {
+            if (payload && payload.options) {
+                syncLobbySettings(payload.options);
+            }
             if (payload.state === 'BOARD' && !isGameStarted) {
                 // If remote host pressed 'Start Game' in lobby
                 if (typeof startOnlineGame === 'function') {
@@ -3688,7 +3867,8 @@
         if (activeOnlineBuzzer) {
             const teamIdx = teams.findIndex(t => t.id === activeOnlineBuzzer.playerId || t.name === activeOnlineBuzzer.playerName);
             if (teamIdx !== -1) {
-                const delta = isCorrect ? currentCost : -currentCost;
+                const penalty = getPenaltyDeduction(currentCost);
+                const delta = isCorrect ? currentCost : -penalty;
                 changeTeamScore(teamIdx, delta);
             }
         }
@@ -3718,6 +3898,14 @@
         window.toggleLocalHost = toggleLocalHost;
         window.copyRoomCode = copyRoomCode;
         window.judgeOnlineAnswer = judgeOnlineAnswer;
+        window.openLobbySettingsModal = openLobbySettingsModal;
+        window.closeLobbySettingsModal = closeLobbySettingsModal;
+        window.saveLobbySettings = saveLobbySettings;
+        window.toggleLobbyPenaltyInputs = toggleLobbyPenaltyInputs;
+        window.getLobbySettings = getLobbySettings;
+        window.syncLobbySettings = syncLobbySettings;
+        window.updateLobbySettingsChips = updateLobbySettingsChips;
+        window.getPenaltyDeduction = getPenaltyDeduction;
         window.isOnlineGame = () => isOnlineGame;
         window.getHostNetworkClient = () => hostNetworkClient;
         window.updateLobbyPackDisplay = updateLobbyPackDisplay;

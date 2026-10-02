@@ -104,4 +104,34 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         assert.equal(typeof client.judgeAnswer, 'function');
         assert.equal(typeof client.getPlayersList, 'function');
     });
+
+    test('TASK-01: Lobby Game & Timer Settings UI, Modal, and Protocol Integration', () => {
+        // Summary chips bar
+        assert.ok(htmlContent.includes('id="lobby-settings-bar"'), '#lobby-settings-bar must exist');
+        assert.ok(htmlContent.includes('id="chip-reading-time"'), '#chip-reading-time must exist');
+        assert.ok(htmlContent.includes('id="chip-thinking-time"'), '#chip-thinking-time must exist');
+        assert.ok(htmlContent.includes('id="chip-answer-time"'), '#chip-answer-time must exist');
+        assert.ok(htmlContent.includes('id="chip-penalty"'), '#chip-penalty must exist');
+        assert.ok(htmlContent.includes('id="btn-open-lobby-settings"'), '#btn-open-lobby-settings must exist');
+
+        // Modal dialog & inputs
+        assert.ok(htmlContent.includes('id="lobby-settings-modal"'), '#lobby-settings-modal must exist');
+        assert.ok(htmlContent.includes('id="lobby-setting-reading-time"'), '#lobby-setting-reading-time must exist');
+        assert.ok(htmlContent.includes('id="lobby-setting-thinking-time"'), '#lobby-setting-thinking-time must exist');
+        assert.ok(htmlContent.includes('id="lobby-setting-answer-time"'), '#lobby-setting-answer-time must exist');
+        assert.ok(htmlContent.includes('id="lobby-setting-penalty-enabled"'), '#lobby-setting-penalty-enabled must exist');
+        assert.ok(htmlContent.includes('id="lobby-setting-penalty-mode"'), '#lobby-setting-penalty-mode must exist');
+        assert.ok(htmlContent.includes('id="lobby-setting-penalty-fixed-amount"'), '#lobby-setting-penalty-fixed-amount must exist');
+        assert.ok(htmlContent.includes('id="btn-save-lobby-settings"'), '#btn-save-lobby-settings must exist');
+
+        // Protocol message types
+        const { MSG_TYPES } = require('../js/net/Protocol.js');
+        assert.equal(MSG_TYPES.HOST_UPDATE_ROOM_SETTINGS, 'HOST_UPDATE_ROOM_SETTINGS');
+        assert.equal(MSG_TYPES.ROOM_SETTINGS_UPDATED, 'ROOM_SETTINGS_UPDATED');
+
+        // NetworkClient method
+        const NetworkClient = require('../js/net/NetworkClient.js');
+        const client = new NetworkClient({ url: 'ws://127.0.0.1:8080', isHost: true });
+        assert.equal(typeof client.updateRoomSettings, 'function', 'updateRoomSettings method must exist on NetworkClient');
+    });
 });
