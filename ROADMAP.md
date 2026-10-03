@@ -6,6 +6,8 @@
 > 📁 **Связанные документы:**
 > * [PLAN.md](file:///C:/Users/user/IdeaProjects/quiz_u/PLAN.md) — архитектура и стек мультиплеера.
 > * [DEV_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DEV_GUIDE.md) — инженерные правила для AI и саммари перед пушем.
+> * [REVIEW_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/REVIEW_GUIDE.md) — регламент конструктивного ревью и план ревью проекта.
+> * [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) — трекер задач, фичей и багов.
 > * [DESIGN_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DESIGN_GUIDE.md) — Steam Direct, ассеты, вишлисты и маркетинг в соцсетях.
 
 ---

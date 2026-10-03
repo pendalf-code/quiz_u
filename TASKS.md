@@ -4,6 +4,7 @@
 > 
 > 🔗 **Связанные документы:**
 > * [DEV_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DEV_GUIDE.md) — инженерные правила, стандарты кодовой базы и правила перед коммитом.
+> * [REVIEW_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/REVIEW_GUIDE.md) — регламент конструктивного ревью и план ревью проекта.
 > * [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md) — глобальные релизные этапы проекта.
 > * [PLAN.md](file:///C:/Users/user/IdeaProjects/quiz_u/PLAN.md) — концепция и архитектура мультиплеера.
 > * [README.md](file:///C:/Users/user/IdeaProjects/quiz_u/README.md) — запуск и руководство пользователя.
