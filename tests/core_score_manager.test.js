@@ -50,6 +50,40 @@ describe('Core: ScoreManager Tests', () => {
         assert.strictEqual(stats[1].cats, 1);
     });
 
+    it('indexes statistics by team id and preserves them after team removal', () => {
+        const sm = new ScoreManager([
+            { id: 'team_a', name: 'Команда А', score: 0 },
+            { id: 'team_b', name: 'Команда Б', score: 0 },
+            { id: 'team_c', name: 'Команда В', score: 0 }
+        ]);
+
+        sm.changeScore('team_a', 200, 'normal');
+        sm.changeScore('team_b', -100, 'normal');
+        sm.changeScore('team_c', 400, 'cat');
+
+        // Verify retrieval by ID
+        assert.strictEqual(sm.getTeamStats('team_a').correct, 1);
+        assert.strictEqual(sm.getTeamStats('team_b').wrong, 1);
+        assert.strictEqual(sm.getTeamStats('team_c').cats, 1);
+
+        // Remove middle team (team_b)
+        sm.removeTeam(1);
+
+        const remainingTeams = sm.getTeams();
+        assert.strictEqual(remainingTeams.length, 2);
+        assert.strictEqual(remainingTeams[0].id, 'team_a');
+        assert.strictEqual(remainingTeams[1].id, 'team_c');
+
+        // team_c is now at index 1, its stats must remain intact and aligned
+        assert.strictEqual(sm.getTeamStats('team_c').cats, 1);
+        assert.strictEqual(sm.getTeamStats(1).cats, 1);
+        assert.strictEqual(sm.gameStats[1].cats, 1);
+        assert.strictEqual(sm.gameStats['team_c'].cats, 1);
+
+        // team_b stats should be cleaned up
+        assert.strictEqual(sm.getTeamStats('team_b'), null);
+    });
+
     it('applies score change to all teams uniformly', () => {
         const sm = new ScoreManager([
             { name: 'T1', score: 100 },

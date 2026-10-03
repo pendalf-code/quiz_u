@@ -5,7 +5,7 @@
  *
  * Возможности:
  * 1. Сканирование папки assets/ (аудио, видео, изображения вопросов/ответов).
- * 2. Проверка размеров файлов и выявление тяжелых ассетов (> 2 МБ для аудио/фото, > 10 МБ для видео).
+ * 2. Проверка размеров файлов и выявление тяжелых ассетов (> 2 МБ для аудио/фото, > 8 МБ для видео).
  * 3. Генерация манифеста ассетов assets/cdn_manifest.json для пакетной выгрузки в Cloudflare R2 / S3.
  * 4. Предоставление рекомендаций по сжатию (ffmpeg для mp3/mp4, cwebp для изображений).
  */
@@ -92,7 +92,7 @@ function auditMediaFiles(options = {}) {
     };
 }
 
-function generateCdnManifest(cdnBaseUrl = 'https://cdn.quizu.app') {
+function generateCdnManifest(cdnBaseUrl = 'https://cdn.quizu.app', saveToFile = true) {
     const report = auditMediaFiles();
     const manifest = {
         version: '1.0.0',
@@ -114,7 +114,9 @@ function generateCdnManifest(cdnBaseUrl = 'https://cdn.quizu.app') {
         };
     }
 
-    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2), 'utf8');
+    if (saveToFile) {
+        fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2), 'utf8');
+    }
     return manifest;
 }
 

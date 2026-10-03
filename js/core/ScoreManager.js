@@ -41,6 +41,7 @@
             }));
             this.currentTurnIndex = 0;
             this.clearAuctionBets();
+            this.gameStats = {};
             this._notifyChange();
         }
 
@@ -77,7 +78,22 @@
         removeTeam(teamIdOrIdx) {
             const idx = this._resolveTeamIndex(teamIdOrIdx);
             if (idx >= 0 && idx < this.teams.length) {
+                const removedTeam = this.teams[idx];
                 this.teams.splice(idx, 1);
+
+                if (removedTeam && removedTeam.id) {
+                    delete this.gameStats[removedTeam.id];
+                }
+
+                // Переиндексируем числовые ссылки для синхронизации со смещёнными индексами команд
+                const oldNumericKeys = Object.keys(this.gameStats).filter(k => /^\d+$/.test(k));
+                oldNumericKeys.forEach(k => delete this.gameStats[k]);
+                this.teams.forEach((team, i) => {
+                    if (this.gameStats[team.id]) {
+                        this.gameStats[i] = this.gameStats[team.id];
+                    }
+                });
+
                 if (this.currentTurnIndex >= this.teams.length) {
                     this.currentTurnIndex = 0;
                 }
@@ -109,21 +125,22 @@
             if (idx < 0 || idx >= this.teams.length) return;
 
             this.teams[idx].score += amount;
+            const teamId = this.teams[idx].id;
 
-            if (!this.gameStats[idx]) {
-                this.gameStats[idx] = { correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0 };
-            }
+            const statObj = this.gameStats[teamId] || this.gameStats[idx] || { correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0 };
+            this.gameStats[teamId] = statObj;
+            this.gameStats[idx] = statObj;
 
             if (category === 'pass') {
-                this.gameStats[idx].passes++;
+                statObj.passes++;
             } else {
                 if (amount > 0) {
-                    this.gameStats[idx].correct++;
+                    statObj.correct++;
                 } else if (amount < 0) {
-                    this.gameStats[idx].wrong++;
+                    statObj.wrong++;
                 }
-                if (category === 'cat') this.gameStats[idx].cats++;
-                if (category === 'auction') this.gameStats[idx].auctions++;
+                if (category === 'cat') statObj.cats++;
+                if (category === 'auction') statObj.auctions++;
             }
 
             this._notifyChange();
@@ -137,11 +154,12 @@
             if (typeof delta !== 'number' || isNaN(delta)) return;
             this.teams.forEach((team, idx) => {
                 team.score += delta;
-                if (!this.gameStats[idx]) {
-                    this.gameStats[idx] = { correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0 };
-                }
-                if (delta > 0) this.gameStats[idx].correct++;
-                else if (delta < 0) this.gameStats[idx].wrong++;
+                const teamId = team.id;
+                const statObj = this.gameStats[teamId] || this.gameStats[idx] || { correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0 };
+                this.gameStats[teamId] = statObj;
+                this.gameStats[idx] = statObj;
+                if (delta > 0) statObj.correct++;
+                else if (delta < 0) statObj.wrong++;
             });
             this._notifyChange();
         }
@@ -248,6 +266,18 @@
             this.clearAuctionBets();
             this.currentTurnIndex = 0;
             this._notifyChange();
+        }
+
+        /**
+         * Возвращает статистику команды по id или индексу.
+         * @param {number|string} teamIdOrIdx
+         * @returns {Object|null}
+         */
+        getTeamStats(teamIdOrIdx) {
+            const idx = this._resolveTeamIndex(teamIdOrIdx);
+            if (idx < 0 || idx >= this.teams.length) return null;
+            const teamId = this.teams[idx].id;
+            return this.gameStats[teamId] || this.gameStats[idx] || { correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0 };
         }
 
         /**

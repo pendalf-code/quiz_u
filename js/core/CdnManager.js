@@ -85,13 +85,13 @@
         }
 
         /**
-         * Нормализует локальный путь (добавляет префикс 'assets/' при необходимости)
+         * Нормализует локальный путь (добавляет префикс 'assets/' при необходимости и преобразует слэши)
          * @param {string} rawPath
          * @returns {string}
          */
         normalizeLocalPath(rawPath) {
             if (!rawPath || typeof rawPath !== 'string') return '';
-            const trimmed = rawPath.trim();
+            const trimmed = rawPath.trim().replace(/\\/g, '/');
             if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || 
                 trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
                 return trimmed;
@@ -112,7 +112,7 @@
          */
         resolve(rawPath) {
             if (!rawPath || typeof rawPath !== 'string') return rawPath;
-            const trimmed = rawPath.trim();
+            const trimmed = rawPath.trim().replace(/\\/g, '/');
 
             // Если путь уже является внешним URL или inline данными - возвращаем без изменений
             if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || 

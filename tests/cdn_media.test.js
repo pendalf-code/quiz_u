@@ -17,6 +17,22 @@ test('CdnManager: Default local resolution when disabled', () => {
     assert.equal(cdn.resolve('data:image/png;base64,...'), 'data:image/png;base64,...');
 });
 
+test('CdnManager: Normalizes Windows backslashes in paths', () => {
+    const cdn = new CdnManager.CdnManager({
+        cdnBaseUrl: 'https://r2.quizu.app',
+        enabled: true
+    });
+
+    assert.equal(cdn.normalizeLocalPath('video\\cat.mp4'), 'assets/video/cat.mp4');
+    assert.equal(cdn.normalizeLocalPath('assets\\music\\track.mp3'), 'assets/music/track.mp3');
+    assert.equal(cdn.resolve('video\\cat.mp4'), 'https://r2.quizu.app/assets/video/cat.mp4');
+    assert.equal(cdn.resolve('assets\\music\\track.mp3'), 'https://r2.quizu.app/assets/music/track.mp3');
+
+    const localCdn = new CdnManager.CdnManager({ enabled: false });
+    assert.equal(localCdn.resolve('q_img\\picture.png'), 'assets/q_img/picture.png');
+    assert.equal(localCdn.resolve('assets\\q_img\\picture.png'), 'assets/q_img/picture.png');
+});
+
 test('CdnManager: Remote resolution when CDN base URL is configured', () => {
     const cdn = new CdnManager.CdnManager({
         cdnBaseUrl: 'https://r2.quizu.app',
@@ -80,7 +96,7 @@ test('optimize_media script: auditMediaFiles and manifest generation', () => {
     assert.ok(typeof report.totalSizeFormatted === 'string');
     assert.ok(Array.isArray(report.warnings));
 
-    const manifest = generateCdnManifest('https://test-cdn.quizu.app');
+    const manifest = generateCdnManifest('https://test-cdn.quizu.app', false);
     assert.equal(manifest.cdnBaseUrl, 'https://test-cdn.quizu.app');
     assert.equal(manifest.totalFiles, report.totalFiles);
     assert.ok(Object.keys(manifest.assets).length > 0);
