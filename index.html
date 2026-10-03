@@ -2,23 +2,25 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Викторина Город Ю</title>
-    <link rel="icon"
-          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏙️</text></svg>">
+    <link href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏙️</text></svg>"
+          rel="icon">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/catalog.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/catalog.css" rel="stylesheet">
+    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" rel="stylesheet">
 </head>
 <body>
 
 <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Переключить тему">☀️</button>
-<button class="fullscreen-toggle-btn" id="fullscreen-toggle" onclick="toggleFullscreen()" title="Полноэкранный режим (F11)">⛶</button>
-<div id="gamepad-toast" class="gamepad-toast" style="display: none;"></div>
+<button class="fullscreen-toggle-btn" id="fullscreen-toggle" onclick="toggleFullscreen()"
+        title="Полноэкранный режим (F11)">⛶
+</button>
+<div class="gamepad-toast" id="gamepad-toast" style="display: none;"></div>
 
 <div class="city-bg">
     <div class="sun-container"></div>
@@ -29,17 +31,25 @@
 </div>
 
 <div class="container">
-    <div id="game-screen" class="screen active">
+    <div class="screen active" id="game-screen">
 
-        <div id="main-app-box" class="start-menu-container">
+        <div class="start-menu-container" id="main-app-box">
             <div id="sub-menu-main">
                 <div class="menu-logo">ГОРОД Ю</div>
                 <div class="menu-subtitle">Место, где раскрываются таланты и создаётся будущее!</div>
                 <div class="setup-actions" style="flex-direction: column; gap: 18px; align-items: center;">
-                    <button class="btn menu-main-btn btn-menu-play" onclick="checkSavedGame()" title="Классическая игра за одним общим экраном">▶️ Локальная игра</button>
-                    <button class="btn menu-main-btn btn-menu-online" onclick="openOnlineLobby()" title="Игра по локальной сети Wi-Fi со смартфонов игроков">🌐 LAN-игра</button>
-                    <button class="btn menu-main-btn btn-menu-wan" disabled style="opacity: 0.55; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 10px;" title="Глобальная онлайн-игра через интернет (в разработке)">☁️ Сетевая игра <span class="badge-soon">Скоро</span></button>
-                    <button class="btn menu-main-btn btn-menu-rules" onclick="showJeopardyRules()">📖 Правила игры</button>
+                    <button class="btn menu-main-btn btn-menu-play" onclick="checkSavedGame()"
+                            title="Классическая игра за одним общим экраном">▶️ Локальная игра
+                    </button>
+                    <button class="btn menu-main-btn btn-menu-online" onclick="openOnlineLobby()"
+                            title="Игра по локальной сети Wi-Fi со смартфонов игроков">🌐 LAN-игра
+                    </button>
+                    <button class="btn menu-main-btn btn-menu-wan" disabled
+                            style="opacity: 0.55; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 10px;"
+                            title="Глобальная онлайн-игра через интернет (в разработке)">☁️ Сетевая игра <span
+                            class="badge-soon">Скоро</span></button>
+                    <button class="btn menu-main-btn btn-menu-rules" onclick="showJeopardyRules()">📖 Правила игры
+                    </button>
                 </div>
             </div>
 
@@ -168,12 +178,14 @@
 
                         <span class="catalog-search-lens">🔍</span>
 
-                        <input type="text" id="catalog-search-input" class="catalog-search-field"
+                        <input class="catalog-search-field" id="catalog-search-input"
+                               oninput="handleCatalogFiltersChanged()"
                                placeholder="Поиск по названию или теме (например: гарри поттер, майнкрафт, советское кино, 90е)..."
-                               oninput="handleCatalogFiltersChanged()">
+                               type="text">
 
-                        <button type="button" id="catalog-search-clear" class="catalog-clear-search-btn"
-                                onclick="clearCatalogSearch()" title="Очистить поиск">✖
+                        <button class="catalog-clear-search-btn" id="catalog-search-clear"
+                                onclick="clearCatalogSearch()"
+                                title="Очистить поиск" type="button">✖
                         </button>
 
                     </div>
@@ -191,24 +203,28 @@
 
                             <div class="catalog-chips-wrap" id="catalog-diff-chips">
 
-                                <button type="button" class="catalog-chip is-active" data-diff="all"
-                                        onclick="setCatalogDiff('all')">Все
+                                <button class="catalog-chip is-active" data-diff="all" onclick="setCatalogDiff('all')"
+                                        type="button">Все
                                 </button>
 
-                                <button type="button" class="catalog-chip chip-diff-easy" data-diff="easy"
-                                        onclick="setCatalogDiff('easy')">🟢 Просто
+                                <button class="catalog-chip chip-diff-easy" data-diff="easy"
+                                        onclick="setCatalogDiff('easy')"
+                                        type="button">🟢 Просто
                                 </button>
 
-                                <button type="button" class="catalog-chip chip-diff-medium" data-diff="medium"
-                                        onclick="setCatalogDiff('medium')">🔵 Средне
+                                <button class="catalog-chip chip-diff-medium" data-diff="medium"
+                                        onclick="setCatalogDiff('medium')"
+                                        type="button">🔵 Средне
                                 </button>
 
-                                <button type="button" class="catalog-chip chip-diff-hard" data-diff="hard"
-                                        onclick="setCatalogDiff('hard')">🟠 Сложно
+                                <button class="catalog-chip chip-diff-hard" data-diff="hard"
+                                        onclick="setCatalogDiff('hard')"
+                                        type="button">🟠 Сложно
                                 </button>
 
-                                <button type="button" class="catalog-chip chip-diff-expert" data-diff="expert"
-                                        onclick="setCatalogDiff('expert')">🔴 Очень сложно
+                                <button class="catalog-chip chip-diff-expert" data-diff="expert"
+                                        onclick="setCatalogDiff('expert')"
+                                        type="button">🔴 Очень сложно
                                 </button>
 
                             </div>
@@ -224,28 +240,30 @@
 
                             <div class="catalog-chips-wrap" id="catalog-rounds-chips">
 
-                                <button type="button" class="catalog-chip is-active" data-rounds="all"
-                                        onclick="setCatalogRounds('all')">Все
+                                <button class="catalog-chip is-active" data-rounds="all"
+                                        onclick="setCatalogRounds('all')"
+                                        type="button">Все
                                 </button>
 
-                                <button type="button" class="catalog-chip" data-rounds="1"
-                                        onclick="setCatalogRounds('1')">1 раунд
+                                <button class="catalog-chip" data-rounds="1" onclick="setCatalogRounds('1')"
+                                        type="button">1 раунд
                                 </button>
 
-                                <button type="button" class="catalog-chip" data-rounds="2"
-                                        onclick="setCatalogRounds('2')">2 раунда
+                                <button class="catalog-chip" data-rounds="2" onclick="setCatalogRounds('2')"
+                                        type="button">2 раунда
                                 </button>
 
-                                <button type="button" class="catalog-chip" data-rounds="3"
-                                        onclick="setCatalogRounds('3')">3 раунда
+                                <button class="catalog-chip" data-rounds="3" onclick="setCatalogRounds('3')"
+                                        type="button">3 раунда
                                 </button>
 
-                                <button type="button" class="catalog-chip chip-has-final" data-rounds="final"
-                                        onclick="setCatalogRounds('final')">🏆 С финалом
+                                <button class="catalog-chip chip-has-final" data-rounds="final"
+                                        onclick="setCatalogRounds('final')"
+                                        type="button">🏆 С финалом
                                 </button>
 
-                                <button type="button" class="catalog-chip" data-rounds="nofinal"
-                                        onclick="setCatalogRounds('nofinal')">Без финала
+                                <button class="catalog-chip" data-rounds="nofinal" onclick="setCatalogRounds('nofinal')"
+                                        type="button">Без финала
                                 </button>
 
                             </div>
@@ -259,7 +277,7 @@
 
                             <div class="catalog-filter-label">🏷️ Категория темы:</div>
 
-                            <select id="catalog-category-select" class="catalog-styled-select"
+                            <select class="catalog-styled-select" id="catalog-category-select"
                                     onchange="handleCatalogFiltersChanged()">
 
                                 <option value="all">🌈 Все категории (400+ тем)</option>
@@ -311,7 +329,7 @@
 
                     <div class="catalog-summary-bar">
 
-                        <div id="catalog-counter-badge" class="catalog-counter-pill">
+                        <div class="catalog-counter-pill" id="catalog-counter-badge">
 
                             Показано: <b id="catalog-count-num">0</b> паков
 
@@ -321,7 +339,7 @@
 
                             <span class="catalog-sort-text">Сортировка:</span>
 
-                            <select id="catalog-sort-select" class="catalog-sort-dropdown"
+                            <select class="catalog-sort-dropdown" id="catalog-sort-select"
                                     onchange="handleCatalogFiltersChanged()">
 
                                 <option value="default">По умолчанию</option>
@@ -352,8 +370,6 @@
                     <!-- Injected dynamically by catalog.js -->
 
                 </div>
-
-
 
 
             </div>
@@ -387,8 +403,9 @@
 
                     </div>
 
-                    <textarea id="json-editor" class="editor-textarea" spellcheck="false"
-                              placeholder="Загрузите файл или вставьте JSON структуру игры..."></textarea>
+                    <textarea class="editor-textarea" id="json-editor"
+                              placeholder="Загрузите файл или вставьте JSON структуру игры..."
+                              spellcheck="false"></textarea>
 
                 </div>
 
@@ -404,23 +421,26 @@
 
                         </label>
 
-                        <input type="file" id="json-file-input" accept=".json" onchange="loadCustomQuestionsFile(event)"
-                               style="display: none;">
+                        <input accept=".json" id="json-file-input" onchange="loadCustomQuestionsFile(event)"
+                               style="display: none;"
+                               type="file">
 
-                        <button class="btn btn-check editor-btn-action" type="button" onclick="exportCurrentQuestions()">
+                        <button class="btn btn-check editor-btn-action" onclick="exportCurrentQuestions()"
+                                type="button">
 
                             💾 Скачать текущий пак (.JSON)
 
                         </button>
 
-                        <button class="btn btn-success editor-btn-action editor-btn-primary" type="button" onclick="applyCustomQuestions()">
+                        <button class="btn btn-success editor-btn-action editor-btn-primary"
+                                onclick="applyCustomQuestions()"
+                                type="button">
 
                             ✅ Применить и начать игру
 
                         </button>
 
                     </div>
-
 
 
                 </div>
@@ -433,45 +453,55 @@
                 <div style="max-width: 540px; margin: 35px auto 40px auto; display: flex; flex-direction: column; gap: 24px; text-align: left;">
                     <div class="settings-row-box">
                         <label class="settings-label">⏱️ Время на чтение вопроса:</label>
-                        <input type="number" id="setting-reading-time" class="setting-input-field" value="7" min="0"
-                               style="width: 100px; text-align: center; margin: 0; padding: 10px; border-radius: 8px; border: 2px solid var(--purple-medium); font-size: 16px; font-weight: bold; color: var(--purple-dark);">
+                        <input class="setting-input-field" id="setting-reading-time" min="0"
+                               style="width: 100px; text-align: center; margin: 0; padding: 10px; border-radius: 8px; border: 2px solid var(--purple-medium); font-size: 16px; font-weight: bold; color: var(--purple-dark);"
+                               type="number"
+                               value="7">
                     </div>
 
                     <div class="settings-row-box">
                         <label class="settings-label">🔥 Время на обсуждение:</label>
-                        <input type="number" id="setting-thinking-time" class="setting-input-field" value="30" min="1"
-                               style="width: 100px; text-align: center; margin: 0; padding: 10px; border-radius: 8px; border: 2px solid var(--purple-medium); font-size: 16px; font-weight: bold; color: var(--purple-dark);">
+                        <input class="setting-input-field" id="setting-thinking-time" min="1"
+                               style="width: 100px; text-align: center; margin: 0; padding: 10px; border-radius: 8px; border: 2px solid var(--purple-medium); font-size: 16px; font-weight: bold; color: var(--purple-dark);"
+                               type="number"
+                               value="30">
                     </div>
 
                     <div class="settings-row-box">
                         <label class="settings-label">🎙️ Время на ответ команды:</label>
-                        <input type="number" id="setting-answer-time" class="setting-input-field" value="5" min="1"
-                               style="width: 100px; text-align: center; margin: 0; padding: 10px; border-radius: 8px; border: 2px solid var(--purple-medium); font-size: 16px; font-weight: bold; color: var(--purple-dark);">
+                        <input class="setting-input-field" id="setting-answer-time" min="1"
+                               style="width: 100px; text-align: center; margin: 0; padding: 10px; border-radius: 8px; border: 2px solid var(--purple-medium); font-size: 16px; font-weight: bold; color: var(--purple-dark);"
+                               type="number"
+                               value="5">
                     </div>
 
                     <div class="settings-group-box">
                         <label class="settings-group-title">🎲 Особые типы вопросов в игре:</label>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <label class="settings-checkbox-label">
-                                <input type="checkbox" id="setting-type-cat" checked
-                                       style="width: 20px; height: 20px; accent-color: var(--gold-accent);"> 🐱 Разрешить
+                                <input checked id="setting-type-cat"
+                                       style="width: 20px; height: 20px; accent-color: var(--gold-accent);"
+                                       type="checkbox"> 🐱 Разрешить
                                 «Кот в мешке»
                             </label>
                             <label class="settings-checkbox-label">
-                                <input type="checkbox" id="setting-type-auction" checked
-                                       style="width: 20px; height: 20px; accent-color: var(--gold-accent);"> 💰 Разрешить
+                                <input checked id="setting-type-auction"
+                                       style="width: 20px; height: 20px; accent-color: var(--gold-accent);"
+                                       type="checkbox"> 💰 Разрешить
                                 «Аукцион (для всех)»
                             </label>
                             <label class="settings-checkbox-label">
-                                <input type="checkbox" id="setting-type-auction-leader" checked
-                                       style="width: 20px; height: 20px; accent-color: var(--gold-accent);"> 🔨 Разрешить
+                                <input checked id="setting-type-auction-leader"
+                                       style="width: 20px; height: 20px; accent-color: var(--gold-accent);"
+                                       type="checkbox"> 🔨 Разрешить
                                 «Аукцион (только лидеру)»
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <div class="setup-actions" style="justify-content: center; gap: 18px; margin-top: 40px; margin-bottom: 30px;">
+                <div class="setup-actions"
+                     style="justify-content: center; gap: 18px; margin-top: 40px; margin-bottom: 30px;">
                     <button class="btn btn-success" onclick="saveSettings()">💾 Сохранить настройки</button>
                     <button class="btn btn-close-modal" onclick="backToMainMenu()">⬅️ Назад в главное меню</button>
                 </div>
@@ -528,7 +558,8 @@
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                             <button class="btn btn-check" onclick="testWinnerScreenMock()"
-                                    style="background: #8e44ad; color: #ffffff; font-weight: bold;">🎉 Проверить экран победителя
+                                    style="background: #8e44ad; color: #ffffff; font-weight: bold;">🎉 Проверить экран
+                                победителя
                             </button>
                         </div>
                     </div>
@@ -563,7 +594,7 @@
                     <button class="btn btn-secondary btn-back-lobby" onclick="leaveOnlineLobby()">
                         ← В главное меню
                     </button>
-                    <h2 class="online-lobby-title">🌐 Онлайн-комната (Jackbox-режим)</h2>
+                    <h2 class="online-lobby-title">🌐 Онлайн-комната</h2>
                     <div class="online-server-status" id="lobby-server-status">
                         <span class="status-indicator status-connecting" id="lobby-status-dot"></span>
                         <span class="status-text" id="lobby-status-text">Подключение...</span>
@@ -576,12 +607,15 @@
                         <div class="lobby-card-title">📱 Подключение со смартфонов</div>
                         <div class="lobby-code-badge">
                             <span class="lobby-code-label">КОД КОМНАТЫ</span>
-                            <div class="lobby-room-code" id="lobby-room-code"><span class="room-code-loading">••••</span></div>
-                            <button class="btn-copy-code" id="btn-copy-room-code" onclick="copyRoomCode()" title="Скопировать код">📋 Скопировать</button>
+                            <div class="lobby-room-code" id="lobby-room-code"><span
+                                    class="room-code-loading">••••</span></div>
+                            <button class="btn-copy-code" id="btn-copy-room-code" onclick="copyRoomCode()"
+                                    title="Скопировать код">📋 Скопировать
+                            </button>
                         </div>
 
                         <div class="lobby-qr-wrapper">
-                            <div id="lobby-qr-code" class="lobby-qr-container">
+                            <div class="lobby-qr-container" id="lobby-qr-code">
                                 <div class="lobby-qr-placeholder">
                                     <div class="lobby-qr-spinner"></div>
                                     <div class="lobby-qr-placeholder-text">Подключение...</div>
@@ -592,14 +626,17 @@
 
                         <div class="lobby-join-instructions">
                             <span>Отсканируйте камерой смартфона или перейдите по ссылке:</span>
-                            <a id="lobby-join-url" class="lobby-join-link" href="#" target="_blank">http://localhost:8080/mobile/</a>
+                            <a class="lobby-join-link" href="#" id="lobby-join-url" target="_blank">http://localhost:8080/mobile/</a>
                         </div>
 
                         <div class="lobby-server-input-group">
                             <label for="lobby-server-url-input">Сервер WebSocket:</label>
                             <div class="lobby-server-row">
-                                <input type="text" id="lobby-server-url-input" class="lobby-input" placeholder="ws://localhost:8080">
-                                <button class="btn btn-secondary btn-reconnect-server" onclick="reconnectHostLobby()">Подключить</button>
+                                <input class="lobby-input" id="lobby-server-url-input" placeholder="ws://localhost:8080"
+                                       type="text">
+                                <button class="btn btn-secondary btn-reconnect-server" onclick="reconnectHostLobby()">
+                                    Подключить
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -615,7 +652,8 @@
                         <div class="lobby-readiness-panel" id="lobby-readiness-panel">
                             <div class="readiness-chip" id="chip-readiness-host">
                                 <span class="readiness-chip-label">Ведущий:</span>
-                                <span class="readiness-badge badge-warning" id="lobby-host-badge">⚠️ Требуется ведущий</span>
+                                <span class="readiness-badge badge-warning"
+                                      id="lobby-host-badge">⚠️ Требуется ведущий</span>
                             </div>
                             <div class="readiness-chip" id="chip-readiness-players">
                                 <span class="readiness-chip-label">Игроки:</span>
@@ -624,7 +662,8 @@
                         </div>
 
                         <div class="lobby-host-local-row">
-                            <button type="button" class="btn-toggle-local-host" id="btn-toggle-local-host" onclick="toggleLocalHost()">
+                            <button class="btn-toggle-local-host" id="btn-toggle-local-host" onclick="toggleLocalHost()"
+                                    type="button">
                                 💻 Вести игру с этого ПК
                             </button>
                         </div>
@@ -659,13 +698,16 @@
                                 <span class="pack-meta-pill" id="pack-meta-themes">📚 Темы: —</span>
                             </div>
                             <div class="lobby-pack-actions">
-                                <button type="button" class="btn-mini btn-change-pack" onclick="openPrepareQuestionsChoice()">
+                                <button class="btn-mini btn-change-pack" onclick="openPrepareQuestionsChoice()"
+                                        type="button">
                                     📁 Каталог паков
                                 </button>
-                                <label class="btn-mini btn-upload-lobby-pack" for="lobby-pack-file-input" title="Загрузить пользовательский .JSON пак с вопросами">
+                                <label class="btn-mini btn-upload-lobby-pack" for="lobby-pack-file-input"
+                                       title="Загрузить пользовательский .JSON пак с вопросами">
                                     📂 Свой .JSON
                                 </label>
-                                <input type="file" id="lobby-pack-file-input" accept=".json" onchange="uploadLobbyCustomPack(event)" style="display: none;">
+                                <input accept=".json" id="lobby-pack-file-input" onchange="uploadLobbyCustomPack(event)"
+                                       style="display: none;" type="file">
                             </div>
                         </div>
 
@@ -673,11 +715,14 @@
                         <div class="lobby-settings-bar" id="lobby-settings-bar">
                             <div class="lobby-settings-header-row">
                                 <div class="lobby-settings-header-label">⚙️ Настройки</div>
-                                <button type="button" class="btn-configure-lobby-settings" id="btn-open-lobby-settings" onclick="openLobbySettingsModal()" title="Настройки игры, таймеров и штрафов">
+                                <button class="btn-configure-lobby-settings" id="btn-open-lobby-settings"
+                                        onclick="openLobbySettingsModal()"
+                                        title="Настройки игры, таймеров и штрафов" type="button">
                                     ✏️ Изменить
                                 </button>
                             </div>
-                            <div class="lobby-settings-chips" id="lobby-settings-chips" onclick="openLobbySettingsModal()" title="Нажмите для изменения настроек">
+                            <div class="lobby-settings-chips" id="lobby-settings-chips"
+                                 onclick="openLobbySettingsModal()" title="Нажмите для изменения настроек">
                                 <span class="setting-summary-chip" id="chip-reading-time">⏱️ Чтение: 7с</span>
                                 <span class="setting-summary-chip" id="chip-thinking-time">🔥 Баззер: 30с</span>
                                 <span class="setting-summary-chip" id="chip-answer-time">🎤 Ответ: 5с</span>
@@ -689,7 +734,8 @@
                         <div class="lobby-quick-guide-card">
                             <div class="quick-guide-title">💡 Игра со смартфонов</div>
                             <div class="quick-guide-text">
-                                Игроки сканируют QR-код со своих смартфонов и сразу участвуют в игре через веб-браузер без установки приложений.
+                                Игроки сканируют QR-код со своих смартфонов и сразу участвуют в игре через веб-браузер
+                                без установки приложений.
                             </div>
                         </div>
                     </div>
@@ -697,7 +743,8 @@
 
                 <!-- Footer Start Action (Zone 4: Dominant Bottom Bar) -->
                 <div class="lobby-actions-footer lobby-bottom-action-bar">
-                    <button id="btn-lobby-start-game" class="btn btn-primary btn-lobby-start" onclick="startOnlineGame()" disabled>
+                    <button class="btn btn-primary btn-lobby-start" disabled
+                            id="btn-lobby-start-game" onclick="startOnlineGame()">
                         ▶️ Начать игру
                     </button>
                     <div class="lobby-start-hint" id="lobby-start-hint">
@@ -711,7 +758,8 @@
                 <div class="setup-actions team-setup-actions-vertical" style="margin-top: 30px; margin-bottom: 35px;">
                     <button class="btn btn-success" onclick="saveTeamsFromSetup()">✅ Запустить игру</button>
                     <button class="btn btn-check" onclick="addInputRow()">➕ Добавить команду</button>
-                    <button class="btn btn-check" onclick="showSubScreen('sub-menu-prepare-choice')">⬅️ К выбору пака</button>
+                    <button class="btn btn-check" onclick="showSubScreen('sub-menu-prepare-choice')">⬅️ К выбору пака
+                    </button>
                     <button class="btn btn-check" onclick="openPreGameSettings()">⚙️ Настройки викторины</button>
                     <button class="btn btn-close-modal" onclick="backToMainMenu()">🏠 В главное меню</button>
                 </div>
@@ -720,12 +768,12 @@
                     <div class="team-setup-card-title">👥 Список команд</div>
                     <div class="team-input-grid" id="team-inputs" style="margin-top: 15px; margin-bottom: 10px;">
                         <div class="team-input-row">
-                            <input type="text" class="team-input" value="Команда 1" placeholder="Название команды 1">
+                            <input class="team-input" placeholder="Название команды 1" type="text" value="Команда 1">
                             <button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌
                             </button>
                         </div>
                         <div class="team-input-row">
-                            <input type="text" class="team-input" value="Команда 2" placeholder="Название команды 2">
+                            <input class="team-input" placeholder="Название команды 2" type="text" value="Команда 2">
                             <button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌
                             </button>
                         </div>
@@ -736,12 +784,16 @@
             <div id="sub-menu-first-turn" style="display: none; width: 100%;">
                 <h3>🎯 Кто ходит первым?</h3>
 
-                <div id="first-turn-teams-list" class="team-setup-actions-vertical" style="margin-top: 30px; margin-bottom: 35px;">
+                <div class="team-setup-actions-vertical" id="first-turn-teams-list"
+                     style="margin-top: 30px; margin-bottom: 35px;">
                     <!-- Dynamic team buttons will be rendered here -->
                 </div>
 
-                <div class="setup-actions" style="justify-content: center; gap: 16px; margin-top: 25px; margin-bottom: 20px;">
-                    <button class="btn btn-check" onclick="showSubScreen('team-setup-container')">⬅️ Назад к настройке команд</button>
+                <div class="setup-actions"
+                     style="justify-content: center; gap: 16px; margin-top: 25px; margin-bottom: 20px;">
+                    <button class="btn btn-check" onclick="showSubScreen('team-setup-container')">⬅️ Назад к настройке
+                        команд
+                    </button>
                     <button class="btn btn-close-modal" onclick="backToMainMenu()">🏠 В главное меню</button>
                 </div>
             </div>
@@ -751,7 +803,7 @@
         <div class="game-header" id="game-header-block" style="display: none;">
             <div class="game-header-info">
                 <div class="round-title" id="round-title">Раунд 1</div>
-                <div id="current-turn-display" class="current-turn-container">
+                <div class="current-turn-container" id="current-turn-display">
                     <span class="turn-label">👉 Выбирает вопрос:</span>
                     <span class="active-turn-badge" id="active-turn-team-badge">
                         <span id="active-turn-team-name">Команда</span>
@@ -796,31 +848,33 @@
         <div class="timer reading" id="timer">7</div>
         <div class="modal-text" id="modal-question-text">Текст вопроса</div>
 
-        <img id="modal-question-img" src="" alt="Иллюстрация"
-             onerror="this.classList.add('img-error'); this.style.display='none';" style="display: none;">
-        <video id="modal-question-video" controls
+        <img alt="Иллюстрация" id="modal-question-img"
+             onerror="this.classList.add('img-error'); this.style.display='none';"
+             src="" style="display: none;">
+        <video controls id="modal-question-video"
                style="display: none; width: 100%; max-width: 880px; max-height: 500px; border-radius: 20px; margin: 0 auto 20px auto; box-shadow: 0 6px 20px rgba(0,0,0,0.4);"></video>
         <div id="modal-question-iframe-container"
              style="display: none; width: 100%; max-width: 880px; aspect-ratio: 16/9; margin: 0 auto 20px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.4);">
-            <iframe id="modal-question-iframe" src="" style="width:100%; height:100%; border:none;"
-                    allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+            <iframe allow="autoplay; encrypted-media; fullscreen" allowfullscreen id="modal-question-iframe"
+                    src="" style="width:100%; height:100%; border:none;"></iframe>
         </div>
-        <audio id="modal-question-audio" controls
+        <audio controls id="modal-question-audio"
                style="display: none; width: 100%; max-width: 400px; margin: 0 auto 20px auto; outline: none;"></audio>
 
         <div class="modal-answer" id="modal-answer-text">Ответ: Правильный ответ</div>
-        <img id="modal-answer-img" src="" alt="Иллюстрация ответа"
-             onerror="this.classList.add('img-error'); this.style.display='none';" style="display: none;">
-        <video id="modal-answer-video" controls
+        <img alt="Иллюстрация ответа" id="modal-answer-img"
+             onerror="this.classList.add('img-error'); this.style.display='none';"
+             src="" style="display: none;">
+        <video controls id="modal-answer-video"
                style="display: none; width: 100%; max-width: 880px; max-height: 500px; border-radius: 20px; margin: 0 auto 20px auto; box-shadow: 0 6px 20px rgba(0,0,0,0.4);"></video>
         <div id="modal-answer-iframe-container"
              style="display: none; width: 100%; max-width: 880px; aspect-ratio: 16/9; margin: 0 auto 20px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.4);">
-            <iframe id="modal-answer-iframe" src="" style="width:100%; height:100%; border:none;"
-                    allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+            <iframe allow="autoplay; encrypted-media; fullscreen" allowfullscreen id="modal-answer-iframe"
+                    src="" style="width:100%; height:100%; border:none;"></iframe>
         </div>
 
         <!-- Online Buzzer Notification & Answering Player Banner (TASK-02) -->
-        <div id="online-buzzer-banner" class="online-buzzer-banner" style="display: none;">
+        <div class="online-buzzer-banner" id="online-buzzer-banner" style="display: none;">
             <div class="online-buzzer-icon" id="online-buzzer-icon">🔔</div>
             <div class="online-buzzer-avatar" id="online-buzzer-avatar" style="display: none;">👤</div>
             <div class="online-buzzer-text-wrap">
@@ -830,7 +884,8 @@
             <div class="online-buzzer-ring-wrap" id="online-buzzer-ring-wrap" style="display: none;">
                 <svg class="online-ring-svg" viewBox="0 0 100 100">
                     <circle class="online-ring-bg" cx="50" cy="50" r="42"></circle>
-                    <circle class="online-ring-progress" id="online-buzzer-ring-progress" cx="50" cy="50" r="42"></circle>
+                    <circle class="online-ring-progress" cx="50" cy="50" id="online-buzzer-ring-progress"
+                            r="42"></circle>
                 </svg>
                 <div class="online-ring-seconds" id="online-buzzer-ring-seconds">5</div>
             </div>
@@ -856,67 +911,83 @@
 </div>
 
 <!-- Special Question: Cat in Bag Fullscreen Splash Overlay -->
-<div id="cat-splash-overlay" class="cat-splash-overlay" onclick="dismissCatSplash(event)" style="display: none;">
+<div class="cat-splash-overlay" id="cat-splash-overlay" onclick="dismissCatSplash(event)" style="display: none;">
     <div class="cat-splash-content" onclick="dismissCatSplash(event)">
         <div class="cat-splash-title">Кот в мешке!</div>
         <div class="cat-splash-anim-wrap">
             <div class="cat-splash-bubble">МЯУ! 🐾</div>
             <svg class="cat-splash-svg" viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg">
                 <defs>
-                    <radialGradient id="cat-snout-grad-sp" cx="50%" cy="40%" r="50%">
+                    <radialGradient cx="50%" cy="40%" id="cat-snout-grad-sp" r="50%">
                         <stop offset="0%" stop-color="#3d2c1e"/>
                         <stop offset="100%" stop-color="#1f140a"/>
                     </radialGradient>
-                    <linearGradient id="cat-bag-grad-sp" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient id="cat-bag-grad-sp" x1="0%" x2="100%" y1="0%" y2="100%">
                         <stop offset="0%" stop-color="#b45309"/>
                         <stop offset="50%" stop-color="#92400e"/>
                         <stop offset="100%" stop-color="#78350f"/>
                     </linearGradient>
                 </defs>
-                <path d="M 68 85 Q 64 68 56 60 Q 76 66 84 82 Z" fill="#e0a96d" />
-                <path d="M 66 83 Q 63 70 58 63 Q 73 68 80 81 Z" fill="#fda4af" />
-                <path d="M 132 85 Q 136 68 144 60 Q 124 66 116 82 Z" fill="#e0a96d" />
-                <path d="M 134 83 Q 137 70 142 63 Q 127 68 120 81 Z" fill="#fda4af" />
-                <ellipse cx="100" cy="92" rx="38" ry="32" fill="url(#cat-snout-grad-sp)" />
-                <ellipse cx="85" cy="88" rx="8" ry="11" fill="#facc15" />
-                <ellipse cx="86" cy="88" rx="4" ry="9" fill="#1e1b4b" />
-                <circle cx="84" cy="84" r="2.2" fill="#ffffff" />
-                <ellipse cx="115" cy="88" rx="8" ry="11" fill="#facc15" />
-                <ellipse cx="114" cy="88" rx="4" ry="9" fill="#1e1b4b" />
-                <circle cx="113" cy="84" r="2.2" fill="#ffffff" />
-                <polygon points="100,96 95,92 105,92" fill="#fda4af" />
-                <path d="M 95 99 Q 100 102 105 99" stroke="#fda4af" stroke-width="2" fill="none" stroke-linecap="round" />
-                <line x1="62" y1="94" x2="88" y2="96" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
-                <line x1="60" y1="100" x2="88" y2="99" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
-                <line x1="138" y1="94" x2="112" y2="96" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
-                <line x1="140" y1="100" x2="112" y2="99" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.9"/>
-                <path d="M 52 118 C 45 140 40 185 58 198 C 76 210 124 210 142 198 C 160 185 155 140 148 118 C 142 124 130 128 100 128 C 70 128 58 124 52 118 Z" fill="url(#cat-bag-grad-sp)" />
-                <path d="M 46 114 Q 100 124 154 114 Q 148 106 100 106 Q 52 106 46 114 Z" fill="#d97706" />
-                <ellipse cx="100" cy="113" rx="48" ry="7" fill="#78350f" />
-                <path d="M 78 113 Q 100 119 122 113" stroke="#fef08a" stroke-width="3" fill="none" stroke-linecap="round"/>
-                <circle cx="100" cy="118" r="4.5" fill="#facc15" />
-                <path d="M 97 122 L 91 138" stroke="#fde047" stroke-width="2.5" stroke-linecap="round" />
-                <path d="M 103 122 L 109 138" stroke="#fde047" stroke-width="2.5" stroke-linecap="round" />
-                <ellipse cx="78" cy="116" rx="8" ry="5.5" fill="#e0a96d" />
-                <ellipse cx="122" cy="116" rx="8" ry="5.5" fill="#e0a96d" />
-                <text x="100" y="168" text-anchor="middle" font-size="28" font-weight="900" fill="#fef08a" font-family="sans-serif">?</text>
+                <path d="M 68 85 Q 64 68 56 60 Q 76 66 84 82 Z" fill="#e0a96d"/>
+                <path d="M 66 83 Q 63 70 58 63 Q 73 68 80 81 Z" fill="#fda4af"/>
+                <path d="M 132 85 Q 136 68 144 60 Q 124 66 116 82 Z" fill="#e0a96d"/>
+                <path d="M 134 83 Q 137 70 142 63 Q 127 68 120 81 Z" fill="#fda4af"/>
+                <ellipse cx="100" cy="92" fill="url(#cat-snout-grad-sp)" rx="38" ry="32"/>
+                <ellipse cx="85" cy="88" fill="#facc15" rx="8" ry="11"/>
+                <ellipse cx="86" cy="88" fill="#1e1b4b" rx="4" ry="9"/>
+                <circle cx="84" cy="84" fill="#ffffff" r="2.2"/>
+                <ellipse cx="115" cy="88" fill="#facc15" rx="8" ry="11"/>
+                <ellipse cx="114" cy="88" fill="#1e1b4b" rx="4" ry="9"/>
+                <circle cx="113" cy="84" fill="#ffffff" r="2.2"/>
+                <polygon fill="#fda4af" points="100,96 95,92 105,92"/>
+                <path d="M 95 99 Q 100 102 105 99" fill="none" stroke="#fda4af" stroke-linecap="round"
+                      stroke-width="2"/>
+                <line opacity="0.9" stroke="#ffffff" stroke-linecap="round" stroke-width="1.8" x1="62" x2="88" y1="94"
+                      y2="96"/>
+                <line opacity="0.9" stroke="#ffffff" stroke-linecap="round" stroke-width="1.8" x1="60" x2="88" y1="100"
+                      y2="99"/>
+                <line opacity="0.9" stroke="#ffffff" stroke-linecap="round" stroke-width="1.8" x1="138" x2="112" y1="94"
+                      y2="96"/>
+                <line opacity="0.9" stroke="#ffffff" stroke-linecap="round" stroke-width="1.8" x1="140" x2="112"
+                      y1="100"
+                      y2="99"/>
+                <path d="M 52 118 C 45 140 40 185 58 198 C 76 210 124 210 142 198 C 160 185 155 140 148 118 C 142 124 130 128 100 128 C 70 128 58 124 52 118 Z"
+                      fill="url(#cat-bag-grad-sp)"/>
+                <path d="M 46 114 Q 100 124 154 114 Q 148 106 100 106 Q 52 106 46 114 Z" fill="#d97706"/>
+                <ellipse cx="100" cy="113" fill="#78350f" rx="48" ry="7"/>
+                <path d="M 78 113 Q 100 119 122 113" fill="none" stroke="#fef08a" stroke-linecap="round"
+                      stroke-width="3"/>
+                <circle cx="100" cy="118" fill="#facc15" r="4.5"/>
+                <path d="M 97 122 L 91 138" stroke="#fde047" stroke-linecap="round" stroke-width="2.5"/>
+                <path d="M 103 122 L 109 138" stroke="#fde047" stroke-linecap="round" stroke-width="2.5"/>
+                <ellipse cx="78" cy="116" fill="#e0a96d" rx="8" ry="5.5"/>
+                <ellipse cx="122" cy="116" fill="#e0a96d" rx="8" ry="5.5"/>
+                <text fill="#fef08a" font-family="sans-serif" font-size="28" font-weight="900" text-anchor="middle"
+                      x="100"
+                      y="168">?
+                </text>
             </svg>
         </div>
-        <button type="button" class="btn btn-check cat-splash-btn" onclick="dismissCatSplash(event)">
+        <button class="btn btn-check cat-splash-btn" onclick="dismissCatSplash(event)" type="button">
             Понятно, открыть вопрос ➔
         </button>
     </div>
 </div>
 
 <!-- Special Question: Auction Fullscreen Splash Overlay -->
-<div id="auction-splash-overlay" class="auction-splash-overlay" onclick="dismissAuctionSplash(event)" style="display: none;">
+<div class="auction-splash-overlay" id="auction-splash-overlay" onclick="dismissAuctionSplash(event)"
+     style="display: none;">
     <div class="auction-splash-content" onclick="dismissAuctionSplash(event)">
-        <div id="auction-splash-title" class="auction-splash-title">💰 ВОПРОС СО СТАВКОЙ! 💰</div>
-        <div id="auction-splash-subtitle" class="auction-splash-subtitle">Ставки делают все команды! Рискуйте очками и идите ва-банк!</div>
-        <div id="auction-splash-anim-wrap" class="auction-splash-anim-wrap">
+        <div class="auction-splash-title" id="auction-splash-title">💰 ВОПРОС СО СТАВКОЙ! 💰</div>
+        <div class="auction-splash-subtitle" id="auction-splash-subtitle">Ставки делают все команды! Рискуйте очками и
+            идите ва-банк!
+        </div>
+        <div class="auction-splash-anim-wrap" id="auction-splash-anim-wrap">
             <div class="auction-splash-bubble">ВА-БАНК! 🪙</div>
         </div>
-        <button type="button" id="auction-splash-continue-btn" class="auction-splash-continue-btn" onclick="dismissAuctionSplash(event)">
+        <button class="auction-splash-continue-btn" id="auction-splash-continue-btn"
+                onclick="dismissAuctionSplash(event)"
+                type="button">
             💰 Перейти к торгам ➔
         </button>
     </div>
@@ -932,7 +1003,7 @@
             </div>
         </div>
 
-        <div id="turn-modal-teams-list" class="turn-teams-list"></div>
+        <div class="turn-teams-list" id="turn-modal-teams-list"></div>
 
         <div class="turn-modal-footer">
             <button class="btn btn-close-modal" onclick="closeTurnOrderModal()">Закрыть</button>
@@ -952,42 +1023,43 @@
 
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
 
-                    <span id="preview-pack-category" class="pack-category-badge"></span>
+                    <span class="pack-category-badge" id="preview-pack-category"></span>
 
-                    <span id="preview-pack-difficulty" class="pack-diff-badge"></span>
+                    <span class="pack-diff-badge" id="preview-pack-difficulty"></span>
 
-                    <span id="preview-pack-rounds-info" class="pack-mini-pill"></span>
+                    <span class="pack-mini-pill" id="preview-pack-rounds-info"></span>
 
                 </div>
 
-                <h2 id="preview-pack-title" class="preview-modal-title"></h2>
+                <h2 class="preview-modal-title" id="preview-pack-title"></h2>
 
             </div>
 
-            <button type="button" class="preview-close-x" onclick="closePackPreviewModal()" title="Закрыть">✖</button>
+            <button class="preview-close-x" onclick="closePackPreviewModal()" title="Закрыть" type="button">✖</button>
 
         </div>
 
 
-        <div id="preview-pack-desc" class="preview-modal-desc"></div>
+        <div class="preview-modal-desc" id="preview-pack-desc"></div>
 
 
         <div class="preview-rounds-section">
 
             <div class="preview-section-title">📋 Содержание тем и раундов:</div>
 
-            <div id="preview-rounds-container" class="preview-rounds-container"></div>
+            <div class="preview-rounds-container" id="preview-rounds-container"></div>
 
         </div>
 
 
         <div class="preview-modal-buttons">
 
-            <button id="preview-btn-play" class="btn btn-success"
+            <button class="btn btn-success" id="preview-btn-play"
                     style="font-size: 17px; padding: 14px 28px; font-weight: 800;">▶️ Играть с этим паком
             </button>
 
-            <button id="preview-btn-download" class="btn btn-pack-modal-download" style="font-size: 16px; padding: 14px 24px;">📥
+            <button class="btn btn-pack-modal-download" id="preview-btn-download"
+                    style="font-size: 16px; padding: 14px 24px;">📥
                 Скачать файл (.json)
             </button>
 
@@ -1005,7 +1077,7 @@
     <div class="modal-card lobby-settings-modal-card">
         <div class="lobby-settings-modal-header">
             <h2 class="lobby-settings-modal-title">⚙️ Настройки игры</h2>
-            <button class="btn-close-modal-x" type="button" onclick="closeLobbySettingsModal()">&times;</button>
+            <button class="btn-close-modal-x" onclick="closeLobbySettingsModal()" type="button">&times;</button>
         </div>
 
         <div class="lobby-settings-modal-body">
@@ -1016,21 +1088,24 @@
                     <label class="settings-label" for="lobby-setting-reading-time">
                         ⏱️ Время на чтение ведущим (сек):
                     </label>
-                    <input type="number" id="lobby-setting-reading-time" class="setting-input-field" value="7" min="0" max="60">
+                    <input class="setting-input-field" id="lobby-setting-reading-time" max="60" min="0" type="number"
+                           value="7">
                 </div>
 
                 <div class="settings-row-box">
                     <label class="settings-label" for="lobby-setting-thinking-time">
                         🔥 Общее время на размышление / окно баззера (сек):
                     </label>
-                    <input type="number" id="lobby-setting-thinking-time" class="setting-input-field" value="30" min="5" max="120">
+                    <input class="setting-input-field" id="lobby-setting-thinking-time" max="120" min="5" type="number"
+                           value="30">
                 </div>
 
                 <div class="settings-row-box">
                     <label class="settings-label" for="lobby-setting-answer-time">
                         🎤 Персональное время игрока на ответ (сек):
                     </label>
-                    <input type="number" id="lobby-setting-answer-time" class="setting-input-field" value="5" min="1" max="60">
+                    <input class="setting-input-field" id="lobby-setting-answer-time" max="60" min="1" type="number"
+                           value="5">
                 </div>
             </div>
 
@@ -1039,14 +1114,16 @@
 
                 <div class="settings-row-box">
                     <label class="settings-checkbox-label" for="lobby-setting-penalty-enabled">
-                        <input type="checkbox" id="lobby-setting-penalty-enabled" checked onchange="toggleLobbyPenaltyInputs()">
+                        <input checked id="lobby-setting-penalty-enabled" onchange="toggleLobbyPenaltyInputs()"
+                               type="checkbox">
                         <span>Списывать очки при неверном ответе или таймауте</span>
                     </label>
                 </div>
 
                 <div class="settings-row-box" id="lobby-penalty-mode-row">
                     <label class="settings-label" for="lobby-setting-penalty-mode">Режим списания:</label>
-                    <select id="lobby-setting-penalty-mode" class="catalog-sort-dropdown" onchange="toggleLobbyPenaltyInputs()">
+                    <select class="catalog-sort-dropdown" id="lobby-setting-penalty-mode"
+                            onchange="toggleLobbyPenaltyInputs()">
                         <option value="nominal">Номинал вопроса (полная цена)</option>
                         <option value="fixed">Фиксированный штраф</option>
                     </select>
@@ -1056,7 +1133,8 @@
                     <label class="settings-label" for="lobby-setting-penalty-fixed-amount">
                         Сумма штрафа (очков):
                     </label>
-                    <input type="number" id="lobby-setting-penalty-fixed-amount" class="setting-input-field" value="100" min="10" step="50">
+                    <input class="setting-input-field" id="lobby-setting-penalty-fixed-amount" min="10" step="50"
+                           type="number" value="100">
                 </div>
             </div>
         </div>
@@ -1072,23 +1150,27 @@
     </div>
 </div>
 
-    <!-- Modal: Правила игры по режимам (TASK-09) -->
+<!-- Modal: Правила игры по режимам (TASK-09) -->
 <div class="modal" id="rules-modal" style="display: none;">
     <div class="modal-card rules-modal-card">
         <div class="rules-modal-header">
             <h2 class="rules-title">📖 Правила игры</h2>
-            <button class="btn-close-modal-x" type="button" onclick="closeRulesModal()" title="Закрыть">&times;</button>
+            <button class="btn-close-modal-x" onclick="closeRulesModal()" title="Закрыть" type="button">&times;</button>
         </div>
 
         <!-- Navigation Tabs -->
         <div class="rules-tabs-nav" id="rules-tabs-nav" role="tablist">
-            <button class="rules-tab-btn active" id="tab-btn-local" role="tab" aria-selected="true" onclick="switchRulesTab('local')">
+            <button aria-selected="true" class="rules-tab-btn active" id="tab-btn-local"
+                    onclick="switchRulesTab('local')"
+                    role="tab">
                 <span class="tab-icon">🏠</span> Локальная игра
             </button>
-            <button class="rules-tab-btn" id="tab-btn-lan" role="tab" aria-selected="false" onclick="switchRulesTab('lan')">
+            <button aria-selected="false" class="rules-tab-btn" id="tab-btn-lan" onclick="switchRulesTab('lan')"
+                    role="tab">
                 <span class="tab-icon">🌐</span> LAN-игра (со смартфонов)
             </button>
-            <button class="rules-tab-btn" id="tab-btn-special" role="tab" aria-selected="false" onclick="switchRulesTab('special')">
+            <button aria-selected="false" class="rules-tab-btn" id="tab-btn-special" onclick="switchRulesTab('special')"
+                    role="tab">
                 <span class="tab-icon">🎁</span> Специальные вопросы
             </button>
         </div>
@@ -1100,18 +1182,30 @@
                 <div class="rules-block">
                     <div class="rules-section-title">🎯 Основная цель и ход игры</div>
                     <ul class="rules-list">
-                        <li>🏆 <b>Цель партии:</b> набрать больше очков, чем соперники, правильно отвечая на вопросы основных раундов и финала.</li>
-                        <li>📊 <b>Игровое табло:</b> выбирайте тему и стоимость на поле. Чем выше номинал — тем сложнее вопрос.</li>
-                        <li>🔄 <b>Очередность ходов:</b> после ответа ход автоматически переходит следующей команде. Ведущий также может вручную назначить ход кнопкой <b>«Передать ход»</b>.</li>
+                        <li>🏆 <b>Цель партии:</b> набрать больше очков, чем соперники, правильно отвечая на вопросы
+                            основных раундов и финала.
+                        </li>
+                        <li>📊 <b>Игровое табло:</b> выбирайте тему и стоимость на поле. Чем выше номинал — тем сложнее
+                            вопрос.
+                        </li>
+                        <li>🔄 <b>Очередность ходов:</b> после ответа ход автоматически переходит следующей команде.
+                            Ведущий также может вручную назначить ход кнопкой <b>«Передать ход»</b>.
+                        </li>
                     </ul>
                 </div>
 
                 <div class="rules-block">
                     <div class="rules-section-title">⌨️ Управление клавишами за общим экраном</div>
                     <ul class="rules-list">
-                        <li><kbd class="rules-kbd">Пробел</kbd> — запуск таймера ответа команды или постановка таймера на паузу.</li>
-                        <li><kbd class="rules-kbd">P</kbd> или <kbd class="rules-kbd">З</kbd> — общая пауза / возобновление игрового таймера вопроса.</li>
-                        <li><kbd class="rules-kbd">Enter</kbd> или клик — показать правильный ответ, пояснение и медиаматериалы.</li>
+                        <li><kbd class="rules-kbd">Пробел</kbd> — запуск таймера ответа команды или постановка таймера
+                            на паузу.
+                        </li>
+                        <li><kbd class="rules-kbd">P</kbd> или <kbd class="rules-kbd">З</kbd> — общая пауза /
+                            возобновление игрового таймера вопроса.
+                        </li>
+                        <li><kbd class="rules-kbd">Enter</kbd> или клик — показать правильный ответ, пояснение и
+                            медиаматериалы.
+                        </li>
                         <li><kbd class="rules-kbd">Esc</kbd> — закрытие активных модальных окон и подсказок.</li>
                     </ul>
                 </div>
@@ -1119,14 +1213,20 @@
                 <div class="rules-block">
                     <div class="rules-section-title">💰 Подсчёт очков и судейство</div>
                     <ul class="rules-list">
-                        <li><span class="rules-tag rules-tag-green">Плюс</span> <b>Верный ответ:</b> команда получает полную стоимость вопроса в свой банк.</li>
-                        <li><span class="rules-tag rules-tag-red">Минус</span> <b>Неверный ответ:</b> номинал вопроса вычитается из счёта ответившей команды.</li>
-                        <li><span class="rules-tag rules-tag-gold">Бонус</span> <b>«⚡ Очки всем»:</b> быстрая кнопка в верхней панели для одновременного начисления или снятия баллов всем командам.</li>
+                        <li><span class="rules-tag rules-tag-green">Плюс</span> <b>Верный ответ:</b> команда получает
+                            полную стоимость вопроса в свой банк.
+                        </li>
+                        <li><span class="rules-tag rules-tag-red">Минус</span> <b>Неверный ответ:</b> номинал вопроса
+                            вычитается из счёта ответившей команды.
+                        </li>
+                        <li><span class="rules-tag rules-tag-gold">Бонус</span> <b>«⚡ Очки всем»:</b> быстрая кнопка в
+                            верхней панели для одновременного начисления или снятия баллов всем командам.
+                        </li>
                     </ul>
                 </div>
                 <!-- Mode Switcher Navigation -->
                 <div class="rules-tab-footer-nav">
-                    <button type="button" class="btn-rules-nav-next" onclick="switchRulesTab('lan')">
+                    <button class="btn-rules-nav-next" onclick="switchRulesTab('lan')" type="button">
                         📡 Перейти к правилам LAN-игры &rarr;
                     </button>
                 </div>
@@ -1137,35 +1237,52 @@
                 <div class="rules-block">
                     <div class="rules-section-title">📡 Подключение со смартфонов</div>
                     <ul class="rules-list">
-                        <li>📶 <b>Одна сеть:</b> главный экран и смартфоны участников должны быть в одной Wi-Fi сети.</li>
-                        <li>📷 <b>Быстрый вход:</b> отсканируйте QR-код на экране лобби или введите короткий 4-значный код комнаты.</li>
-                        <li>🎭 <b>Выбор роли при входе:</b> подключитесь как <b>«Игрок»</b> 🎯 или <b>«Ведущий»</b> 🎙️.</li>
+                        <li>📶 <b>Одна сеть:</b> главный экран и смартфоны участников должны быть в одной Wi-Fi сети.
+                        </li>
+                        <li>📷 <b>Быстрый вход:</b> отсканируйте QR-код на экране лобби или введите короткий 4-значный
+                            код комнаты.
+                        </li>
+                        <li>🎭 <b>Выбор роли при входе:</b> подключитесь как <b>«Игрок»</b> 🎯 или <b>«Ведущий»</b> 🎙️.
+                        </li>
                     </ul>
                 </div>
 
                 <div class="rules-block">
                     <div class="rules-section-title">👥 Роли: Ведущий и Игроки</div>
                     <ul class="rules-list">
-                        <li>🎙️ <b>Ведущий (Host):</b> держит полный мобильный пульт управления: видит скрытые ответы, кнопки быстрого судейства (<b>«Зачесть»</b> / <b>«Отклонить»</b>), управление таймером, паузой и показ ответов на ТВ.</li>
-                        <li>🎯 <b>Игроки (Players):</b> экран смартфона становится сенсорной кнопкой ответа (Buzzer) с вибрацией при нажатии.</li>
+                        <li>🎙️ <b>Ведущий (Host):</b> держит полный мобильный пульт управления: видит скрытые ответы,
+                            кнопки быстрого судейства (<b>«Зачесть»</b> / <b>«Отклонить»</b>), управление таймером,
+                            паузой и показ ответов на ТВ.
+                        </li>
+                        <li>🎯 <b>Игроки (Players):</b> экран смартфона становится сенсорной кнопкой ответа (Buzzer) с
+                            вибрацией при нажатии.
+                        </li>
                     </ul>
                 </div>
 
                 <div class="rules-block">
                     <div class="rules-section-title">⚡ Гонка баззеров и тайминги</div>
                     <ul class="rules-list">
-                        <li>⏳ <b>Время на чтение:</b> диктор зачитывает вопрос (в этот момент баззеры заблокированы от фальстарта).</li>
-                        <li>🚨 <b>Окно баззера:</b> кнопка загорается — первый нажавший блокирует соперников и начинает отвечать.</li>
-                        <li>⏱️ <b>Персональный таймер:</b> у отвечающего игрока идёт персональный отсчёт, а общий таймер вопроса на ТВ замирает.</li>
-                        <li>⚖️ <b>Штрафы и второй шанс:</b> при неверном ответе списываются очки, а баззер снова открывается для остальных игроков.</li>
+                        <li>⏳ <b>Время на чтение:</b> диктор зачитывает вопрос (в этот момент баззеры заблокированы от
+                            фальстарта).
+                        </li>
+                        <li>🚨 <b>Окно баззера:</b> кнопка загорается — первый нажавший блокирует соперников и начинает
+                            отвечать.
+                        </li>
+                        <li>⏱️ <b>Персональный таймер:</b> у отвечающего игрока идёт персональный отсчёт, а общий таймер
+                            вопроса на ТВ замирает.
+                        </li>
+                        <li>⚖️ <b>Штрафы и второй шанс:</b> при неверном ответе списываются очки, а баззер снова
+                            открывается для остальных игроков.
+                        </li>
                     </ul>
                 </div>
                 <!-- Mode Switcher Navigation -->
                 <div class="rules-tab-footer-nav">
-                    <button type="button" class="btn-rules-nav-prev" onclick="switchRulesTab('local')">
+                    <button class="btn-rules-nav-prev" onclick="switchRulesTab('local')" type="button">
                         &larr; 🎮 Локальная игра
                     </button>
-                    <button type="button" class="btn-rules-nav-next" onclick="switchRulesTab('special')">
+                    <button class="btn-rules-nav-next" onclick="switchRulesTab('special')" type="button">
                         ✨ Спец-вопросы &rarr;
                     </button>
                 </div>
@@ -1176,7 +1293,9 @@
                 <div class="rules-block">
                     <div class="rules-section-title">🐱 «Кот в мешке» (Секретный вопрос)</div>
                     <ul class="rules-list">
-                        <li>🚫 Выбравшая команда <b>не может отвечать сама</b> — она обязана подарить кота любому сопернику!</li>
+                        <li>🚫 Выбравшая команда <b>не может отвечать сама</b> — она обязана подарить кота любому
+                            сопернику!
+                        </li>
                         <li>📦 Тема и стоимость объявляются только после передачи вопроса принимающей команде.</li>
                         <li>⏸️ До подтверждения передачи вопроса таймер раунда стоит на паузе.</li>
                     </ul>
@@ -1187,23 +1306,29 @@
                     <ul class="rules-list">
                         <li>💰 <b>Открытые торги:</b> команды повышают ставки, начиная с номинала вопроса.</li>
                         <li>🔥 <b>Лимит ставки:</b> сумма ставки ограничена балансом команды или ставкой «Ва-банк».</li>
-                        <li>👑 <b>Право ответа:</b> отвечает только та команда, чья ставка оказалась наивысшей («Аукцион Лидер»). За верный ответ начисляется ставка, при ошибке — списывается.</li>
+                        <li>👑 <b>Право ответа:</b> отвечает только та команда, чья ставка оказалась наивысшей («Аукцион
+                            Лидер»). За верный ответ начисляется ставка, при ошибке — списывается.
+                        </li>
                     </ul>
                 </div>
 
                 <div class="rules-block">
                     <div class="rules-section-title">🔒 «Вопрос без передачи» и Финал</div>
                     <ul class="rules-list">
-                        <li>🎯 <b>Без передачи:</b> вопрос закрепляется исключительно за текущей командой — соперники не могут перехватить его баззером.</li>
-                        <li>🏁 <b>Финальный раунд:</b> команды тайно делают ставки на решающий вопрос тура. Итоги финала определяют абсолютного победителя партии!</li>
+                        <li>🎯 <b>Без передачи:</b> вопрос закрепляется исключительно за текущей командой — соперники не
+                            могут перехватить его баззером.
+                        </li>
+                        <li>🏁 <b>Финальный раунд:</b> команды тайно делают ставки на решающий вопрос тура. Итоги финала
+                            определяют абсолютного победителя партии!
+                        </li>
                     </ul>
                 </div>
                 <!-- Mode Switcher Navigation -->
                 <div class="rules-tab-footer-nav">
-                    <button type="button" class="btn-rules-nav-prev" onclick="switchRulesTab('lan')">
+                    <button class="btn-rules-nav-prev" onclick="switchRulesTab('lan')" type="button">
                         &larr; 📡 LAN-игра
                     </button>
-                    <button type="button" class="btn-rules-nav-next" onclick="switchRulesTab('local')">
+                    <button class="btn-rules-nav-next" onclick="switchRulesTab('local')" type="button">
                         🎮 К началу (Локальная)
                     </button>
                 </div>
@@ -1233,7 +1358,7 @@
 <script src="js/net/NetworkClient.js"></script>
 
 <!-- KaTeX Math Renderer with offline fallback -->
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="js/packs_data.js"></script>
 <script src="js/catalog.js"></script>
 <script src="js/math_render.js"></script>
