@@ -573,7 +573,7 @@
                 </div>
 
                 <div class="online-lobby-grid">
-                    <!-- Left Column: Room Code & QR -->
+                    <!-- Zone 1: Подключение со смартфонов (QR и код комнаты) -->
                     <div class="lobby-card lobby-connect-card">
                         <div class="lobby-card-title">📱 Подключение со смартфонов</div>
                         <div class="lobby-code-badge">
@@ -600,10 +600,10 @@
                         </div>
                     </div>
 
-                    <!-- Right Column: Players List & Pack Selection & Game Start -->
+                    <!-- Zone 2: Участники и роли -->
                     <div class="lobby-card lobby-players-card">
                         <div class="lobby-card-title-row">
-                            <div class="lobby-card-title">👥 Подключённые игроки</div>
+                            <div class="lobby-card-title">👥 Участники и роли</div>
                             <span class="lobby-players-count" id="lobby-players-count">0 / 8</span>
                         </div>
 
@@ -625,8 +625,45 @@
                             </button>
                         </div>
 
+                        <div class="lobby-players-list" id="lobby-players-list">
+                            <div class="lobby-players-empty" id="lobby-players-empty">
+                                <div class="lobby-empty-icon">⏳</div>
+                                <div class="lobby-empty-title">Ожидание подключения игроков...</div>
+                                <div class="lobby-empty-sub">Игроки подключаются через QR-код со своих смартфонов</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Zone 3: Пакет вопросов и настройки игры -->
+                    <div class="lobby-card lobby-pack-card">
+                        <div class="lobby-card-title-row">
+                            <div class="lobby-card-title">📦 Пакет и настройки</div>
+                        </div>
+
+                        <!-- Pack info block -->
+                        <div class="lobby-pack-info-card">
+                            <div class="lobby-pack-info-header">
+                                <span class="lobby-pack-label">📦 Выбранный пак вопросов:</span>
+                            </div>
+                            <div class="lobby-pack-name" id="lobby-active-pack-title">Загрузка пака...</div>
+                            <div class="lobby-pack-meta" id="lobby-active-pack-meta">
+                                <span class="pack-meta-pill" id="pack-meta-rounds">🎯 Раунды: —</span>
+                                <span class="pack-meta-pill" id="pack-meta-themes">📚 Темы: —</span>
+                            </div>
+                            <div class="lobby-pack-actions">
+                                <button type="button" class="btn-mini btn-change-pack" onclick="openPrepareQuestionsChoice()">
+                                    📂 Выбрать из каталога
+                                </button>
+                                <label class="btn-mini btn-upload-lobby-pack" for="lobby-pack-file-input" title="Загрузить пользовательский .JSON пак с вопросами">
+                                    📁 Загрузить свой .JSON
+                                </label>
+                                <input type="file" id="lobby-pack-file-input" accept=".json" onchange="uploadLobbyCustomPack(event)" style="display: none;">
+                            </div>
+                        </div>
+
                         <!-- Game & Timer Settings Bar in Hub (TASK-01) -->
                         <div class="lobby-settings-bar" id="lobby-settings-bar">
+                            <div class="lobby-settings-header-label">⚙️ Правила и тайминги раунда:</div>
                             <div class="lobby-settings-summary-row">
                                 <div class="lobby-settings-chips" id="lobby-settings-chips" onclick="openLobbySettingsModal()" title="Нажмите для настройки таймеров и штрафов">
                                     <span class="setting-summary-chip" id="chip-reading-time">⏱️ Чтение: 7с</span>
@@ -635,37 +672,20 @@
                                     <span class="setting-summary-chip" id="chip-penalty">⚖️ Штраф: Номинал</span>
                                 </div>
                                 <button type="button" class="btn-configure-lobby-settings" id="btn-open-lobby-settings" onclick="openLobbySettingsModal()">
-                                    ⚙️ Настройки игры
+                                    ⚙️ Изменить
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="lobby-players-list" id="lobby-players-list">
-                            <div class="lobby-players-empty" id="lobby-players-empty">
-                                <div class="lobby-empty-icon">⏳</div>
-                                <div class="lobby-empty-title">Ожидание подключения игроков...</div>
-                                <div class="lobby-empty-sub">Игроки подключаются через QR-код со своих смартфонов</div>
-                            </div>
-                        </div>
-
-                        <!-- Pack info block -->
-                        <div class="lobby-pack-info-card">
-                            <div class="lobby-pack-info-header">
-                                <span class="lobby-pack-label">📦 Выбранный пак вопросов:</span>
-                                <button class="btn-mini btn-change-pack" onclick="openPrepareQuestionsChoice()">Сменить пак</button>
-                            </div>
-                            <div class="lobby-pack-name" id="lobby-active-pack-title">Загрузка пака...</div>
-                        </div>
-
-                        <!-- Footer Start Action -->
-                        <div class="lobby-actions-footer">
-                            <button id="btn-lobby-start-game" class="btn btn-primary btn-lobby-start" onclick="startOnlineGame()" disabled>
-                                ▶️ Начать игру
-                            </button>
-                            <div class="lobby-start-hint" id="lobby-start-hint">
-                                Для старта сетевой игры требуется подключить ведущего и минимум 2 игрока
-                            </div>
-                        </div>
+                <!-- Footer Start Action (Zone 4: Dominant Bottom Bar) -->
+                <div class="lobby-actions-footer lobby-bottom-action-bar">
+                    <button id="btn-lobby-start-game" class="btn btn-primary btn-lobby-start" onclick="startOnlineGame()" disabled>
+                        ▶️ Начать игру
+                    </button>
+                    <div class="lobby-start-hint" id="lobby-start-hint">
+                        Для старта сетевой игры требуется подключить ведущего и минимум 2 игрока
                     </div>
                 </div>
             </div>

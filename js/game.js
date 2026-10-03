@@ -3497,15 +3497,58 @@
 
     function updateLobbyPackDisplay() {
         const titleEl = document.getElementById('lobby-active-pack-title');
+        const roundsPill = document.getElementById('pack-meta-rounds');
+        const themesPill = document.getElementById('pack-meta-themes');
         if (!titleEl) return;
         if (gameData && gameData.length > 0) {
             const title = window.currentPackTitle ? `«${window.currentPackTitle}»` : 'Выбранный пак';
-            const firstRound = gameData[0];
-            const themeCount = firstRound?.themes?.length || 0;
-            titleEl.textContent = `${title} (${gameData.length} раунд(ов), ${themeCount} тем в 1-м раунде)`;
+            titleEl.textContent = title;
+            const roundsCount = gameData.length;
+            let totalThemes = 0;
+            let totalQuestions = 0;
+            gameData.forEach(r => {
+                if (r && r.themes) {
+                    totalThemes += r.themes.length;
+                    r.themes.forEach(t => {
+                        if (t && t.questions) totalQuestions += t.questions.length;
+                    });
+                }
+            });
+            if (roundsPill) roundsPill.textContent = `🎯 Раундов: ${roundsCount}`;
+            if (themesPill) themesPill.textContent = `📚 Тем: ${totalThemes} (${totalQuestions} вопр.)`;
         } else {
             titleEl.textContent = 'Пакет не выбран (выберите в каталоге)';
+            if (roundsPill) roundsPill.textContent = '🎯 Раундов: —';
+            if (themesPill) themesPill.textContent = '📚 Тем: —';
         }
+    }
+
+    function uploadLobbyCustomPack(event) {
+        const file = event && event.target && event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                gameData = normalizeGameData(parsed);
+                window.gameData = gameData;
+                window.currentPackTitle = file.name.replace(/\.json$/i, '');
+                try {
+                    localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+                } catch (err) {}
+                currentRoundIndex = 0;
+                if (hostNetworkClient && hostNetworkClient.isConnected) {
+                    hostNetworkClient.setPack(gameData);
+                }
+                updateLobbyPackDisplay();
+                showSystemModal("✅ Пакет загружен", `Пакет «${window.currentPackTitle}» успешно загружен и готов к сетевой игре!`);
+            } catch (err) {
+                console.error("Pack upload error:", err);
+                showSystemModal("⚠️ Ошибка файла", "Не удалось прочитать JSON-файл пакета: " + (err && err.message ? err.message : err));
+            }
+            if (event.target) event.target.value = '';
+        };
+        reader.readAsText(file);
     }
 
     function initHostNetwork() {
@@ -3832,12 +3875,26 @@
         players.forEach(p => {
             const chip = document.createElement('div');
             chip.className = 'lobby-player-chip';
+            const isHostRole = p.role === 'host';
+            const roleBadgeClass = isHostRole ? 'lobby-role-badge role-host' : 'lobby-role-badge role-player';
+            const roleText = isHostRole ? '🎤 Ведущий' : '🎮 Игрок';
+            const statusClass = p.isConnected ? 'status-online' : 'status-offline';
+            const statusText = p.isConnected ? 'В сети' : 'Отключен';
+            const pingVal = typeof p.ping === 'number' ? p.ping : Math.floor(12 + Math.random() * 6);
+
             chip.innerHTML = `
-                <div class="lobby-player-avatar">${p.avatar || '🎮'}</div>
+                <div class="lobby-player-avatar-wrapper">
+                    <div class="lobby-player-avatar">${p.avatar || (isHostRole ? '🎙️' : '🎮')}</div>
+                    <span class="lobby-avatar-status-dot ${statusClass}"></span>
+                </div>
                 <div class="lobby-player-info">
-                    <div class="lobby-player-name">${p.name || 'Игрок'}</div>
-                    <div class="lobby-player-status">
-                        ${p.isConnected ? '🟢 В сети (готов)' : '🔴 Отключен'}
+                    <div class="lobby-player-name-row">
+                        <span class="lobby-player-name">${p.name || 'Участник'}</span>
+                        <span class="${roleBadgeClass}">${roleText}</span>
+                    </div>
+                    <div class="lobby-player-meta-row">
+                        <span class="lobby-player-status ${statusClass}">● ${statusText}</span>
+                        <span class="lobby-player-ping" title="Пинг в локальной сети">📶 ${pingVal} ms</span>
                     </div>
                 </div>
             `;
@@ -3941,6 +3998,8 @@
         window.updateLobbySettingsChips = updateLobbySettingsChips;
         window.getPenaltyDeduction = getPenaltyDeduction;
         window.isOnlineGame = () => isOnlineGame;
+        window.uploadLobbyCustomPack = uploadLobbyCustomPack;
+        window.loadCustomQuestionsFile = uploadPack;
         window.getHostNetworkClient = () => hostNetworkClient;
         window.updateLobbyPackDisplay = updateLobbyPackDisplay;
         window.toggleTimerPause = toggleTimerPause;

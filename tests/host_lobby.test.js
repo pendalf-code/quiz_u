@@ -134,4 +134,40 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         const client = new NetworkClient({ url: 'ws://127.0.0.1:8080', isHost: true });
         assert.equal(typeof client.updateRoomSettings, 'function', 'updateRoomSettings method must exist on NetworkClient');
     });
+
+    test('TASK-13: 3-column LAN lobby layout, pack management card, player roles/ping, and bottom action bar', () => {
+        // 3 Zones structure in HTML
+        assert.ok(htmlContent.includes('class="lobby-card lobby-connect-card"'), 'Zone 1: Connect card must exist');
+        assert.ok(htmlContent.includes('class="lobby-card lobby-players-card"'), 'Zone 2: Players card must exist');
+        assert.ok(htmlContent.includes('class="lobby-card lobby-pack-card"'), 'Zone 3: Pack card must exist');
+
+        // Zone 3: Pack meta & upload controls
+        assert.ok(htmlContent.includes('id="lobby-active-pack-meta"'), 'Pack metadata container must exist');
+        assert.ok(htmlContent.includes('id="pack-meta-rounds"'), 'Pack rounds pill must exist');
+        assert.ok(htmlContent.includes('id="pack-meta-themes"'), 'Pack themes pill must exist');
+        assert.ok(htmlContent.includes('btn-change-pack'), 'Change pack button must exist');
+        assert.ok(htmlContent.includes('btn-upload-lobby-pack'), 'Upload pack button must exist');
+        assert.ok(htmlContent.includes('id="lobby-pack-file-input"'), 'Lobby pack file input must exist');
+
+        // Dominant bottom action bar
+        assert.ok(htmlContent.includes('lobby-bottom-action-bar'), 'Dominant bottom action bar must exist');
+        assert.ok(htmlContent.includes('id="btn-lobby-start-game"'), 'Start button must be present in lobby');
+
+        // CSS Styles verification
+        const cssContent = fs.readFileSync(path.join(rootDir, 'css', 'style.css'), 'utf8');
+        assert.ok(cssContent.includes('.lobby-pack-card') || cssContent.includes('.lobby-bottom-action-bar'), 'Lobby redesign CSS must exist');
+        assert.ok(cssContent.includes('.lobby-role-badge'), 'Role badge style must exist');
+        assert.ok(cssContent.includes('.role-host'), 'Host role style must exist');
+        assert.ok(cssContent.includes('.role-player'), 'Player role style must exist');
+        assert.ok(cssContent.includes('.lobby-player-ping'), 'Player ping style must exist');
+        assert.ok(cssContent.includes('.btn-upload-lobby-pack'), 'Upload pack button style must exist');
+        assert.ok(cssContent.includes('body.light-theme .lobby-bottom-action-bar'), 'Light theme for action bar must exist');
+        assert.ok(cssContent.includes('body.light-theme .lobby-pack-card'), 'Light theme for pack card must exist');
+
+        // JS logic verification
+        const gameJsContent = fs.readFileSync(path.join(rootDir, 'js', 'game.js'), 'utf8');
+        assert.ok(gameJsContent.includes('uploadLobbyCustomPack'), 'uploadLobbyCustomPack function must exist in game.js');
+        assert.ok(gameJsContent.includes('lobby-role-badge'), 'Player chip rendering must include role badges');
+        assert.ok(gameJsContent.includes('lobby-player-ping'), 'Player chip rendering must include ping indicator');
+    });
 });
