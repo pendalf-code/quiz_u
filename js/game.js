@@ -1269,55 +1269,60 @@
         showSubScreen('sub-menu-dev');
     }
 
-    function showJeopardyRules() {
-        const rulesHtml = `
-            <div class="rules-content-box">
-                <div class="rules-card-item">
-                    <div class="rules-section-title">🎯 Основная цель и ход игры</div>
-                    Команды по очереди выбирают тему и стоимость вопроса на игровом поле. Чем выше номинал — тем сложнее вопрос. Побеждает команда, набравшая наибольшее количество баллов по итогам всех раундов и финала.
-                </div>
-
-                <div class="rules-card-item">
-                    <div class="rules-section-title">🔄 Очередность хода и выбор вопроса</div>
-                    • В верхней панели всегда отображается текущая команда: <b>👉 Выбирает вопрос</b>.<br>
-                    • После ответа на вопрос ход автоматически переходит следующей по списку команде.<br>
-                    • Ведущий может в любой момент нажать <b>🔄 Передать ход</b>, чтобы передать право выбора любой другой команде вручную.
-                </div>
-
-                <div class="rules-card-item">
-                    <div class="rules-section-title">⏱️ Фазы таймеров и управление</div>
-                    • <b>Фаза чтения (бирюзовый круг)</b>: время для диктора или команд на ознакомление с вопросом.<br>
-                    • <b>Фаза обсуждения (красный круг)</b>: основное время для размышления над ответом.<br>
-                    • <b>Фаза ответа (янтарный круг)</b>: включается ведущим при нажатии клавиши <b>Пробел</b> (или кнопки ответа), когда команда готова отвечать. Повторный <b>Пробел</b> ставит таймер на паузу или возобновляет его.<br>
-                    • В <b>Настройках</b> можно индивидуально настроить длительность чтения, обсуждения и ответа, а также включить или отключить звуковые сигналы.
-                </div>
-
-                <div class="rules-card-item">
-                    <div class="rules-section-title">🎲 Специальные типы вопросов</div>
-                    <ul class="rules-list">
-                        <li>🐱 <b>Кот в мешке</b> — вопрос нельзя отвечать выбравшей команде! Его обязательно нужно отдать соперникам. До выбора принимающей команды таймер находится на паузе.</li>
-                        <li>💰 <b>Аукцион (Все)</b> — открытые торги: команды делают ставки от номинала вопроса до своего баланса очков (или ва-банк).</li>
-                        <li>🔨 <b>Аукцион (Лидер)</b> — право ответа разыгрывается по высшей ставке: отвечает только та команда, чья ставка оказалась максимальной.</li>
-                    </ul>
-                </div>
-
-                <div class="rules-card-item">
-                    <div class="rules-section-title">🏆 Раунды, Финал и Подведение итогов</div>
-                    • <b>Многораундовые паки</b>: игра может состоять из 1, 2 или 3 основных раундов с возрастающей стоимостью вопросов.<br>
-                    • <b>Финальный раунд</b>: команды выбирают ставки втайне, после чего отвечают на решающий вопрос тура.<br>
-                    • <b>⚡ Очки всем</b>: быстрая кнопка в шапке игры для начисления или списания баллов всем командам одновременно (например, за общий конкурс).<br>
-                    • <b>Подиум победителей</b>: по окончании игры открывается интерактивный экран награждения с золотым сундуком, фейерверком и итоговой таблицей статистики правильных и неверных ответов.
-                </div>
-
-                <div class="rules-card-item">
-                    <div class="rules-section-title">📚 Каталог паков и собственный редактор</div>
-                    • В каталоге доступно более <b>200+ готовых паков</b> по 12 тематическим категориям с фильтрацией по сложности и числу раундов.<br>
-                    • Вы можете создавать свои паки во встроенном <b>Редакторе вопросов</b>, экспортировать их в .json или загружать свои файлы.
-                </div>
-            </div>
-        `;
-        showSystemModal("📖 ПРАВИЛА ВИКТОРИНЫ", rulesHtml);
+    function switchRulesTab(tabName) {
+        const tabs = ['local', 'lan', 'special'];
+        const targetTab = tabs.includes(tabName) ? tabName : 'local';
+        tabs.forEach(t => {
+            const btn = document.getElementById(`tab-btn-${t}`);
+            const pane = document.getElementById(`rules-tab-${t}`);
+            const isActive = (t === targetTab);
+            if (btn) {
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            }
+            if (pane) {
+                pane.classList.toggle('active', isActive);
+                pane.style.display = isActive ? 'block' : 'none';
+            }
+        });
+        const contentScroll = document.getElementById('rules-content-scroll');
+        if (contentScroll) contentScroll.scrollTop = 0;
     }
+    window.switchRulesTab = switchRulesTab;
+
+    function showJeopardyRules(defaultTab = 'local') {
+        const modal = document.getElementById('rules-modal');
+        if (modal) {
+            switchRulesTab(defaultTab);
+            modal.style.display = 'flex';
+            modal.classList.add('active');
+            const card = modal.querySelector('.rules-modal-card') || modal.querySelector('.modal-card');
+            if (card) {
+                card.classList.remove('zoom-in');
+                setTimeout(() => card.classList.add('zoom-in'), 10);
+            }
+            if (!modal.dataset.backdropBound) {
+                modal.dataset.backdropBound = 'true';
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        closeRulesModal();
+                    }
+                });
+            }
+        }
+    }
+    window.showJeopardyRules = showJeopardyRules;
+
+    function closeRulesModal() {
+        const modal = document.getElementById('rules-modal');
+        if (modal) {
+            const card = modal.querySelector('.rules-modal-card') || modal.querySelector('.modal-card');
+            if (card) card.classList.remove('zoom-in');
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
+    }
+    window.closeRulesModal = closeRulesModal;
 
     function testLaunchQuestion(type) {
         isTestMode = true;
@@ -2667,6 +2672,15 @@
     window.addEventListener('keydown', function (event) {
         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
         if (activeTag === 'input' || activeTag === 'textarea') return;
+
+        const rulesModal = document.getElementById('rules-modal');
+        if (rulesModal && (rulesModal.classList.contains('active') || rulesModal.style.display === 'flex')) {
+            if (event.key === 'Escape' || event.code === 'Escape') {
+                event.preventDefault();
+                closeRulesModal();
+                return;
+            }
+        }
 
         const turnModal = document.getElementById('turn-order-modal');
         if (turnModal && turnModal.classList.contains('active')) {
@@ -4241,6 +4255,16 @@
             } catch (e) {
                 console.warn('[SteamIntegration] Error:', e);
             }
+        }
+
+        const rulesModal = document.getElementById('rules-modal');
+        if (rulesModal && !rulesModal.dataset.backdropBound) {
+            rulesModal.dataset.backdropBound = 'true';
+            rulesModal.addEventListener('click', function (e) {
+                if (e.target === rulesModal) {
+                    closeRulesModal();
+                }
+            });
         }
 
         if (typeof GamepadManager !== 'undefined') {
