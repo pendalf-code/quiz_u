@@ -36,12 +36,10 @@
                 <div class="menu-logo">ГОРОД Ю</div>
                 <div class="menu-subtitle">Место, где раскрываются таланты и создаётся будущее!</div>
                 <div class="setup-actions" style="flex-direction: column; gap: 18px; align-items: center;">
-                    <button class="btn menu-main-btn btn-menu-play" onclick="checkSavedGame()">▶️ Локальная игра (один экран)</button>
-                    <button class="btn menu-main-btn btn-menu-online" onclick="openOnlineLobby()">🌐 Создать онлайн-комнату (Jackbox-режим)</button>
-                    <button class="btn menu-main-btn btn-menu-packs" onclick="openPrepareQuestionsChoice()">🛠️ Подготовить вопросы</button>
+                    <button class="btn menu-main-btn btn-menu-play" onclick="checkSavedGame()" title="Классическая игра за одним общим экраном">▶️ Локальная игра</button>
+                    <button class="btn menu-main-btn btn-menu-online" onclick="openOnlineLobby()" title="Игра по локальной сети Wi-Fi со смартфонов игроков">🌐 LAN-игра</button>
+                    <button class="btn menu-main-btn btn-menu-wan" disabled style="opacity: 0.55; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 10px;" title="Глобальная онлайн-игра через интернет (в разработке)">☁️ Сетевая игра <span class="badge-soon">Скоро</span></button>
                     <button class="btn menu-main-btn btn-menu-rules" onclick="showJeopardyRules()">📖 Правила игры</button>
-                    <button class="btn menu-main-btn btn-menu-settings" onclick="showSubScreen('sub-menu-settings')">⚙️ Настройки</button>
-                    <button class="btn menu-main-btn btn-menu-dev" onclick="openDevMenu()">🧪 Для тестирования</button>
                 </div>
             </div>
 
@@ -696,6 +694,7 @@
                     <button class="btn btn-success" onclick="saveTeamsFromSetup()">✅ Запустить игру</button>
                     <button class="btn btn-check" onclick="addInputRow()">➕ Добавить команду</button>
                     <button class="btn btn-check" onclick="showSubScreen('sub-menu-prepare-choice')">⬅️ К выбору пака</button>
+                    <button class="btn btn-check" onclick="openPreGameSettings()">⚙️ Настройки викторины</button>
                     <button class="btn btn-close-modal" onclick="backToMainMenu()">🏠 В главное меню</button>
                 </div>
 
@@ -802,10 +801,21 @@
                     allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
         </div>
 
-        <!-- Online Buzzer Notification & Answering Player Banner -->
+        <!-- Online Buzzer Notification & Answering Player Banner (TASK-02) -->
         <div id="online-buzzer-banner" class="online-buzzer-banner" style="display: none;">
             <div class="online-buzzer-icon" id="online-buzzer-icon">🔔</div>
-            <div class="online-buzzer-text" id="online-buzzer-text">Ожидание нажатия кнопки на смартфонах...</div>
+            <div class="online-buzzer-avatar" id="online-buzzer-avatar" style="display: none;">👤</div>
+            <div class="online-buzzer-text-wrap">
+                <div class="online-buzzer-status" id="online-buzzer-status" style="display: none;">Отвечает игрок:</div>
+                <div class="online-buzzer-text" id="online-buzzer-text">Ожидание нажатия кнопки на смартфонах...</div>
+            </div>
+            <div class="online-buzzer-ring-wrap" id="online-buzzer-ring-wrap" style="display: none;">
+                <svg class="online-ring-svg" viewBox="0 0 100 100">
+                    <circle class="online-ring-bg" cx="50" cy="50" r="42"></circle>
+                    <circle class="online-ring-progress" id="online-buzzer-ring-progress" cx="50" cy="50" r="42"></circle>
+                </svg>
+                <div class="online-ring-seconds" id="online-buzzer-ring-seconds">5</div>
+            </div>
         </div>
 
         <div id="teams-modal-list" style="width: 100%; margin-top: 20px;"></div>

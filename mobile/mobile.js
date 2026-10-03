@@ -369,6 +369,14 @@
         elements.answerTimerBar.style.width = '100%';
         elements.answerTimerBar.style.backgroundColor = 'var(--accent-green)';
 
+        const ringProgress = document.getElementById('mobile-answer-ring-progress');
+        const circumference = 2 * Math.PI * 42;
+        if (ringProgress) {
+            ringProgress.style.strokeDasharray = `${circumference}`;
+            ringProgress.style.strokeDashoffset = '0';
+            ringProgress.style.stroke = 'var(--accent-green)';
+        }
+
         const stepMs = 100;
         const totalSteps = (seconds * 1000) / stepMs;
         let currentStep = totalSteps;
@@ -383,8 +391,15 @@
 
             if (progress <= 0.3) {
                 elements.answerTimerBar.style.backgroundColor = 'var(--accent-red)';
+                if (ringProgress) ringProgress.style.stroke = 'var(--accent-red)';
             } else if (progress <= 0.6) {
                 elements.answerTimerBar.style.backgroundColor = 'var(--accent-gold)';
+                if (ringProgress) ringProgress.style.stroke = 'var(--accent-gold)';
+            } else {
+                if (ringProgress) ringProgress.style.stroke = 'var(--accent-green)';
+            }
+            if (ringProgress) {
+                ringProgress.style.strokeDashoffset = `${circumference * (1 - progress)}`;
             }
 
             if (currentStep <= 0) {
