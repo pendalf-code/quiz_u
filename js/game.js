@@ -3625,28 +3625,41 @@
         reader.readAsText(file);
     }
 
-    function initHostNetwork() {
+    function initHostNetwork(overrideUrl = null) {
         const statusDot = document.getElementById('lobby-status-dot');
         const statusText = document.getElementById('lobby-status-text');
         const urlInput = document.getElementById('lobby-server-url-input');
+        const codeEl = document.getElementById('lobby-room-code');
+        const qrContainer = document.getElementById('lobby-qr-code');
 
         if (statusDot) statusDot.className = 'status-indicator status-connecting';
         if (statusText) statusText.textContent = 'Подключение...';
 
-        const proto = (window.location && window.location.protocol === 'https:') ? 'wss:' : 'ws:';
-        const host = (window.location && window.location.hostname) ? window.location.hostname : 'localhost';
-        const port = (window.location && window.location.port) ? window.location.port : '8080';
-        const defaultWsUrl = `${proto}//${host}:${port}`;
+        if (codeEl && (!currentOnlineRoomCode || currentOnlineRoomCode === '----')) {
+            codeEl.innerHTML = '<span class="room-code-loading">• • • •</span>';
+        }
+        if (qrContainer && !currentOnlineRoomCode) {
+            qrContainer.innerHTML = '<div class="lobby-qr-placeholder"><div class="lobby-qr-spinner"></div><div class="lobby-qr-placeholder-text">Подключение к серверу...</div><div class="lobby-qr-placeholder-sub">Ожидание кода комнаты</div></div>';
+        }
 
-        if (urlInput && !urlInput.value) {
+        const isSecure = window.location && window.location.protocol === 'https:';
+        const proto = isSecure ? 'wss:' : 'ws:';
+        const host = (window.location && window.location.hostname && window.location.hostname !== '') ? window.location.hostname : 'localhost';
+        let serverPort = '8080';
+        if (window.location && window.location.port) {
+            const locPort = String(window.location.port);
+            if (locPort === '8080' || (!['63342', '5500', '3000', '5173', '8000', '4200'].includes(locPort) && locPort !== '')) {
+                serverPort = locPort;
+            }
+        }
+        const defaultWsUrl = `${proto}//${host}:${serverPort}`;
+
+        if (overrideUrl) {
+            if (urlInput) urlInput.value = overrideUrl;
+        } else if (urlInput && !urlInput.value) {
             urlInput.value = defaultWsUrl;
         }
-        const wsUrl = (urlInput && urlInput.value) ? urlInput.value.trim() : defaultWsUrl;
-
-        if (hostNetworkClient) {
-            hostNetworkClient.disconnect();
-            hostNetworkClient = null;
-        }
+        const initialWsUrl = overrideUrl || ((urlInput && urlInput.value) ? urlInput.value.trim() : defaultWsUrl);
 
         if (typeof NetworkClient === 'undefined') {
             console.error('NetworkClient is not defined!');
@@ -3655,290 +3668,300 @@
             return;
         }
 
-        hostNetworkClient = new NetworkClient({ url: wsUrl, isHost: true });
+        let hasFallbackAttempted = false;
 
-        hostNetworkClient.on('connected', () => {
-            if (statusDot) statusDot.className = 'status-indicator status-connected';
-            if (statusText) statusText.textContent = 'Подключено к серверу';
-            hostNetworkClient.createRoom({ isHostOnPC: isLocalHostEnabled, requireMobileHost: true, ...getLobbySettings() });
-        });
-
-        hostNetworkClient.on('disconnected', () => {
-            if (statusDot) statusDot.className = 'status-indicator status-error';
-            if (statusText) statusText.textContent = 'Отключено от сервера';
-        });
-
-        hostNetworkClient.on('error', (err) => {
-            if (statusDot) statusDot.className = 'status-indicator status-error';
-            if (statusText) statusText.textContent = 'Ошибка соединения';
-            console.warn('Host Network Error:', err);
-        });
-
-        hostNetworkClient.on('room_created', (data) => {
-            currentOnlineRoomCode = data.roomCode;
-            if (data && data.options) {
-                syncLobbySettings(data.options);
-            }
-            const codeEl = document.getElementById('lobby-room-code');
-            if (codeEl) codeEl.textContent = data.roomCode;
-
-            const origin = (window.location && window.location.origin)
-                ? window.location.origin
-                : `http://${host}:${port}`;
-            const joinUrl = `${origin}/mobile/?room=${data.roomCode}`;
-
-            const linkEl = document.getElementById('lobby-join-url');
-            if (linkEl) {
-                linkEl.textContent = joinUrl;
-                linkEl.href = joinUrl;
+        function startConnection(targetUrl) {
+            if (hostNetworkClient) {
+                hostNetworkClient.disconnect();
+                hostNetworkClient = null;
             }
 
-            renderLobbyQRCode(joinUrl);
-            renderLobbyPlayers();
-        });
+            hostNetworkClient = new NetworkClient({ url: targetUrl, isHost: true });
 
-        hostNetworkClient.on('player_joined', () => {
-            renderLobbyPlayers();
-        });
+            hostNetworkClient.on('connected', () => {
+                if (statusDot) statusDot.className = 'status-indicator status-connected';
+                if (statusText) statusText.textContent = 'Подключено к серверу';
+                hostNetworkClient.createRoom({ isHostOnPC: isLocalHostEnabled, requireMobileHost: true, ...getLobbySettings() });
+            });
 
-        hostNetworkClient.on('player_left', () => {
-            renderLobbyPlayers();
-        });
-
-        hostNetworkClient.on('score_updated', (data) => {
-            if (teams && Array.isArray(teams)) {
-                const team = teams.find(t => t.id === data.playerId || t.name === data.playerName);
-                if (team) {
-                    team.score = data.newScore;
-                    updateTeamsPanel();
+            hostNetworkClient.on('disconnected', () => {
+                if (statusDot) statusDot.className = 'status-indicator status-error';
+                if (statusText) statusText.textContent = 'Отключено от сервера';
+                const codeElem = document.getElementById('lobby-room-code');
+                if (codeElem && (!currentOnlineRoomCode || currentOnlineRoomCode === '----')) {
+                    codeElem.innerHTML = '<span class="room-code-offline">ОФФЛАЙН</span>';
                 }
-            }
-        });
+                const qrElem = document.getElementById('lobby-qr-code');
+                if (qrElem && (!currentOnlineRoomCode || currentOnlineRoomCode === '----')) {
+                    qrElem.innerHTML = '<div class="lobby-qr-placeholder lobby-qr-placeholder-error"><span class="qr-placeholder-icon">📡⚠️</span><span class="qr-placeholder-title">Отключено</span><button type="button" class="btn-retry-qr" onclick="reconnectHostLobby()">Повторить</button></div>';
+                }
+            });
 
-        hostNetworkClient.on('buzz_locked', (payload) => {
-            activeOnlineBuzzer = payload;
-            playBuzzerSound();
+            hostNetworkClient.on('error', (err) => {
+                console.warn('Host Network Error:', err);
 
-            // Pause common question timer (TASK-02)
-            if (timerInterval) {
-                savedThinkingTime = timeLeft;
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-            isAnswerTimerActive = true;
+                // Auto-fallback: If LAN/remote IP failed or timed out and we haven\'t tried localhost, retry with localhost
+                const isLocal = targetUrl.includes('localhost') || targetUrl.includes('127.0.0.1');
+                if (!hasFallbackAttempted && !isLocal) {
+                    hasFallbackAttempted = true;
+                    const fallbackUrl = `${proto}//localhost:${serverPort}`;
+                    console.warn(`Connection to ${targetUrl} failed. Falling back to ${fallbackUrl}...`);
+                    if (statusText) statusText.textContent = 'LAN недоступен (VPN?), пробую localhost...';
+                    if (urlInput) urlInput.value = fallbackUrl;
+                    startConnection(fallbackUrl);
+                    return;
+                }
 
-            const timerElem = document.getElementById('timer');
-            const hintElem = document.getElementById('timer-hint');
-            if (timerElem) {
-                timerElem.classList.add('paused');
-            }
-            if (hintElem) {
-                hintElem.textContent = '⏳ Общий таймер на паузе (ответ игрока)';
-                hintElem.style.color = '#fdcb6e';
-            }
+                if (statusDot) statusDot.className = 'status-indicator status-error';
+                if (statusText) statusText.textContent = 'Ошибка соединения (порт ' + serverPort + ')';
+                const codeElem = document.getElementById('lobby-room-code');
+                if (codeElem && (!currentOnlineRoomCode || currentOnlineRoomCode === '----')) {
+                    codeElem.innerHTML = '<span class="room-code-offline">ОФФЛАЙН</span>';
+                }
+                const qrElem = document.getElementById('lobby-qr-code');
+                if (qrElem && (!currentOnlineRoomCode || currentOnlineRoomCode === '----')) {
+                    qrElem.innerHTML = '<div class="lobby-qr-placeholder lobby-qr-placeholder-error"><span class="qr-placeholder-icon">📡❌</span><span class="qr-placeholder-title">Сервер не отвечает</span><span class="lobby-qr-placeholder-sub" style="font-size:10px; color:#d63031;">Запустите: npm start в папке server</span><button type="button" class="btn-retry-qr" onclick="reconnectHostLobby()">Подключить</button></div>';
+                }
+            });
 
-            // Stylized answering banner (TASK-02)
-            const banner = document.getElementById('online-buzzer-banner');
-            const icon = document.getElementById('online-buzzer-icon');
-            const avatar = document.getElementById('online-buzzer-avatar');
-            const status = document.getElementById('online-buzzer-status');
-            const text = document.getElementById('online-buzzer-text');
+            hostNetworkClient.on('room_created', (data) => {
+                currentOnlineRoomCode = data.roomCode;
+                if (data && data.options) {
+                    syncLobbySettings(data.options);
+                }
+                const codeEl = document.getElementById('lobby-room-code');
+                if (codeEl) codeEl.textContent = data.roomCode;
 
-            if (banner) {
-                banner.style.display = 'flex';
-                banner.className = 'online-buzzer-banner buzzer-answering';
-            }
-            if (icon) icon.style.display = 'none';
-            if (avatar) {
-                avatar.style.display = 'flex';
-                avatar.textContent = payload.avatar || '👤';
-            }
-            if (status) {
-                status.style.display = 'block';
-                status.textContent = 'Отвечает игрок:';
-            }
-            if (text) {
-                text.innerHTML = `<b>${payload.playerName}</b>`;
-            }
+                const isSecure = window.location && window.location.protocol === 'https:';
+                const webProto = isSecure ? 'https:' : 'http:';
+                let hostAddress = data.serverIp || host;
+                if ((hostAddress === 'localhost' || hostAddress === '127.0.0.1') && data.serverIp && data.serverIp !== 'localhost' && data.serverIp !== '127.0.0.1') {
+                    hostAddress = data.serverIp;
+                }
+                const joinPort = data.serverPort || serverPort || '8080';
+                const joinUrl = `${webProto}//${hostAddress}:${joinPort}/mobile/?room=${data.roomCode}`;
 
-            // Start synchronized circular countdown ring (TASK-02)
-            const ansSeconds = payload.answerTime || configAnswerTime || 5;
-            startOnlineAnswerCountdown(ansSeconds);
+                const linkEl = document.getElementById('lobby-join-url');
+                if (linkEl) {
+                    linkEl.textContent = joinUrl;
+                    linkEl.href = joinUrl;
+                }
 
-            const teamIdx = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
-            if (teamIdx !== -1) {
-                activeTeamIdxForQuestion = teamIdx;
+                renderLobbyQRCode(joinUrl);
+                renderLobbyPlayers();
+            });
+
+            hostNetworkClient.on('player_joined', () => {
+                renderLobbyPlayers();
+            });
+
+            hostNetworkClient.on('player_left', () => {
+                renderLobbyPlayers();
+            });
+
+            hostNetworkClient.on('score_updated', (data) => {
+                if (teams && Array.isArray(teams)) {
+                    const team = teams.find(t => t.id === data.playerId || t.name === data.playerName);
+                    if (team) {
+                        team.score = data.newScore;
+                        updateTeamsPanel();
+                    }
+                }
+            });
+
+            hostNetworkClient.on('buzz_locked', (payload) => {
+                activeOnlineBuzzer = payload;
+                playBuzzerSound();
+
+                // Pause common question timer (TASK-02)
+                if (timerInterval) {
+                    savedThinkingTime = timeLeft;
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                isAnswerTimerActive = true;
+
+                const timerElem = document.getElementById('timer');
+                const hintElem = document.getElementById('timer-hint');
+                if (timerElem) {
+                    timerElem.classList.add('paused');
+                }
+                if (hintElem) {
+                    hintElem.textContent = '⏳ Общий таймер на паузе (ответ игрока)';
+                    hintElem.style.color = '#fdcb6e';
+                }
+
+                // Stylized answering banner (TASK-02)
+                const banner = document.getElementById('online-buzzer-banner');
+                const icon = document.getElementById('online-buzzer-icon');
+                const avatar = document.getElementById('online-buzzer-avatar');
+                const status = document.getElementById('online-buzzer-status');
+                const text = document.getElementById('online-buzzer-text');
+
+                if (banner) {
+                    banner.style.display = 'flex';
+                    banner.className = 'online-buzzer-banner buzzer-answering';
+                }
+                if (icon) icon.style.display = 'none';
                 if (avatar) {
-                    avatar.style.boxShadow = `0 0 16px ${teams[teamIdx].color || '#00b894'}`;
-                    avatar.style.borderColor = teams[teamIdx].color || '#55efc4';
+                    avatar.style.display = 'flex';
+                    avatar.textContent = payload.avatar || '👤';
                 }
-            }
-
-            const btnArea = document.getElementById('modal-buttons-area');
-            const questionModal = document.getElementById('question-modal');
-            if (btnArea && questionModal && questionModal.classList.contains('active')) {
-                btnArea.innerHTML = `
-                    <div class="host-online-controls">
-                        <button class="btn btn-judge-correct" onclick="judgeOnlineAnswer(true)">
-                            ✅ Зачесть (+${currentCost})
-                        </button>
-                        <button class="btn btn-judge-wrong" onclick="judgeOnlineAnswer(false)">
-                            ❌ Отклонить (-${getPenaltyDeduction(currentCost)})
-                        </button>
-                        <button class="btn btn-check" onclick="showAnswer()">
-                            Показать ответ
-                        </button>
-                    </div>
-                `;
-            }
-        });
-
-        hostNetworkClient.on('room_settings_updated', (payload) => {
-            if (payload && payload.options) {
-                syncLobbySettings(payload.options);
-            }
-        });
-
-        hostNetworkClient.on('buzzer_ready', () => {
-            activeOnlineBuzzer = null;
-            stopOnlineAnswerCountdown();
-            const banner = document.getElementById('online-buzzer-banner');
-            const icon = document.getElementById('online-buzzer-icon');
-            const avatar = document.getElementById('online-buzzer-avatar');
-            const status = document.getElementById('online-buzzer-status');
-            const ring = document.getElementById('online-buzzer-ring-wrap');
-            if (banner) {
-                banner.style.display = 'flex';
-                banner.className = 'online-buzzer-banner';
-                if (icon) icon.style.display = 'block';
-                if (avatar) avatar.style.display = 'none';
-                if (status) status.style.display = 'none';
-                if (ring) ring.style.display = 'none';
-                const text = document.getElementById('online-buzzer-text');
-                if (text) text.textContent = '🔔 Кнопка активна! Игроки могут нажимать на смартфонах';
-            }
-        });
-
-        hostNetworkClient.on('answer_timeout', () => {
-            activeOnlineBuzzer = null;
-            stopOnlineAnswerCountdown();
-            const banner = document.getElementById('online-buzzer-banner');
-            const icon = document.getElementById('online-buzzer-icon');
-            const avatar = document.getElementById('online-buzzer-avatar');
-            const status = document.getElementById('online-buzzer-status');
-            const ring = document.getElementById('online-buzzer-ring-wrap');
-            if (banner) {
-                banner.className = 'online-buzzer-banner';
-                banner.style.display = 'flex';
-                if (icon) icon.style.display = 'block';
-                if (avatar) avatar.style.display = 'none';
-                if (status) status.style.display = 'none';
-                if (ring) ring.style.display = 'none';
-                const text = document.getElementById('online-buzzer-text');
-                if (text) text.textContent = '⏰ Время на ответ истекло!';
-            }
-        });
-
-        // Remote Host Game Controls (TASK-04)
-        hostNetworkClient.on('judge_result', (payload) => {
-            stopOnlineAnswerCountdown();
-            if (payload.playerId && (!activeOnlineBuzzer || !activeOnlineBuzzer.judgedLocally)) {
-                const teamIdx = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
-                if (teamIdx !== -1) {
-                    const delta = payload.isCorrect ? payload.cost : -payload.cost;
-                    changeTeamScore(teamIdx, delta);
+                if (status) {
+                    status.style.display = 'block';
+                    status.textContent = 'Отвечает игрок:';
                 }
-            }
-            if (payload.isCorrect) {
-                showAnswer();
-            } else {
+                if (text) {
+                    text.innerHTML = `<b>${payload.playerName}</b>`;
+                }
+
+                // Start synchronized circular countdown ring (TASK-02)
+                startOnlineAnswerCountdown(configAnswerTime);
+            });
+
+            hostNetworkClient.on('buzzer_ready', () => {
+                activeOnlineBuzzer = null;
+                stopOnlineAnswerCountdown();
                 const banner = document.getElementById('online-buzzer-banner');
                 const icon = document.getElementById('online-buzzer-icon');
                 const avatar = document.getElementById('online-buzzer-avatar');
                 const status = document.getElementById('online-buzzer-status');
                 const ring = document.getElementById('online-buzzer-ring-wrap');
-                const text = document.getElementById('online-buzzer-text');
-
-                if (payload.reopened) {
-                    if (banner) {
-                        banner.className = 'online-buzzer-banner';
-                        banner.style.display = 'flex';
-                    }
+                if (banner) {
+                    banner.className = 'online-buzzer-banner';
+                    banner.style.display = 'flex';
                     if (icon) icon.style.display = 'block';
                     if (avatar) avatar.style.display = 'none';
                     if (status) status.style.display = 'none';
                     if (ring) ring.style.display = 'none';
-                    if (text) text.textContent = '🔔 Неверно! Кнопка снова активна для остальных игроков';
+                    const text = document.getElementById('online-buzzer-text');
+                    if (text) text.textContent = '🔔 Кнопка активна! Игроки могут нажимать на смартфонах';
+                }
+            });
 
-                    const btnArea = document.getElementById('modal-buttons-area');
-                    if (btnArea) {
-                        btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
-                    }
-
-                    // Resume common question countdown if time remains (TASK-02)
-                    isAnswerTimerActive = false;
-                    const timerElem = document.getElementById('timer');
-                    const hintElem = document.getElementById('timer-hint');
-                    if (timerElem) timerElem.classList.remove('paused');
-                    if (hintElem) {
-                        hintElem.textContent = '🔥 Время пошло! Обсуждение';
-                        hintElem.style.color = '#ff7675';
-                    }
-
-                    if (savedThinkingTime > 0) {
-                        timeLeft = savedThinkingTime;
-                        startTimer();
-                    }
-                } else {
-                    if (banner) {
-                        banner.className = 'online-buzzer-banner';
-                        banner.style.display = 'flex';
-                    }
+            hostNetworkClient.on('answer_timeout', () => {
+                activeOnlineBuzzer = null;
+                stopOnlineAnswerCountdown();
+                const banner = document.getElementById('online-buzzer-banner');
+                const icon = document.getElementById('online-buzzer-icon');
+                const avatar = document.getElementById('online-buzzer-avatar');
+                const status = document.getElementById('online-buzzer-status');
+                const ring = document.getElementById('online-buzzer-ring-wrap');
+                if (banner) {
+                    banner.className = 'online-buzzer-banner';
+                    banner.style.display = 'flex';
                     if (icon) icon.style.display = 'block';
                     if (avatar) avatar.style.display = 'none';
                     if (status) status.style.display = 'none';
                     if (ring) ring.style.display = 'none';
-                    if (text) text.textContent = '❌ Неверно! Никто не ответил правильно';
+                    const text = document.getElementById('online-buzzer-text');
+                    if (text) text.textContent = '⏰ Время на ответ истекло!';
+                }
+            });
+
+            // Remote Host Game Controls (TASK-04)
+            hostNetworkClient.on('judge_result', (payload) => {
+                stopOnlineAnswerCountdown();
+                if (payload.playerId && (!activeOnlineBuzzer || !activeOnlineBuzzer.judgedLocally)) {
+                    const teamIdx = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
+                    if (teamIdx !== -1) {
+                        const delta = payload.isCorrect ? payload.cost : -payload.cost;
+                        changeTeamScore(teamIdx, delta);
+                    }
+                }
+                if (payload.isCorrect) {
                     showAnswer();
+                } else {
+                    const banner = document.getElementById('online-buzzer-banner');
+                    const icon = document.getElementById('online-buzzer-icon');
+                    const avatar = document.getElementById('online-buzzer-avatar');
+                    const status = document.getElementById('online-buzzer-status');
+                    const ring = document.getElementById('online-buzzer-ring-wrap');
+                    const text = document.getElementById('online-buzzer-text');
+
+                    if (payload.reopened) {
+                        if (banner) {
+                            banner.className = 'online-buzzer-banner';
+                            banner.style.display = 'flex';
+                        }
+                        if (icon) icon.style.display = 'block';
+                        if (avatar) avatar.style.display = 'none';
+                        if (status) status.style.display = 'none';
+                        if (ring) ring.style.display = 'none';
+                        if (text) text.textContent = '🔔 Неверно! Кнопка снова активна для остальных игроков';
+
+                        const btnArea = document.getElementById('modal-buttons-area');
+                        if (btnArea) {
+                            btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
+                        }
+
+                        // Resume common question countdown if time remains (TASK-02)
+                        isAnswerTimerActive = false;
+                        const timerElem = document.getElementById('timer');
+                        const hintElem = document.getElementById('timer-hint');
+                        if (timerElem) timerElem.classList.remove('paused');
+                        if (hintElem) {
+                            hintElem.textContent = '🔥 Время пошло! Обсуждение';
+                            hintElem.style.color = '#ff7675';
+                        }
+
+                        if (savedThinkingTime > 0) {
+                            timeLeft = savedThinkingTime;
+                            startTimer();
+                        }
+                    } else {
+                        if (banner) {
+                            banner.className = 'online-buzzer-banner';
+                            banner.style.display = 'flex';
+                        }
+                        if (icon) icon.style.display = 'block';
+                        if (avatar) avatar.style.display = 'none';
+                        if (status) status.style.display = 'none';
+                        if (ring) ring.style.display = 'none';
+                        if (text) text.textContent = '❌ Неверно! Никто не ответил правильно';
+                        showAnswer();
+                    }
                 }
-            }
-        });
+            });
 
-        hostNetworkClient.on('show_answer', () => {
-            showAnswer();
-        });
+            hostNetworkClient.on('show_answer', () => {
+                showAnswer();
+            });
 
-        hostNetworkClient.on('game_paused', (payload) => {
-            if (payload.isPaused) {
-                pauseTimer();
-            } else {
-                resumeTimer();
-            }
-        });
-
-        hostNetworkClient.on('question_closed', () => {
-            closeSystemModal(true);
-        });
-
-        hostNetworkClient.on('room_state', (payload) => {
-            if (payload && payload.options) {
-                syncLobbySettings(payload.options);
-            }
-            if (payload.state === 'BOARD' && !isGameStarted) {
-                // If remote host pressed 'Start Game' in lobby
-                if (typeof startOnlineGame === 'function') {
-                    startOnlineGame();
+            hostNetworkClient.on('game_paused', (payload) => {
+                if (payload.isPaused) {
+                    pauseTimer();
+                } else {
+                    resumeTimer();
                 }
-            } else if (!isGameStarted) {
-                renderLobbyPlayers();
-            }
-        });
+            });
 
-        hostNetworkClient.on('server_error', (payload) => {
-            showSystemModal("⚠️ Ошибка сервера", payload.message || "Не удалось выполнить действие на сервере.");
-        });
+            hostNetworkClient.on('question_closed', () => {
+                closeSystemModal(true);
+            });
 
-        hostNetworkClient.connect();
+            hostNetworkClient.on('room_state', (payload) => {
+                if (payload && payload.options) {
+                    syncLobbySettings(payload.options);
+                }
+                if (payload.state === 'BOARD' && !isGameStarted) {
+                    // If remote host pressed 'Start Game' in lobby
+                    if (typeof startOnlineGame === 'function') {
+                        startOnlineGame();
+                    }
+                } else if (!isGameStarted) {
+                    renderLobbyPlayers();
+                }
+            });
+
+            hostNetworkClient.on('server_error', (payload) => {
+                showSystemModal("⚠️ Ошибка сервера", payload.message || "Не удалось выполнить действие на сервере.");
+            });
+
+            hostNetworkClient.connect().catch(() => {});
+        }
+
+        startConnection(initialWsUrl);
     }
 
     function renderLobbyQRCode(url) {
@@ -3957,8 +3980,10 @@
                 });
             } catch (err) {
                 console.warn('QR Code generation warning:', err);
-                container.innerHTML = `<a href="${url}" target="_blank" style="font-size: 13px; color: #2563eb; word-break: break-all;">${url}</a>`;
+                container.innerHTML = `<a href="${url}" target="_blank" style="font-size: 13px; color: #2563eb; word-break: break-all; padding: 10px; display: block; text-align: center;">${url}</a>`;
             }
+        } else {
+            container.innerHTML = `<a href="${url}" target="_blank" style="font-size: 13px; color: #2563eb; word-break: break-all; padding: 10px; display: block; text-align: center;">${url}</a>`;
         }
     }
 

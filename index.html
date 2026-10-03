@@ -576,12 +576,18 @@
                         <div class="lobby-card-title">📱 Подключение со смартфонов</div>
                         <div class="lobby-code-badge">
                             <span class="lobby-code-label">КОД КОМНАТЫ</span>
-                            <div class="lobby-room-code" id="lobby-room-code">----</div>
+                            <div class="lobby-room-code" id="lobby-room-code"><span class="room-code-loading">••••</span></div>
                             <button class="btn-copy-code" id="btn-copy-room-code" onclick="copyRoomCode()" title="Скопировать код">📋 Скопировать</button>
                         </div>
 
                         <div class="lobby-qr-wrapper">
-                            <div id="lobby-qr-code" class="lobby-qr-container"></div>
+                            <div id="lobby-qr-code" class="lobby-qr-container">
+                                <div class="lobby-qr-placeholder">
+                                    <div class="lobby-qr-spinner"></div>
+                                    <div class="lobby-qr-placeholder-text">Подключение...</div>
+                                    <div class="lobby-qr-placeholder-sub">Ожидание кода комнаты</div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="lobby-join-instructions">
@@ -641,19 +647,23 @@
                         <!-- Pack info block -->
                         <div class="lobby-pack-info-card">
                             <div class="lobby-pack-info-header">
-                                <span class="lobby-pack-label">📦 Выбранный пак вопросов:</span>
+                                <span class="lobby-pack-label">📚 Выбранный пакет</span>
+                                <span class="lobby-pack-status-badge">АКТИВЕН</span>
                             </div>
-                            <div class="lobby-pack-name" id="lobby-active-pack-title">Загрузка пака...</div>
+                            <div class="lobby-pack-title-box">
+                                <span class="lobby-pack-title-icon">📖</span>
+                                <div class="lobby-pack-name" id="lobby-active-pack-title">Загрузка пака...</div>
+                            </div>
                             <div class="lobby-pack-meta" id="lobby-active-pack-meta">
                                 <span class="pack-meta-pill" id="pack-meta-rounds">🎯 Раунды: —</span>
                                 <span class="pack-meta-pill" id="pack-meta-themes">📚 Темы: —</span>
                             </div>
                             <div class="lobby-pack-actions">
                                 <button type="button" class="btn-mini btn-change-pack" onclick="openPrepareQuestionsChoice()">
-                                    📂 Выбрать из каталога
+                                    📁 Каталог паков
                                 </button>
                                 <label class="btn-mini btn-upload-lobby-pack" for="lobby-pack-file-input" title="Загрузить пользовательский .JSON пак с вопросами">
-                                    📁 Загрузить свой .JSON
+                                    📂 Свой .JSON
                                 </label>
                                 <input type="file" id="lobby-pack-file-input" accept=".json" onchange="uploadLobbyCustomPack(event)" style="display: none;">
                             </div>
@@ -661,17 +671,25 @@
 
                         <!-- Game & Timer Settings Bar in Hub (TASK-01) -->
                         <div class="lobby-settings-bar" id="lobby-settings-bar">
-                            <div class="lobby-settings-header-label">⚙️ Правила и тайминги раунда:</div>
-                            <div class="lobby-settings-summary-row">
-                                <div class="lobby-settings-chips" id="lobby-settings-chips" onclick="openLobbySettingsModal()" title="Нажмите для настройки таймеров и штрафов">
-                                    <span class="setting-summary-chip" id="chip-reading-time">⏱️ Чтение: 7с</span>
-                                    <span class="setting-summary-chip" id="chip-thinking-time">🔥 Баззер: 30с</span>
-                                    <span class="setting-summary-chip" id="chip-answer-time">🎤 Ответ: 5с</span>
-                                    <span class="setting-summary-chip" id="chip-penalty">⚖️ Штраф: Номинал</span>
-                                </div>
-                                <button type="button" class="btn-configure-lobby-settings" id="btn-open-lobby-settings" onclick="openLobbySettingsModal()">
-                                    ⚙️ Изменить
+                            <div class="lobby-settings-header-row">
+                                <div class="lobby-settings-header-label">⚙️ Правила и тайминги</div>
+                                <button type="button" class="btn-configure-lobby-settings" id="btn-open-lobby-settings" onclick="openLobbySettingsModal()" title="Настроить тайминги и штрафы">
+                                    ✏️ Изменить
                                 </button>
+                            </div>
+                            <div class="lobby-settings-chips" id="lobby-settings-chips" onclick="openLobbySettingsModal()" title="Нажмите для настройки таймеров и штрафов">
+                                <span class="setting-summary-chip" id="chip-reading-time">⏱️ Чтение: 7с</span>
+                                <span class="setting-summary-chip" id="chip-thinking-time">🔥 Баззер: 30с</span>
+                                <span class="setting-summary-chip" id="chip-answer-time">🎤 Ответ: 5с</span>
+                                <span class="setting-summary-chip" id="chip-penalty">⚖️ Штраф: Номинал</span>
+                            </div>
+                        </div>
+
+                        <!-- Mini Quick Guide for visual balance -->
+                        <div class="lobby-quick-guide-card">
+                            <div class="quick-guide-title">💡 Игра со смартфонов</div>
+                            <div class="quick-guide-text">
+                                Игроки сканируют QR-код со своих смартфонов и сразу участвуют в игре через веб-браузер без установки приложений.
                             </div>
                         </div>
                     </div>

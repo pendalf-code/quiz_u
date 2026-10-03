@@ -16,6 +16,7 @@ class NetworkClient {
         this.url = options.url || null;
         this.ws = null;
         this.WebSocketClass = options.WebSocket || (typeof WebSocket !== 'undefined' ? WebSocket : null);
+        this.connectionTimeoutMs = (typeof options.connectionTimeoutMs === 'number') ? options.connectionTimeoutMs : 4000;
         this.roomCode = null;
         this.hostToken = null;
         this.isHost = options.isHost !== false;
@@ -80,14 +81,40 @@ class NetworkClient {
 
         return new Promise((resolve, reject) => {
             let settled = false;
+            let connectTimer = null;
+
+            const clearTimer = () => {
+                if (connectTimer) {
+                    clearTimeout(connectTimer);
+                    connectTimer = null;
+                }
+            };
+
+            if (this.connectionTimeoutMs > 0) {
+                connectTimer = setTimeout(() => {
+                    if (!settled) {
+                        settled = true;
+                        if (this.ws && (this.ws.readyState === 0 || this.ws.readyState === 2)) {
+                            try {
+                                this.ws.close();
+                            } catch (_) {}
+                        }
+                        const timeoutErr = new Error(`Connection timeout (${this.url})`);
+                        this.emit('error', timeoutErr);
+                        reject(timeoutErr);
+                    }
+                }, this.connectionTimeoutMs);
+            }
 
             try {
                 this.ws = new this.WebSocketClass(this.url);
             } catch (err) {
+                clearTimer();
                 return reject(err);
             }
 
             this.ws.onopen = () => {
+                clearTimer();
                 this.isConnected = true;
                 this.reconnectAttempts = 0;
                 if (!settled) {
@@ -107,6 +134,7 @@ class NetworkClient {
             };
 
             this.ws.onerror = (err) => {
+                clearTimer();
                 this.emit('error', err);
                 if (!settled) {
                     settled = true;
@@ -115,6 +143,7 @@ class NetworkClient {
             };
 
             this.ws.onclose = (event) => {
+                clearTimer();
                 this.isConnected = false;
                 this.emit('disconnected', { code: event.code, reason: event.reason });
                 if (this.autoReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {

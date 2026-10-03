@@ -12,12 +12,43 @@ const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
 const { MSG_TYPES, ERROR_CODES, createMessage, parseMessage } = require('./protocol');
+const os = require('os');
 const RoomManager = require('./RoomManager');
 
 const PORT = process.env.PORT || 8080;
 const rootDir = path.resolve(__dirname, '..', '..');
 const mobileDir = path.join(rootDir, 'mobile');
 const packsDir = path.join(rootDir, 'паки вопросов');
+
+
+function getLanIp() {
+    try {
+        const interfaces = os.networkInterfaces();
+        const candidates = [];
+        for (const name of Object.keys(interfaces)) {
+            const lower = name.toLowerCase();
+            // Skip virtual / VPN adapters that hijack or route away local traffic
+            const isVirtual = lower.includes('vpn') || lower.includes('wireguard') ||
+                              lower.includes('amnezia') || lower.includes('tap') ||
+                              lower.includes('tun') || lower.includes('vethernet') ||
+                              lower.includes('wsl') || lower.includes('hyper-v') ||
+                              lower.includes('virtual');
+            for (const iface of interfaces[name]) {
+                if (iface.family === 'IPv4' && !iface.internal) {
+                    if (iface.address.startsWith('169.254.') || iface.address.startsWith('127.')) continue;
+                    candidates.push({ name, address: iface.address, isVirtual });
+                }
+            }
+        }
+        // Prioritize non-virtual physical Wi-Fi / Ethernet adapters on standard home/office subnets
+        const physicalLan = candidates.find(c => !c.isVirtual && (c.address.startsWith('192.168.') || c.address.startsWith('10.')));
+        if (physicalLan) return physicalLan.address;
+        const anyPhysical = candidates.find(c => !c.isVirtual);
+        if (anyPhysical) return anyPhysical.address;
+        if (candidates.length > 0) return candidates[0].address;
+    } catch (_) {}
+    return 'localhost';
+}
 
 const roomManager = new RoomManager();
 
@@ -210,9 +241,12 @@ function handleClientMessage(ws, message) {
             ws.isHost = true;
             ws.roomCode = room.code;
 
+            const lanIp = getLanIp();
             ws.send(createMessage(MSG_TYPES.ROOM_CREATED, {
                 roomCode: room.code,
                 hostToken: room.hostToken,
+                serverIp: lanIp,
+                serverPort: PORT,
                 state: room.getStateSnapshot(false)
             }));
             break;
@@ -445,4 +479,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { server, wss, roomManager };
+module.exports = { server, wss, roomManager, getLanIp };
