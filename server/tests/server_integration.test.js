@@ -64,6 +64,34 @@ test('Server: Real WebSocket Integration Test', async (t) => {
         assert.equal(typeof statsData.totalRooms, 'number');
     });
 
+    await t.test('HTTP server correctly serves root and mobile index.html, styles and scripts', async () => {
+        // Root /
+        const rootRes = await fetch(`http://127.0.0.1:${port}/`);
+        assert.equal(rootRes.status, 200);
+        assert.ok(rootRes.headers.get('content-type').includes('text/html'));
+        const rootHtml = await rootRes.text();
+        assert.ok(rootHtml.includes('<!DOCTYPE html>'));
+
+        // /index.html
+        const indexRes = await fetch(`http://127.0.0.1:${port}/index.html`);
+        assert.equal(indexRes.status, 200);
+
+        // /mobile and /mobile/
+        const mobileRes = await fetch(`http://127.0.0.1:${port}/mobile/`);
+        assert.equal(mobileRes.status, 200);
+        assert.ok(mobileRes.headers.get('content-type').includes('text/html'));
+
+        // /css/style.css
+        const cssRes = await fetch(`http://127.0.0.1:${port}/css/style.css`);
+        assert.equal(cssRes.status, 200);
+        assert.ok(cssRes.headers.get('content-type').includes('text/css'));
+
+        // /js/game.js
+        const jsRes = await fetch(`http://127.0.0.1:${port}/js/game.js`);
+        assert.equal(jsRes.status, 200);
+        assert.ok(jsRes.headers.get('content-type').includes('javascript'));
+    });
+
     await t.test('End-to-End WebSocket Flow: Host creates room, Players join, Buzzer arbitration & Anti-Cheat', async () => {
         // 1. Connect Host WS
         const hostWs = new WebSocket(wsUrl);

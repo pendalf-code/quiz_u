@@ -3,7 +3,7 @@
  * Features:
  * - WebSocket Server with heartbeat ping/pong
  * - Authoritative room state, buzz race arbitration & anti-cheat
- * - Static file serving for /mobile web app
+ * - Static file serving for /mobile web app & desktop host app
  * - JSON question packs serving with percent-encoded Cyrillic support
  */
 
@@ -33,7 +33,10 @@ const MIME_TYPES = {
     '.jpeg': 'image/jpeg',
     '.ico': 'image/x-icon',
     '.mp3': 'audio/mpeg',
-    '.mp4': 'video/mp4'
+    '.mp4': 'video/mp4',
+    '.woff2': 'font/woff2',
+    '.woff': 'font/woff',
+    '.ttf': 'font/ttf'
 };
 
 // HTTP Server: Handles static files and question pack requests
@@ -74,6 +77,11 @@ const server = http.createServer((req, res) => {
         return res.end('Forbidden');
     }
 
+    // Handle root / and /index.html -> serve main host application
+    if (cleanPath === '/' || cleanPath === '/index.html') {
+        return serveStaticFile(path.join(rootDir, 'index.html'), res);
+    }
+
     // Handle /mobile route -> serve mobile web app
     if (cleanPath === '/mobile' || cleanPath === '/mobile/') {
         return serveStaticFile(path.join(mobileDir, 'index.html'), res);
@@ -92,18 +100,6 @@ const server = http.createServer((req, res) => {
         return serveStaticFile(resolvedPath, res);
     }
 
-    // Handle /js/net/ references from mobile app (Protocol.js, NetworkClient.js)
-    if (cleanPath.startsWith('/js/net/')) {
-        const netFile = cleanPath.slice('/js/net/'.length);
-        const resolvedNetPath = path.resolve(rootDir, 'js', 'net', netFile);
-
-        if (!resolvedNetPath.startsWith(path.resolve(rootDir, 'js', 'net'))) {
-            res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
-            return res.end('Forbidden');
-        }
-        return serveStaticFile(resolvedNetPath, res);
-    }
-
     // Handle question packs static requests
     if (cleanPath.startsWith('/паки вопросов/')) {
         const relativePackPath = cleanPath.slice('/паки вопросов/'.length);
@@ -114,6 +110,23 @@ const server = http.createServer((req, res) => {
             return res.end('Forbidden');
         }
         return serveStaticFile(resolvedPackPath, res);
+    }
+
+    // Handle allowed static asset prefixes for main host web app
+    const isAllowedStaticPrefix = cleanPath.startsWith('/css/') ||
+                                  cleanPath.startsWith('/js/') ||
+                                  cleanPath.startsWith('/assets/') ||
+                                  cleanPath === '/favicon.ico';
+
+    if (isAllowedStaticPrefix) {
+        const relativePath = cleanPath.startsWith('/') ? cleanPath.slice(1) : cleanPath;
+        const resolvedPath = path.resolve(rootDir, relativePath);
+
+        if (!resolvedPath.startsWith(rootDir)) {
+            res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+            return res.end('Forbidden');
+        }
+        return serveStaticFile(resolvedPath, res);
     }
 
     // Fallback 404
