@@ -29,7 +29,8 @@
             buzzer: document.getElementById('screen-buzzer'),
             answer: document.getElementById('screen-answer'),
             auction: document.getElementById('screen-auction'),
-            cat: document.getElementById('screen-cat')
+            cat: document.getElementById('screen-cat'),
+            host: document.getElementById('screen-host')
         },
 
         // Join Screen
@@ -83,6 +84,33 @@
         catPlayersList: document.getElementById('cat-players-list'),
         btnConfirmCat: document.getElementById('btn-confirm-cat'),
 
+        // Host Screen Elements (TASK-04)
+        hostStateBadge: document.getElementById('host-state-badge'),
+        hostThemeBadge: document.getElementById('host-theme-badge'),
+        hostCostBadge: document.getElementById('host-cost-badge'),
+        hostQuestionCard: document.getElementById('host-question-card'),
+        hostQuestionText: document.getElementById('host-question-text'),
+        hostSecretBox: document.getElementById('host-secret-box'),
+        hostSecretAnswer: document.getElementById('host-secret-answer'),
+        hostSecretComment: document.getElementById('host-secret-comment'),
+        hostAnsweringBanner: document.getElementById('host-answering-banner'),
+        hostAnsweringName: document.getElementById('host-answering-name'),
+        hostAnsweringSubtext: document.getElementById('host-answering-subtext'),
+        btnHostJudgeCorrect: document.getElementById('btn-host-judge-correct'),
+        btnHostJudgeCorrectText: document.getElementById('btn-host-judge-correct-text'),
+        btnHostJudgeWrong: document.getElementById('btn-host-judge-wrong'),
+        btnHostJudgeWrongText: document.getElementById('btn-host-judge-wrong-text'),
+        btnHostOpenBuzzer: document.getElementById('btn-host-open-buzzer'),
+        btnHostPause: document.getElementById('btn-host-pause'),
+        hostPauseIcon: document.getElementById('host-pause-icon'),
+        hostPauseText: document.getElementById('host-pause-text'),
+        btnHostShowAnswer: document.getElementById('btn-host-show-answer'),
+        btnHostCloseQuestion: document.getElementById('btn-host-close-question'),
+        btnHostStartGame: document.getElementById('btn-host-start-game'),
+        hostLobbyAction: document.getElementById('host-lobby-action'),
+        hostPlayersList: document.getElementById('host-players-list'),
+        hostPlayersCount: document.getElementById('host-players-count'),
+
         // Toast
         toast: document.getElementById('mobile-toast'),
         toastIcon: document.getElementById('toast-icon'),
@@ -104,7 +132,11 @@
         answerTimeLeft: 5,
         totalAnswerTime: 5,
         selectedCatTargetId: null,
-        toastTimeout: null
+        toastTimeout: null,
+        activeQuestion: null,
+        activeAnsweringPlayer: null,
+        isPaused: false,
+        roomState: 'LOBBY'
     };
 
     // Network Client Instance
@@ -155,10 +187,12 @@
 
         Object.keys(elements.screens).forEach((name) => {
             const screen = elements.screens[name];
-            if (name === screenName) {
-                screen.classList.add('active');
-            } else {
-                screen.classList.remove('active');
+            if (screen) {
+                if (name === screenName) {
+                    screen.classList.add('active');
+                } else {
+                    screen.classList.remove('active');
+                }
             }
         });
     }
@@ -401,9 +435,8 @@
         }
 
         // Lobby action button (Start Game) (TASK-05 validation)
-        const activePlayers = (state.roomState && Array.isArray(state.roomState.players))
-            ? state.roomState.players.filter(p => p.isConnected && p.role !== 'host')
-            : [];
+        const playersList = (netClient ? netClient.getPlayersList() : []) || [];
+        const activePlayers = playersList.filter(p => p.isConnected && p.role !== 'host');
         const canStart = activePlayers.length >= 2;
 
         if (elements.hostLobbyAction) {
@@ -702,14 +735,18 @@
 
             renderPlayersList(payload.players);
 
-            // Update description based on role
+            // Handle Host Role Screen View
             if (state.selectedRole === 'host') {
-                elements.waitingDesc.textContent = 'Вы подключены как ведущий викторины. Ожидание запуска игры...';
-            } else {
-                elements.waitingDesc.textContent = 'Ведущий выбирает вопрос на табло...';
+                showScreen('host');
+                updateHostScreen(payload.state, payload);
+                renderHostPlayersList(payload.players);
+                return;
             }
 
-            // Handle Room States
+            // Update description based on role
+            elements.waitingDesc.textContent = 'Ведущий выбирает вопрос на табло...';
+
+            // Handle Room States for Players
             switch (payload.state) {
                 case 'INIT':
                 case 'LOBBY':
@@ -749,6 +786,15 @@
             stopAnswerTimer();
             state.currentCost = payload.cost || 100;
             state.isEligibleForBuzzer = true;
+            state.activeQuestion = payload.question || null;
+            state.activeAnsweringPlayer = null;
+
+            if (state.selectedRole === 'host') {
+                showScreen('host');
+                updateHostScreen(payload.state || 'QUESTION_READING', payload);
+                return;
+            }
+
             elements.buzzerCostBadge.textContent = `${state.currentCost} очков`;
             elements.answerCostHint.textContent = `Ставка: ${state.currentCost} очков`;
             setBuzzerState('locked');
@@ -759,6 +805,11 @@
             if (payload.cost) {
                 state.currentCost = payload.cost;
                 elements.buzzerCostBadge.textContent = `${state.currentCost} очков`;
+            }
+
+            if (state.selectedRole === 'host') {
+                updateHostScreen('BUZZ_ACTIVE');
+                return;
             }
 
             // Check if player is allowed to buzz
@@ -775,6 +826,13 @@
         });
 
         netClient.on('buzz_locked', (payload) => {
+            if (state.selectedRole === 'host') {
+                state.activeAnsweringPlayer = { playerId: payload.playerId, playerName: payload.playerName };
+                updateHostScreen('ANSWERING');
+                haptic('buzz_press');
+                return;
+            }
+
             const isMe = state.selfPlayer && payload.playerId === state.selfPlayer.id;
 
             if (isMe) {
@@ -791,7 +849,20 @@
             }
         });
 
+        netClient.on('answer_submitted', (payload) => {
+            if (state.selectedRole === 'host') {
+                updateHostScreen('ANSWERING', { answerText: payload.answerText });
+                haptic('buzz_press');
+            }
+        });
+
         netClient.on('buzz_reset', () => {
+            if (state.selectedRole === 'host') {
+                state.activeAnsweringPlayer = null;
+                updateHostScreen('BUZZ_ACTIVE');
+                return;
+            }
+
             if (state.isEligibleForBuzzer) {
                 setBuzzerState('ready');
             }
@@ -801,6 +872,14 @@
         netClient.on('answer_timeout', () => {
             stopAnswerTimer();
             haptic('error');
+
+            if (state.selectedRole === 'host') {
+                state.activeAnsweringPlayer = null;
+                updateHostScreen(state.roomState || 'BUZZ_ACTIVE');
+                showToast('Время на ответ вышло!', 'error');
+                return;
+            }
+
             showToast('Время на ответ вышло!', 'error');
             setBuzzerState('locked');
             showScreen('buzzer');
@@ -809,6 +888,9 @@
         netClient.on('score_updated', (payload) => {
             if (payload.players) {
                 renderPlayersList(payload.players);
+                if (state.selectedRole === 'host') {
+                    renderHostPlayersList(payload.players);
+                }
             }
             if (state.selfPlayer && payload.playerId === state.selfPlayer.id) {
                 state.selfPlayer.score = payload.newScore;
@@ -820,11 +902,21 @@
             if (payload.player) {
                 showToast(`Вошёл: ${payload.player.name}${payload.role === 'host' ? ' (Ведущий)' : ''}`, 'info', 2000);
             }
-            renderPlayersList(netClient.getPlayersList());
+            const players = netClient.getPlayersList();
+            renderPlayersList(players);
+            if (state.selectedRole === 'host') {
+                renderHostPlayersList(players);
+                updateHostScreen(state.roomState);
+            }
         });
 
         netClient.on('player_left', () => {
-            renderPlayersList(netClient.getPlayersList());
+            const players = netClient.getPlayersList();
+            renderPlayersList(players);
+            if (state.selectedRole === 'host') {
+                renderHostPlayersList(players);
+                updateHostScreen(state.roomState);
+            }
         });
 
         netClient.connect().catch((err) => {
@@ -940,9 +1032,8 @@
         if (elements.btnHostStartGame) {
             elements.btnHostStartGame.addEventListener('click', () => {
                 if (!netClient) return;
-                const activePlayers = (state.roomState && Array.isArray(state.roomState.players))
-                    ? state.roomState.players.filter(p => p.isConnected && p.role !== 'host')
-                    : [];
+                const playersList = netClient.getPlayersList() || [];
+                const activePlayers = playersList.filter(p => p.isConnected && p.role !== 'host');
                 if (activePlayers.length < 2) {
                     haptic('buzz_lost');
                     showToast(`⚠️ Требуется минимум 2 игрока (сейчас: ${activePlayers.length})`, 'warning');
@@ -1013,7 +1104,12 @@
                 netClient.joinRoom(roomCode, playerName, state.selectedAvatar, state.sessionToken, state.selectedRole);
             }
 
-            showScreen('waiting');
+            if (state.selectedRole === 'host') {
+                showScreen('host');
+                updateHostScreen('LOBBY');
+            } else {
+                showScreen('waiting');
+            }
             showToast('Подключение к комнате...', 'info');
         });
 
@@ -1040,7 +1136,12 @@
                     netClient.joinRoom(savedRoom, savedName, savedAvatar, savedToken, savedRole);
                 }
 
-                showScreen('waiting');
+                if (savedRole === 'host') {
+                    showScreen('host');
+                    updateHostScreen('LOBBY');
+                } else {
+                    showScreen('waiting');
+                }
                 showToast('Восстановление сессии...', 'info');
             }
         });

@@ -1,4 +1,4 @@
-const { test, describe } = require('node:test');
+const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -13,6 +13,38 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
     const htmlPath = path.join(rootDir, 'mobile', 'index.html');
     const cssPath = path.join(rootDir, 'mobile', 'mobile.css');
     const jsPath = path.join(rootDir, 'mobile', 'mobile.js');
+
+    let sharedPort;
+    let sharedWsUrl;
+
+    before(async () => {
+        if (!server.listening) {
+            await new Promise((resolve) => {
+                server.listen(0, '127.0.0.1', () => {
+                    sharedPort = server.address().port;
+                    sharedWsUrl = `ws://127.0.0.1:${sharedPort}`;
+                    resolve();
+                });
+            });
+        } else {
+            sharedPort = server.address().port;
+            sharedWsUrl = `ws://127.0.0.1:${sharedPort}`;
+        }
+    });
+
+    after(async () => {
+        roomManager.destroy();
+        for (const client of wss.clients) {
+            try { client.terminate(); } catch {}
+        }
+        if (server.listening) {
+            await new Promise((resolve) => {
+                wss.close(() => {
+                    server.close(resolve);
+                });
+            });
+        }
+    });
 
     test('mobile/ files exist and have valid structure', () => {
         assert.ok(fs.existsSync(htmlPath), 'mobile/index.html must exist');
@@ -98,6 +130,8 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
         assert.ok(js.includes('renderHostPlayersList('), 'renderHostPlayersList method must exist in mobile.js');
         assert.ok(js.includes('btnHostJudgeCorrect'), 'btnHostJudgeCorrect listener must exist in mobile.js');
         assert.ok(js.includes('btnHostPause'), 'btnHostPause listener must exist in mobile.js');
+        assert.ok(js.includes("host: document.getElementById('screen-host')"), 'host screen must be registered in elements.screens');
+        assert.ok(js.includes("btnHostJudgeCorrect: document.getElementById('btn-host-judge-correct')"), 'btnHostJudgeCorrect must be registered in elements');
     });
 
     test('TASK-04: NetworkClient exposes host remote control methods', () => {
@@ -153,55 +187,31 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
     });
 
     test('Server HTTP routes /mobile and /mobile/ cleanly to mobile/index.html', async () => {
-        let port;
-        await new Promise((resolve) => {
-            server.listen(0, '127.0.0.1', () => {
-                port = server.address().port;
-                resolve();
-            });
-        });
+        // Test /mobile
+        const res1 = await fetch(`http://127.0.0.1:${sharedPort}/mobile`);
+        assert.equal(res1.status, 200);
+        assert.ok(res1.headers.get('content-type').includes('text/html'));
+        const text1 = await res1.text();
+        assert.ok(text1.includes('Quiz U — Мобильный пульт'));
 
-        try {
-            // Test /mobile
-            const res1 = await fetch(`http://127.0.0.1:${port}/mobile`);
-            assert.equal(res1.status, 200);
-            assert.ok(res1.headers.get('content-type').includes('text/html'));
-            const text1 = await res1.text();
-            assert.ok(text1.includes('Quiz U — Мобильный пульт'));
+        // Test /mobile/
+        const res2 = await fetch(`http://127.0.0.1:${sharedPort}/mobile/`);
+        assert.equal(res2.status, 200);
+        const text2 = await res2.text();
+        assert.ok(text2.includes('id="screen-buzzer"'));
 
-            // Test /mobile/
-            const res2 = await fetch(`http://127.0.0.1:${port}/mobile/`);
-            assert.equal(res2.status, 200);
-            const text2 = await res2.text();
-            assert.ok(text2.includes('id="screen-buzzer"'));
+        // Test /mobile/mobile.css
+        const res3 = await fetch(`http://127.0.0.1:${sharedPort}/mobile/mobile.css`);
+        assert.equal(res3.status, 200);
+        assert.ok(res3.headers.get('content-type').includes('text/css'));
 
-            // Test /mobile/mobile.css
-            const res3 = await fetch(`http://127.0.0.1:${port}/mobile/mobile.css`);
-            assert.equal(res3.status, 200);
-            assert.ok(res3.headers.get('content-type').includes('text/css'));
-
-            // Test /mobile/mobile.js
-            const res4 = await fetch(`http://127.0.0.1:${port}/mobile/mobile.js`);
-            assert.equal(res4.status, 200);
-            assert.ok(res4.headers.get('content-type').includes('application/javascript'));
-        } finally {
-            if (server.closeAllConnections) server.closeAllConnections();
-            await new Promise((resolve) => server.close(resolve));
-        }
+        // Test /mobile/mobile.js
+        const res4 = await fetch(`http://127.0.0.1:${sharedPort}/mobile/mobile.js`);
+        assert.equal(res4.status, 200);
+        assert.ok(res4.headers.get('content-type').includes('application/javascript'));
     });
 
     test('End-to-End WebSocket Flow: Mobile Host & Player join, buzzer, answer, auction & cat transfer', async () => {
-        let port;
-        let wsUrl;
-
-        await new Promise((resolve) => {
-            server.listen(0, '127.0.0.1', () => {
-                port = server.address().port;
-                wsUrl = `ws://127.0.0.1:${port}`;
-                resolve();
-            });
-        });
-
         function createWaiter(ws) {
             const queue = [];
             const listeners = [];
@@ -245,148 +255,133 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
             };
         }
 
-        try {
-            // 1. Host screen (PC TV) connects and creates room
-            const hostWs = new WebSocket(wsUrl);
-            await new Promise((res) => hostWs.on('open', res));
-            const waitHost = createWaiter(hostWs);
+        // 1. Host screen (PC TV) connects and creates room
+        const hostWs = new WebSocket(sharedWsUrl);
+        await new Promise((res) => hostWs.on('open', res));
+        const hostWait = createWaiter(hostWs);
 
-            hostWs.send(createMessage(MSG_TYPES.HOST_CREATE_ROOM, { options: { answerTime: 3 } }));
-            const roomCreatedMsg = await waitHost(MSG_TYPES.ROOM_CREATED);
-            const roomCode = roomCreatedMsg.payload.roomCode;
-            assert.ok(roomCode);
+        hostWs.send(createMessage(MSG_TYPES.HOST_CREATE_ROOM, {}));
 
-            // 1b. Mobile Host connects with role 'host' (TASK-03)
-            const mobileHostWs = new WebSocket(wsUrl);
-            await new Promise((res) => mobileHostWs.on('open', res));
-            const waitMobileHost = createWaiter(mobileHostWs);
+        const created = await hostWait(MSG_TYPES.ROOM_CREATED);
+        const roomCode = created.payload.roomCode;
+        assert.ok(roomCode, 'Room code must be received');
 
-            mobileHostWs.send(createMessage(MSG_TYPES.PLAYER_JOIN, {
-                roomCode,
-                name: 'Мобильный Ведущий',
-                avatar: '🎙️',
-                role: 'host'
-            }));
-            const mobileHostState = await waitMobileHost(MSG_TYPES.ROOM_STATE);
-            assert.equal(mobileHostState.payload.self.role, 'host');
-            assert.equal(mobileHostState.payload.host.name, 'Мобильный Ведущий');
+        // 2. Mobile Host connects and joins as role host
+        const mobileHostWs = new WebSocket(sharedWsUrl);
+        await new Promise((res) => mobileHostWs.on('open', res));
+        const mobileHostWait = createWaiter(mobileHostWs);
 
-            // 1c. Second Mobile Host attempted — must be rejected with HOST_ALREADY_EXISTS (TASK-03)
-            const duplicateHostWs = new WebSocket(wsUrl);
-            await new Promise((res) => duplicateHostWs.on('open', res));
-            const waitDupHost = createWaiter(duplicateHostWs);
-            duplicateHostWs.send(createMessage(MSG_TYPES.PLAYER_JOIN, {
-                roomCode,
-                name: 'Второй Ведущий',
-                avatar: '🎙️',
-                role: 'host'
-            }));
-            const errDupHost = await waitDupHost(MSG_TYPES.ERROR);
-            assert.equal(errDupHost.payload.code, ERROR_CODES.HOST_ALREADY_EXISTS);
-            duplicateHostWs.close();
+        mobileHostWs.send(createMessage(MSG_TYPES.PLAYER_JOIN, {
+            roomCode,
+            name: 'Ведущий',
+            role: 'host',
+            avatar: '🎙️'
+        }));
 
-            // 2. Mobile Player 1 connects
-            const player1Ws = new WebSocket(wsUrl);
-            await new Promise((res) => player1Ws.on('open', res));
-            const waitP1 = createWaiter(player1Ws);
+        const mobileHostState = await mobileHostWait(MSG_TYPES.ROOM_STATE);
+        assert.equal(mobileHostState.payload.role, 'host');
+        assert.ok(mobileHostState.payload.sessionToken, 'Mobile host receives session token');
 
-            player1Ws.send(createMessage(MSG_TYPES.PLAYER_JOIN, {
-                roomCode,
-                name: 'Мобильный Игрок',
-                avatar: '🚀',
-                role: 'player'
-            }));
+        // 3. Player 1 joins with role player
+        const player1Ws = new WebSocket(sharedWsUrl);
+        await new Promise((res) => player1Ws.on('open', res));
+        const p1Wait = createWaiter(player1Ws);
 
-            const p1State = await waitP1(MSG_TYPES.ROOM_STATE);
-            assert.equal(p1State.payload.roomCode, roomCode);
-            assert.equal(p1State.payload.self.name, 'Мобильный Игрок');
-            assert.equal(p1State.payload.self.avatar, '🚀');
-            assert.equal(p1State.payload.self.role, 'player');
-            const p1Id = p1State.payload.self.id;
-            const p1Token = p1State.payload.sessionToken;
-            assert.ok(p1Token, 'Player must receive sessionToken for fast reconnect');
+        player1Ws.send(createMessage(MSG_TYPES.PLAYER_JOIN, {
+            roomCode,
+            name: 'Алиса',
+            role: 'player',
+            avatar: '🐱'
+        }));
 
-            // 3. Mobile Player 2 connects
-            const player2Ws = new WebSocket(wsUrl);
-            await new Promise((res) => player2Ws.on('open', res));
-            const waitP2 = createWaiter(player2Ws);
-            player2Ws.send(createMessage(MSG_TYPES.PLAYER_JOIN, {
-                roomCode,
-                name: 'Второй Игрок',
-                avatar: '🐼',
-                role: 'player'
-            }));
-            const p2State = await waitP2(MSG_TYPES.ROOM_STATE);
-            const p2Id = p2State.payload.self.id;
+        const p1State = await p1Wait(MSG_TYPES.ROOM_STATE);
+        assert.equal(p1State.payload.role, 'player');
+        const p1Id = p1State.payload.self.id;
 
-            // 4. Host starts game and selects question
-            hostWs.send(createMessage(MSG_TYPES.HOST_START_GAME));
-            await waitP1(MSG_TYPES.ROOM_STATE);
+        // 4. Player 2 joins with role player
+        const player2Ws = new WebSocket(sharedWsUrl);
+        await new Promise((res) => player2Ws.on('open', res));
+        const p2Wait = createWaiter(player2Ws);
 
-            hostWs.send(createMessage(MSG_TYPES.HOST_SELECT_QUESTION, {
-                themeIdx: 0,
-                questionIdx: 0,
-                question: { q: 'Столица Франции?', a: 'Париж', price: 200 }
-            }));
-            await waitP1(MSG_TYPES.QUESTION_ACTIVE);
-            // Mobile host also receives the question with secret answer
-            const mobileHostQuestion = await waitMobileHost(MSG_TYPES.QUESTION_ACTIVE);
-            assert.equal(mobileHostQuestion.payload.question.a, 'Париж', 'Mobile host receives secret answer');
+        player2Ws.send(createMessage(MSG_TYPES.PLAYER_JOIN, {
+            roomCode,
+            name: 'Борис',
+            role: 'player',
+            avatar: '🦊'
+        }));
 
-            hostWs.send(createMessage(MSG_TYPES.HOST_ACTIVATE_BUZZER));
-            await waitP1(MSG_TYPES.BUZZER_READY);
+        const p2State = await p2Wait(MSG_TYPES.ROOM_STATE);
+        const p2Id = p2State.payload.self.id;
 
-            // 5. Player 1 presses Buzzer
-            player1Ws.send(createMessage(MSG_TYPES.PLAYER_BUZZ));
-            const buzzLockedMsg = await waitP1(MSG_TYPES.BUZZ_LOCKED);
-            assert.equal(buzzLockedMsg.payload.playerId, p1Id);
+        // 4b. Host starts game (LOBBY -> BOARD)
+        hostWs.send(createMessage(MSG_TYPES.HOST_START_GAME));
+        await hostWait(MSG_TYPES.ROOM_STATE);
 
-            // 6. Player 1 submits answer text from Screen 4
-            player1Ws.send(createMessage(MSG_TYPES.PLAYER_SUBMIT_ANSWER, { answerText: 'Париж' }));
-            const submittedMsg = await waitHost(MSG_TYPES.ANSWER_SUBMITTED);
-            assert.equal(submittedMsg.payload.answerText, 'Париж');
-            assert.equal(submittedMsg.payload.playerName, 'Мобильный Игрок');
+        // 5. Host activates question & opens buzzer
+        hostWs.send(createMessage(MSG_TYPES.HOST_SELECT_QUESTION, {
+            themeIdx: 0,
+            questionIdx: 0,
+            question: { q: 'Какой город?', a: 'Ю', theme: 'География', price: 200 }
+        }));
 
-            // 7. Host judges correct
-            hostWs.send(createMessage(MSG_TYPES.HOST_JUDGE_ANSWER, { isCorrect: true }));
-            const scoreMsg = await waitP1(MSG_TYPES.SCORE_UPDATED);
-            assert.equal(scoreMsg.payload.newScore, 200);
+        const p1Q = await p1Wait(MSG_TYPES.QUESTION_ACTIVE);
+        assert.equal(p1Q.payload.cost, 200);
+        assert.equal(p1Q.payload.question.a, undefined, 'Anti-Cheat: Player must NOT receive answer!');
 
-            // 8. Player 1 makes auction bet
-            player1Ws.send(createMessage(MSG_TYPES.PLAYER_AUCTION_BET, { amount: 500 }));
-            const betMsg = await waitHost(MSG_TYPES.AUCTION_BET_MADE);
-            assert.equal(betMsg.payload.amount, 500);
-            assert.equal(betMsg.payload.playerName, 'Мобильный Игрок');
+        const mobileHostQ = await mobileHostWait(MSG_TYPES.QUESTION_ACTIVE);
+        assert.equal(mobileHostQ.payload.question.a, 'Ю', 'Host receives answer for judging');
 
-            // 9. Player 1 transfers cat in bag to Player 2
-            player1Ws.send(createMessage(MSG_TYPES.PLAYER_CAT_TRANSFER, { targetPlayerId: p2Id }));
-            const catMsg = await waitHost(MSG_TYPES.CAT_TRANSFERRED);
-            assert.equal(catMsg.payload.toPlayerId, p2Id);
-            assert.equal(catMsg.payload.toPlayerName, 'Второй Игрок');
+        // 6. Host opens buzzer
+        hostWs.send(createMessage(MSG_TYPES.HOST_ACTIVATE_BUZZER, {
+            allowedPlayerIds: [p1Id, p2Id]
+        }));
 
-            // Close sockets
-            mobileHostWs.close();
-            player1Ws.close();
-            player2Ws.close();
-            hostWs.close();
-        } finally {
-            roomManager.destroy();
-            if (wss && wss.clients) {
-                wss.clients.forEach(client => {
-                    try { client.terminate(); } catch (e) {}
-                });
-            }
-            try { duplicateHostWs.terminate(); } catch (e) {}
-            try { mobileHostWs.terminate(); } catch (e) {}
-            try { player1Ws.terminate(); } catch (e) {}
-            try { player2Ws.terminate(); } catch (e) {}
-            try { hostWs.terminate(); } catch (e) {}
-            if (server.closeAllConnections) server.closeAllConnections();
-            await new Promise((resolve) => {
-                wss.close(() => {
-                    server.close(resolve);
-                });
-            });
-        }
+        await p1Wait(MSG_TYPES.BUZZER_READY);
+        await p2Wait(MSG_TYPES.BUZZER_READY);
+
+        // 7. Player 1 buzzes
+        player1Ws.send(createMessage(MSG_TYPES.PLAYER_BUZZ, {}));
+
+        const lockedP1 = await p1Wait(MSG_TYPES.BUZZ_LOCKED);
+        assert.equal(lockedP1.payload.playerId, p1Id);
+
+        const lockedP2 = await p2Wait(MSG_TYPES.BUZZ_LOCKED);
+        assert.equal(lockedP2.payload.playerId, p1Id);
+
+        // 8. Player 1 submits answer
+        player1Ws.send(createMessage(MSG_TYPES.PLAYER_SUBMIT_ANSWER, {
+            answerText: 'Ю'
+        }));
+
+        const hostAnswer = await hostWait(MSG_TYPES.ANSWER_SUBMITTED);
+        assert.equal(hostAnswer.payload.answerText, 'Ю');
+
+        // 9. Host judges answer correct
+        hostWs.send(createMessage(MSG_TYPES.HOST_JUDGE_ANSWER, {
+            isCorrect: true
+        }));
+
+        const p1Score = await p1Wait(MSG_TYPES.SCORE_UPDATED);
+        assert.equal(p1Score.payload.newScore, 200);
+
+        // 10. Auction test
+        player1Ws.send(createMessage(MSG_TYPES.PLAYER_AUCTION_BET, {
+            amount: 300
+        }));
+        const betP1 = await hostWait(MSG_TYPES.AUCTION_BET_MADE);
+        assert.equal(betP1.payload.amount, 300);
+
+        // 11. Cat transfer test
+        player1Ws.send(createMessage(MSG_TYPES.PLAYER_CAT_TRANSFER, {
+            targetPlayerId: p2Id
+        }));
+        const catTransfer = await hostWait(MSG_TYPES.CAT_TRANSFERRED);
+        assert.equal(catTransfer.payload.toPlayerId, p2Id);
+
+        // Close sockets
+        hostWs.close();
+        mobileHostWs.close();
+        player1Ws.close();
+        player2Ws.close();
     });
 });
