@@ -1054,7 +1054,130 @@
     </div>
 </div>
 
-    <!-- Scripts -->
+    <!-- Modal: Правила игры по режимам (TASK-09) -->
+<div class="modal" id="rules-modal" style="display: none;">
+    <div class="modal-card rules-modal-card">
+        <div class="rules-modal-header">
+            <h2 class="rules-title">📖 Правила игры</h2>
+            <button class="btn-close-modal-x" type="button" onclick="closeRulesModal()" title="Закрыть">&times;</button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="rules-tabs-nav" id="rules-tabs-nav" role="tablist">
+            <button class="rules-tab-btn active" id="tab-btn-local" role="tab" aria-selected="true" onclick="switchRulesTab('local')">
+                <span class="tab-icon">🏠</span> Локальная игра
+            </button>
+            <button class="rules-tab-btn" id="tab-btn-lan" role="tab" aria-selected="false" onclick="switchRulesTab('lan')">
+                <span class="tab-icon">🌐</span> LAN-игра (со смартфонов)
+            </button>
+            <button class="rules-tab-btn" id="tab-btn-special" role="tab" aria-selected="false" onclick="switchRulesTab('special')">
+                <span class="tab-icon">🎁</span> Специальные вопросы
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="rules-content-scroll" id="rules-content-scroll">
+            <!-- TAB 1: Локальная игра -->
+            <div class="rules-tab-pane active" id="rules-tab-local" role="tabpanel">
+                <div class="rules-block">
+                    <div class="rules-section-title">🎯 Основная цель и ход игры</div>
+                    <ul class="rules-list">
+                        <li>🏆 <b>Цель партии:</b> набрать больше очков, чем соперники, правильно отвечая на вопросы основных раундов и финала.</li>
+                        <li>📊 <b>Игровое табло:</b> выбирайте тему и стоимость на поле. Чем выше номинал — тем сложнее вопрос.</li>
+                        <li>🔄 <b>Очередность ходов:</b> после ответа ход автоматически переходит следующей команде. Ведущий также может вручную назначить ход кнопкой <b>«Передать ход»</b>.</li>
+                    </ul>
+                </div>
+
+                <div class="rules-block">
+                    <div class="rules-section-title">⌨️ Управление клавишами за общим экраном</div>
+                    <ul class="rules-list">
+                        <li><kbd class="rules-kbd">Пробел</kbd> — запуск таймера ответа команды или постановка таймера на паузу.</li>
+                        <li><kbd class="rules-kbd">P</kbd> или <kbd class="rules-kbd">З</kbd> — общая пауза / возобновление игрового таймера вопроса.</li>
+                        <li><kbd class="rules-kbd">Enter</kbd> или клик — показать правильный ответ, пояснение и медиаматериалы.</li>
+                        <li><kbd class="rules-kbd">Esc</kbd> — закрытие активных модальных окон и подсказок.</li>
+                    </ul>
+                </div>
+
+                <div class="rules-block">
+                    <div class="rules-section-title">💰 Подсчёт очков и судейство</div>
+                    <ul class="rules-list">
+                        <li><span class="rules-tag rules-tag-green">Плюс</span> <b>Верный ответ:</b> команда получает полную стоимость вопроса в свой банк.</li>
+                        <li><span class="rules-tag rules-tag-red">Минус</span> <b>Неверный ответ:</b> номинал вопроса вычитается из счёта ответившей команды.</li>
+                        <li><span class="rules-tag rules-tag-gold">Бонус</span> <b>«⚡ Очки всем»:</b> быстрая кнопка в верхней панели для одновременного начисления или снятия баллов всем командам.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- TAB 2: LAN-игра -->
+            <div class="rules-tab-pane" id="rules-tab-lan" role="tabpanel" style="display: none;">
+                <div class="rules-block">
+                    <div class="rules-section-title">📡 Подключение со смартфонов</div>
+                    <ul class="rules-list">
+                        <li>📶 <b>Одна сеть:</b> главный экран и смартфоны участников должны быть в одной Wi-Fi сети.</li>
+                        <li>📷 <b>Быстрый вход:</b> отсканируйте QR-код на экране лобби или введите короткий 4-значный код комнаты.</li>
+                        <li>🎭 <b>Выбор роли при входе:</b> подключитесь как <b>«Игрок»</b> 🎯 или <b>«Ведущий»</b> 🎙️.</li>
+                    </ul>
+                </div>
+
+                <div class="rules-block">
+                    <div class="rules-section-title">👥 Роли: Ведущий и Игроки</div>
+                    <ul class="rules-list">
+                        <li>🎙️ <b>Ведущий (Host):</b> держит полный мобильный пульт управления: видит скрытые ответы, кнопки быстрого судейства (<b>«Зачесть»</b> / <b>«Отклонить»</b>), управление таймером, паузой и показ ответов на ТВ.</li>
+                        <li>🎯 <b>Игроки (Players):</b> экран смартфона становится сенсорной кнопкой ответа (Buzzer) с вибрацией при нажатии.</li>
+                    </ul>
+                </div>
+
+                <div class="rules-block">
+                    <div class="rules-section-title">⚡ Гонка баззеров и тайминги</div>
+                    <ul class="rules-list">
+                        <li>⏳ <b>Время на чтение:</b> диктор зачитывает вопрос (в этот момент баззеры заблокированы от фальстарта).</li>
+                        <li>🚨 <b>Окно баззера:</b> кнопка загорается — первый нажавший блокирует соперников и начинает отвечать.</li>
+                        <li>⏱️ <b>Персональный таймер:</b> у отвечающего игрока идёт персональный отсчёт, а общий таймер вопроса на ТВ замирает.</li>
+                        <li>⚖️ <b>Штрафы и второй шанс:</b> при неверном ответе списываются очки, а баззер снова открывается для остальных игроков.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- TAB 3: Специальные вопросы -->
+            <div class="rules-tab-pane" id="rules-tab-special" role="tabpanel" style="display: none;">
+                <div class="rules-block">
+                    <div class="rules-section-title">🐱 «Кот в мешке» (Секретный вопрос)</div>
+                    <ul class="rules-list">
+                        <li>🚫 Выбравшая команда <b>не может отвечать сама</b> — она обязана подарить кота любому сопернику!</li>
+                        <li>📦 Тема и стоимость объявляются только после передачи вопроса принимающей команде.</li>
+                        <li>⏸️ До подтверждения передачи вопроса таймер раунда стоит на паузе.</li>
+                    </ul>
+                </div>
+
+                <div class="rules-block">
+                    <div class="rules-section-title">🔨 «Аукцион» (Торги за вопрос)</div>
+                    <ul class="rules-list">
+                        <li>💰 <b>Открытые торги:</b> команды повышают ставки, начиная с номинала вопроса.</li>
+                        <li>🔥 <b>Лимит ставки:</b> сумма ставки ограничена балансом команды или ставкой «Ва-банк».</li>
+                        <li>👑 <b>Право ответа:</b> отвечает только та команда, чья ставка оказалась наивысшей («Аукцион Лидер»). За верный ответ начисляется ставка, при ошибке — списывается.</li>
+                    </ul>
+                </div>
+
+                <div class="rules-block">
+                    <div class="rules-section-title">🔒 «Вопрос без передачи» и Финал</div>
+                    <ul class="rules-list">
+                        <li>🎯 <b>Без передачи:</b> вопрос закрепляется исключительно за текущей командой — соперники не могут перехватить его баззером.</li>
+                        <li>🏁 <b>Финальный раунд:</b> команды тайно делают ставки на решающий вопрос тура. Итоги финала определяют абсолютного победителя партии!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer / Action -->
+        <div class="modal-controls rules-modal-footer">
+            <button class="btn btn-check" id="btn-close-rules" onclick="closeRulesModal()">
+                👍 Понятно
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
 <!-- KaTeX Math Renderer with offline fallback -->
 <!-- Core Quiz Engine Modules -->
 <script src="js/core/PackParser.js"></script>

@@ -55,7 +55,8 @@ describe('Navigation & DOM Integrity Tests', () => {
       'turn-order-modal',
       'cat-splash-overlay',
       'auction-splash-overlay',
-      'pack-preview-modal'
+      'pack-preview-modal',
+      'rules-modal'
     ];
 
     for (const modalId of requiredModals) {
