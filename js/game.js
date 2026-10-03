@@ -896,9 +896,65 @@
         }
     }
 
+    let onlineAnswerCountdownInterval = null;
+
+    function stopOnlineAnswerCountdown() {
+        if (onlineAnswerCountdownInterval) {
+            clearInterval(onlineAnswerCountdownInterval);
+            onlineAnswerCountdownInterval = null;
+        }
+        const ringWrap = document.getElementById('online-buzzer-ring-wrap');
+        if (ringWrap) ringWrap.style.display = 'none';
+    }
+
+    function startOnlineAnswerCountdown(seconds) {
+        stopOnlineAnswerCountdown();
+
+        const ringWrap = document.getElementById('online-buzzer-ring-wrap');
+        const ringProgress = document.getElementById('online-buzzer-ring-progress');
+        const ringSecs = document.getElementById('online-buzzer-ring-seconds');
+        const circumference = 2 * Math.PI * 42; // ~263.89
+
+        if (ringWrap) ringWrap.style.display = 'flex';
+        if (ringSecs) ringSecs.textContent = seconds;
+        if (ringProgress) {
+            ringProgress.style.strokeDasharray = `${circumference}`;
+            ringProgress.style.strokeDashoffset = '0';
+            ringProgress.style.stroke = '#fdcb6e';
+        }
+
+        const stepMs = 100;
+        const totalSteps = (seconds * 1000) / stepMs;
+        let currentStep = totalSteps;
+
+        onlineAnswerCountdownInterval = setInterval(() => {
+            currentStep--;
+            const progress = Math.max(0, currentStep / totalSteps);
+            const secsLeft = Math.ceil(progress * seconds);
+
+            if (ringSecs) ringSecs.textContent = secsLeft;
+            if (ringProgress) {
+                ringProgress.style.strokeDashoffset = `${circumference * (1 - progress)}`;
+                if (progress <= 0.3) {
+                    ringProgress.style.stroke = '#ff7675';
+                } else if (progress <= 0.6) {
+                    ringProgress.style.stroke = '#f39c12';
+                } else {
+                    ringProgress.style.stroke = '#fdcb6e';
+                }
+            }
+
+            if (currentStep <= 0) {
+                stopOnlineAnswerCountdown();
+                playTimeUpSound();
+            }
+        }, stepMs);
+    }
+
     function stopTimer() {
         isGlobalTimerPaused = false;
         pausedTimerData = null;
+        stopOnlineAnswerCountdown();
         if (timerInterval) {
             clearInterval(timerInterval);
             timerInterval = null;
@@ -3476,6 +3532,10 @@
         }
     }
 
+    function openPreGameSettings() {
+        showSubScreen('sub-menu-settings');
+    }
+
     function openOnlineLobby() {
         isOnlineGame = true;
         showSubScreen('sub-menu-online-lobby');
@@ -3645,17 +3705,59 @@
             activeOnlineBuzzer = payload;
             playBuzzerSound();
 
+            // Pause common question timer (TASK-02)
+            if (timerInterval) {
+                savedThinkingTime = timeLeft;
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            isAnswerTimerActive = true;
+
+            const timerElem = document.getElementById('timer');
+            const hintElem = document.getElementById('timer-hint');
+            if (timerElem) {
+                timerElem.classList.add('paused');
+            }
+            if (hintElem) {
+                hintElem.textContent = '⏳ Общий таймер на паузе (ответ игрока)';
+                hintElem.style.color = '#fdcb6e';
+            }
+
+            // Stylized answering banner (TASK-02)
             const banner = document.getElementById('online-buzzer-banner');
+            const icon = document.getElementById('online-buzzer-icon');
+            const avatar = document.getElementById('online-buzzer-avatar');
+            const status = document.getElementById('online-buzzer-status');
+            const text = document.getElementById('online-buzzer-text');
+
             if (banner) {
                 banner.style.display = 'flex';
                 banner.className = 'online-buzzer-banner buzzer-answering';
-                const text = document.getElementById('online-buzzer-text');
-                if (text) text.innerHTML = `📢 Отвечает: <b>${payload.playerName}</b>!`;
             }
+            if (icon) icon.style.display = 'none';
+            if (avatar) {
+                avatar.style.display = 'flex';
+                avatar.textContent = payload.avatar || '👤';
+            }
+            if (status) {
+                status.style.display = 'block';
+                status.textContent = 'Отвечает игрок:';
+            }
+            if (text) {
+                text.innerHTML = `<b>${payload.playerName}</b>`;
+            }
+
+            // Start synchronized circular countdown ring (TASK-02)
+            const ansSeconds = payload.answerTime || configAnswerTime || 5;
+            startOnlineAnswerCountdown(ansSeconds);
 
             const teamIdx = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
             if (teamIdx !== -1) {
                 activeTeamIdxForQuestion = teamIdx;
+                if (avatar) {
+                    avatar.style.boxShadow = `0 0 16px ${teams[teamIdx].color || '#00b894'}`;
+                    avatar.style.borderColor = teams[teamIdx].color || '#55efc4';
+                }
             }
 
             const btnArea = document.getElementById('modal-buttons-area');
@@ -3685,10 +3787,19 @@
 
         hostNetworkClient.on('buzzer_ready', () => {
             activeOnlineBuzzer = null;
+            stopOnlineAnswerCountdown();
             const banner = document.getElementById('online-buzzer-banner');
+            const icon = document.getElementById('online-buzzer-icon');
+            const avatar = document.getElementById('online-buzzer-avatar');
+            const status = document.getElementById('online-buzzer-status');
+            const ring = document.getElementById('online-buzzer-ring-wrap');
             if (banner) {
                 banner.style.display = 'flex';
                 banner.className = 'online-buzzer-banner';
+                if (icon) icon.style.display = 'block';
+                if (avatar) avatar.style.display = 'none';
+                if (status) status.style.display = 'none';
+                if (ring) ring.style.display = 'none';
                 const text = document.getElementById('online-buzzer-text');
                 if (text) text.textContent = '🔔 Кнопка активна! Игроки могут нажимать на смартфонах';
             }
@@ -3696,17 +3807,28 @@
 
         hostNetworkClient.on('answer_timeout', () => {
             activeOnlineBuzzer = null;
+            stopOnlineAnswerCountdown();
             const banner = document.getElementById('online-buzzer-banner');
+            const icon = document.getElementById('online-buzzer-icon');
+            const avatar = document.getElementById('online-buzzer-avatar');
+            const status = document.getElementById('online-buzzer-status');
+            const ring = document.getElementById('online-buzzer-ring-wrap');
             if (banner) {
                 banner.className = 'online-buzzer-banner';
+                banner.style.display = 'flex';
+                if (icon) icon.style.display = 'block';
+                if (avatar) avatar.style.display = 'none';
+                if (status) status.style.display = 'none';
+                if (ring) ring.style.display = 'none';
                 const text = document.getElementById('online-buzzer-text');
-                if (text) text.textContent = '⏰ Время на ответ вышло!';
+                if (text) text.textContent = '⏰ Время на ответ истекло!';
             }
         });
 
         // Remote Host Game Controls (TASK-04)
         hostNetworkClient.on('judge_result', (payload) => {
-            if (payload.playerId) {
+            stopOnlineAnswerCountdown();
+            if (payload.playerId && (!activeOnlineBuzzer || !activeOnlineBuzzer.judgedLocally)) {
                 const teamIdx = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
                 if (teamIdx !== -1) {
                     const delta = payload.isCorrect ? payload.cost : -payload.cost;
@@ -3717,10 +3839,53 @@
                 showAnswer();
             } else {
                 const banner = document.getElementById('online-buzzer-banner');
-                if (banner) {
-                    banner.className = 'online-buzzer-banner';
-                    const text = document.getElementById('online-buzzer-text');
-                    if (text) text.textContent = '❌ Неверно! Кнопка снова активна для остальных игроков';
+                const icon = document.getElementById('online-buzzer-icon');
+                const avatar = document.getElementById('online-buzzer-avatar');
+                const status = document.getElementById('online-buzzer-status');
+                const ring = document.getElementById('online-buzzer-ring-wrap');
+                const text = document.getElementById('online-buzzer-text');
+
+                if (payload.reopened) {
+                    if (banner) {
+                        banner.className = 'online-buzzer-banner';
+                        banner.style.display = 'flex';
+                    }
+                    if (icon) icon.style.display = 'block';
+                    if (avatar) avatar.style.display = 'none';
+                    if (status) status.style.display = 'none';
+                    if (ring) ring.style.display = 'none';
+                    if (text) text.textContent = '🔔 Неверно! Кнопка снова активна для остальных игроков';
+
+                    const btnArea = document.getElementById('modal-buttons-area');
+                    if (btnArea) {
+                        btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
+                    }
+
+                    // Resume common question countdown if time remains (TASK-02)
+                    isAnswerTimerActive = false;
+                    const timerElem = document.getElementById('timer');
+                    const hintElem = document.getElementById('timer-hint');
+                    if (timerElem) timerElem.classList.remove('paused');
+                    if (hintElem) {
+                        hintElem.textContent = '🔥 Время пошло! Обсуждение';
+                        hintElem.style.color = '#ff7675';
+                    }
+
+                    if (savedThinkingTime > 0) {
+                        timeLeft = savedThinkingTime;
+                        startTimer();
+                    }
+                } else {
+                    if (banner) {
+                        banner.className = 'online-buzzer-banner';
+                        banner.style.display = 'flex';
+                    }
+                    if (icon) icon.style.display = 'block';
+                    if (avatar) avatar.style.display = 'none';
+                    if (status) status.style.display = 'none';
+                    if (ring) ring.style.display = 'none';
+                    if (text) text.textContent = '❌ Неверно! Никто не ответил правильно';
+                    showAnswer();
                 }
             }
         });
@@ -3953,9 +4118,10 @@
 
     function judgeOnlineAnswer(isCorrect) {
         if (!isOnlineGame || !hostNetworkClient) return;
-        hostNetworkClient.judgeAnswer(isCorrect);
+        stopOnlineAnswerCountdown();
 
         if (activeOnlineBuzzer) {
+            activeOnlineBuzzer.judgedLocally = true;
             const teamIdx = teams.findIndex(t => t.id === activeOnlineBuzzer.playerId || t.name === activeOnlineBuzzer.playerName);
             if (teamIdx !== -1) {
                 const penalty = getPenaltyDeduction(currentCost);
@@ -3964,18 +4130,46 @@
             }
         }
 
+        hostNetworkClient.judgeAnswer(isCorrect);
+
         if (isCorrect) {
             showAnswer();
         } else {
             const banner = document.getElementById('online-buzzer-banner');
+            const icon = document.getElementById('online-buzzer-icon');
+            const avatar = document.getElementById('online-buzzer-avatar');
+            const status = document.getElementById('online-buzzer-status');
+            const ring = document.getElementById('online-buzzer-ring-wrap');
+            const text = document.getElementById('online-buzzer-text');
+
             if (banner) {
                 banner.className = 'online-buzzer-banner';
-                const text = document.getElementById('online-buzzer-text');
-                if (text) text.textContent = '❌ Неверно! Кнопка снова активна для остальных игроков';
+                banner.style.display = 'flex';
             }
+            if (icon) icon.style.display = 'block';
+            if (avatar) avatar.style.display = 'none';
+            if (status) status.style.display = 'none';
+            if (ring) ring.style.display = 'none';
+            if (text) text.textContent = '🔔 Неверно! Кнопка снова активна для остальных игроков';
+
             const btnArea = document.getElementById('modal-buttons-area');
             if (btnArea) {
                 btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
+            }
+
+            // Resume common question countdown if time remains (TASK-02)
+            isAnswerTimerActive = false;
+            const timerElem = document.getElementById('timer');
+            const hintElem = document.getElementById('timer-hint');
+            if (timerElem) timerElem.classList.remove('paused');
+            if (hintElem) {
+                hintElem.textContent = '🔥 Время пошло! Обсуждение';
+                hintElem.style.color = '#ff7675';
+            }
+
+            if (savedThinkingTime > 0) {
+                timeLeft = savedThinkingTime;
+                startTimer();
             }
         }
     }
@@ -3992,6 +4186,7 @@
         window.openLobbySettingsModal = openLobbySettingsModal;
         window.closeLobbySettingsModal = closeLobbySettingsModal;
         window.saveLobbySettings = saveLobbySettings;
+        window.openPreGameSettings = openPreGameSettings;
         window.toggleLobbyPenaltyInputs = toggleLobbyPenaltyInputs;
         window.getLobbySettings = getLobbySettings;
         window.syncLobbySettings = syncLobbySettings;

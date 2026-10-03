@@ -203,7 +203,13 @@
                 <div class="answer-card">
                     <div class="answer-header">
                         <div class="badge-success">ВЫ ОТВЕЧАЕТЕ!</div>
-                        <div class="timer-countdown" id="answer-timer-num">5</div>
+                        <div class="answer-timer-ring-container">
+                            <svg class="mobile-ring-svg" viewBox="0 0 100 100">
+                                <circle class="mobile-ring-bg" cx="50" cy="50" r="42"></circle>
+                                <circle class="mobile-ring-progress" id="mobile-answer-ring-progress" cx="50" cy="50" r="42"></circle>
+                            </svg>
+                            <div class="timer-countdown" id="answer-timer-num">5</div>
+                        </div>
                     </div>
 
                     <div class="timer-bar-wrap">

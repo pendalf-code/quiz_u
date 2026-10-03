@@ -8,15 +8,40 @@ const rootDir = path.resolve(__dirname, '..');
 describe('Host Lobby & Network Client Integration Tests', () => {
     const htmlContent = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
 
-    test('index.html contains dual-mode launch buttons in main menu', () => {
+    test('TASK-06, 07, 08, 10, 11, 12: main menu mode buttons and navigation cleanup', () => {
+        // TASK-06: Local game without "(один экран)"
         assert.ok(
-            htmlContent.includes('checkSavedGame()') && htmlContent.includes('Локальная игра (один экран)'),
+            htmlContent.includes('checkSavedGame()') && htmlContent.includes('Локальная игра'),
             'Local game button must be present in sub-menu-main'
         );
         assert.ok(
-            htmlContent.includes('openOnlineLobby()') && htmlContent.includes('Создать онлайн-комнату (Jackbox-режим)'),
-            'Online lobby button must be present in sub-menu-main'
+            !htmlContent.includes('Локальная игра (один экран)'),
+            'TASK-06: "один экран" subtitle must be removed'
         );
+
+        // TASK-07: LAN game
+        assert.ok(
+            htmlContent.includes('openOnlineLobby()') && htmlContent.includes('LAN-игра'),
+            'TASK-07: LAN-game button must be present in sub-menu-main'
+        );
+
+        // TASK-08: Disabled WAN button
+        assert.ok(
+            htmlContent.includes('btn-menu-wan') && htmlContent.includes('Сетевая игра') && htmlContent.includes('Скоро'),
+            'TASK-08: Disabled WAN game button with badge must exist'
+        );
+
+        // TASK-10, 11, 12: Cleaned up main menu
+        const menuIdx = htmlContent.indexOf('id="sub-menu-main"');
+        const nextScreenIdx = htmlContent.indexOf('id="sub-menu-prepare-choice"');
+        const mainMenuSlice = htmlContent.slice(menuIdx, nextScreenIdx);
+
+        assert.ok(!mainMenuSlice.includes('btn-menu-settings'), 'TASK-10: Settings button removed from main menu');
+        assert.ok(!mainMenuSlice.includes('btn-menu-dev'), 'TASK-11: Dev button removed from main menu');
+        assert.ok(!mainMenuSlice.includes('btn-menu-packs'), 'TASK-12: Prepare questions button removed from main menu');
+
+        // Pre-game settings access (TASK-10)
+        assert.ok(htmlContent.includes('openPreGameSettings()'), 'TASK-10: Pre-game settings access in team setup');
     });
 
     test('index.html contains #sub-menu-online-lobby with all required elements', () => {
@@ -30,9 +55,12 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         assert.ok(htmlContent.includes('id="btn-copy-room-code"'), 'Copy room code button must exist');
     });
 
-    test('index.html contains in-game #online-buzzer-banner in modal', () => {
+    test('TASK-02: index.html contains in-game #online-buzzer-banner with answering avatar and SVG ring', () => {
         assert.ok(htmlContent.includes('id="online-buzzer-banner"'), 'Buzzer banner container must exist');
         assert.ok(htmlContent.includes('id="online-buzzer-text"'), 'Buzzer text element must exist');
+        assert.ok(htmlContent.includes('id="online-buzzer-avatar"'), 'TASK-02: Buzzer avatar element must exist');
+        assert.ok(htmlContent.includes('id="online-buzzer-ring-progress"'), 'TASK-02: Circular SVG progress ring must exist');
+        assert.ok(htmlContent.includes('id="online-buzzer-ring-seconds"'), 'TASK-02: Answering seconds display must exist');
     });
 
     test('index.html references required network scripts in correct order', () => {
@@ -170,4 +198,33 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         assert.ok(gameJsContent.includes('lobby-role-badge'), 'Player chip rendering must include role badges');
         assert.ok(gameJsContent.includes('lobby-player-ping'), 'Player chip rendering must include ping indicator');
     });
+    test('TASK-02: Visual answering player banner, common timer freeze and circular countdown ring', () => {
+        const cssContent = fs.readFileSync(path.join(rootDir, 'css', 'style.css'), 'utf8');
+        const gameJsContent = fs.readFileSync(path.join(rootDir, 'js', 'game.js'), 'utf8');
+        const mobileHtml = fs.readFileSync(path.join(rootDir, 'mobile', 'index.html'), 'utf8');
+        const mobileCss = fs.readFileSync(path.join(rootDir, 'mobile', 'mobile.css'), 'utf8');
+        const mobileJs = fs.readFileSync(path.join(rootDir, 'mobile', 'mobile.js'), 'utf8');
+
+        // TV / Host Screen elements & styles (TASK-02)
+        assert.ok(htmlContent.includes('id="online-buzzer-avatar"'), 'Answering avatar element exists');
+        assert.ok(htmlContent.includes('id="online-buzzer-ring-wrap"'), 'Circular progress ring wrap exists');
+        assert.ok(htmlContent.includes('id="online-buzzer-ring-progress"'), 'Circular progress ring SVG circle exists');
+        assert.ok(htmlContent.includes('id="online-buzzer-ring-seconds"'), 'Circular countdown seconds element exists');
+
+        assert.ok(cssContent.includes('.online-buzzer-avatar'), '.online-buzzer-avatar CSS exists');
+        assert.ok(cssContent.includes('.online-ring-progress'), '.online-ring-progress CSS exists');
+        assert.ok(cssContent.includes('.timer.paused'), '.timer.paused CSS exists for timer freeze');
+
+        // Game.js synchronization & timer pause (TASK-02)
+        assert.ok(gameJsContent.includes('startOnlineAnswerCountdown'), 'startOnlineAnswerCountdown function exists');
+        assert.ok(gameJsContent.includes('stopOnlineAnswerCountdown'), 'stopOnlineAnswerCountdown function exists');
+        assert.ok(gameJsContent.includes('timerElem.classList.add(\'paused\')'), 'Common question timer paused when buzzer locked');
+        assert.ok(gameJsContent.includes('timerElem.classList.remove(\'paused\')'), 'Common timer unpaused when answer rejected and reopened');
+
+        // Mobile Screen circular timer & synchronization (TASK-02)
+        assert.ok(mobileHtml.includes('id="mobile-answer-ring-progress"'), 'Mobile circular progress ring exists');
+        assert.ok(mobileCss.includes('.mobile-ring-progress'), 'Mobile circular ring CSS exists');
+        assert.ok(mobileJs.includes('mobile-answer-ring-progress'), 'Mobile JS animates circular ring synchronously');
+    });
+
 });

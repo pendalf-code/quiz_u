@@ -539,6 +539,7 @@ class Room {
         this.broadcastToAll(MSG_TYPES.BUZZ_LOCKED, {
             playerId,
             playerName: player.name,
+            avatar: player.avatar || '👤',
             cost: this.currentCost,
             answerTime: ansTime
         });
