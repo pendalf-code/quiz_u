@@ -672,12 +672,12 @@
                         <!-- Game & Timer Settings Bar in Hub (TASK-01) -->
                         <div class="lobby-settings-bar" id="lobby-settings-bar">
                             <div class="lobby-settings-header-row">
-                                <div class="lobby-settings-header-label">⚙️ Правила и тайминги</div>
-                                <button type="button" class="btn-configure-lobby-settings" id="btn-open-lobby-settings" onclick="openLobbySettingsModal()" title="Настроить тайминги и штрафы">
+                                <div class="lobby-settings-header-label">⚙️ Настройки</div>
+                                <button type="button" class="btn-configure-lobby-settings" id="btn-open-lobby-settings" onclick="openLobbySettingsModal()" title="Настройки игры, таймеров и штрафов">
                                     ✏️ Изменить
                                 </button>
                             </div>
-                            <div class="lobby-settings-chips" id="lobby-settings-chips" onclick="openLobbySettingsModal()" title="Нажмите для настройки таймеров и штрафов">
+                            <div class="lobby-settings-chips" id="lobby-settings-chips" onclick="openLobbySettingsModal()" title="Нажмите для изменения настроек">
                                 <span class="setting-summary-chip" id="chip-reading-time">⏱️ Чтение: 7с</span>
                                 <span class="setting-summary-chip" id="chip-thinking-time">🔥 Баззер: 30с</span>
                                 <span class="setting-summary-chip" id="chip-answer-time">🎤 Ответ: 5с</span>
@@ -1004,7 +1004,7 @@
 <div class="modal" id="lobby-settings-modal" style="display: none;">
     <div class="modal-card lobby-settings-modal-card">
         <div class="lobby-settings-modal-header">
-            <h2 class="lobby-settings-modal-title">⚙️ Настройки игры и таймеров</h2>
+            <h2 class="lobby-settings-modal-title">⚙️ Настройки игры</h2>
             <button class="btn-close-modal-x" type="button" onclick="closeLobbySettingsModal()">&times;</button>
         </div>
 
@@ -1124,6 +1124,12 @@
                         <li><span class="rules-tag rules-tag-gold">Бонус</span> <b>«⚡ Очки всем»:</b> быстрая кнопка в верхней панели для одновременного начисления или снятия баллов всем командам.</li>
                     </ul>
                 </div>
+                <!-- Mode Switcher Navigation -->
+                <div class="rules-tab-footer-nav">
+                    <button type="button" class="btn-rules-nav-next" onclick="switchRulesTab('lan')">
+                        📡 Перейти к правилам LAN-игры &rarr;
+                    </button>
+                </div>
             </div>
 
             <!-- TAB 2: LAN-игра -->
@@ -1154,6 +1160,15 @@
                         <li>⚖️ <b>Штрафы и второй шанс:</b> при неверном ответе списываются очки, а баззер снова открывается для остальных игроков.</li>
                     </ul>
                 </div>
+                <!-- Mode Switcher Navigation -->
+                <div class="rules-tab-footer-nav">
+                    <button type="button" class="btn-rules-nav-prev" onclick="switchRulesTab('local')">
+                        &larr; 🎮 Локальная игра
+                    </button>
+                    <button type="button" class="btn-rules-nav-next" onclick="switchRulesTab('special')">
+                        ✨ Спец-вопросы &rarr;
+                    </button>
+                </div>
             </div>
 
             <!-- TAB 3: Специальные вопросы -->
@@ -1182,6 +1197,15 @@
                         <li>🎯 <b>Без передачи:</b> вопрос закрепляется исключительно за текущей командой — соперники не могут перехватить его баззером.</li>
                         <li>🏁 <b>Финальный раунд:</b> команды тайно делают ставки на решающий вопрос тура. Итоги финала определяют абсолютного победителя партии!</li>
                     </ul>
+                </div>
+                <!-- Mode Switcher Navigation -->
+                <div class="rules-tab-footer-nav">
+                    <button type="button" class="btn-rules-nav-prev" onclick="switchRulesTab('lan')">
+                        &larr; 📡 LAN-игра
+                    </button>
+                    <button type="button" class="btn-rules-nav-next" onclick="switchRulesTab('local')">
+                        🎮 К началу (Локальная)
+                    </button>
                 </div>
             </div>
         </div>

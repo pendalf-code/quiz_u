@@ -38,6 +38,7 @@
             this.enabled = options.enabled !== false;
             this.focusedElement = null;
             this.activeGamepadIndex = null;
+            this.isGamepadActive = false; // Only active when a gamepad is actually transmitting input
             this.lastNavTime = 0;
             this.prevButtonStates = {};
             this.pollingRafId = null;
@@ -49,6 +50,7 @@
             this.boundOnConnected = this.onGamepadConnected.bind(this);
             this.boundOnDisconnected = this.onGamepadDisconnected.bind(this);
             this.boundOnKeyDown = this.onKeyDown.bind(this);
+            this.boundOnPointerInteraction = this.onPointerInteraction.bind(this);
         }
 
         /**
@@ -60,6 +62,8 @@
             window.addEventListener('gamepadconnected', this.boundOnConnected);
             window.addEventListener('gamepaddisconnected', this.boundOnDisconnected);
             window.addEventListener('keydown', this.boundOnKeyDown);
+            window.addEventListener('mousedown', this.boundOnPointerInteraction);
+            window.addEventListener('touchstart', this.boundOnPointerInteraction);
 
             // Expose globally for UI handlers
             window.toggleFullscreen = this.toggleFullscreen.bind(this);
@@ -76,8 +80,18 @@
             window.removeEventListener('gamepadconnected', this.boundOnConnected);
             window.removeEventListener('gamepaddisconnected', this.boundOnDisconnected);
             window.removeEventListener('keydown', this.boundOnKeyDown);
+            window.removeEventListener('mousedown', this.boundOnPointerInteraction);
+            window.removeEventListener('touchstart', this.boundOnPointerInteraction);
 
             this.stopPolling();
+            this.clearFocus();
+        }
+
+        /**
+         * User interacted via mouse or touch: clear gamepad focus outline immediately
+         */
+        onPointerInteraction() {
+            this.isGamepadActive = false;
             this.clearFocus();
         }
 
@@ -97,6 +111,7 @@
         onGamepadConnected(e) {
             const gp = e.gamepad;
             this.activeGamepadIndex = gp.index;
+            this.isGamepadActive = true;
             this.showToast(`🎮 Подключен геймпад: ${gp.id.split('(')[0].trim() || 'Controller'}`);
             this.ensureInitialFocus();
         }
@@ -105,6 +120,8 @@
             this.showToast(`🔌 Геймпад отключен: ${e.gamepad.id.split('(')[0].trim()}`);
             if (this.activeGamepadIndex === e.gamepad.index) {
                 this.activeGamepadIndex = null;
+                this.isGamepadActive = false;
+                this.clearFocus();
             }
         }
 
@@ -206,9 +223,12 @@
             if (dpadLeft || leftX < -STICK_DEADZONE) dirX = -1;
             else if (dpadRight || leftX > STICK_DEADZONE) dirX = 1;
 
-            if ((dirX !== 0 || dirY !== 0) && (now - this.lastNavTime > NAVIGATION_REPEAT_DELAY_MS)) {
-                this.lastNavTime = now;
-                this.navigateDirection(dirX, dirY);
+            if (dirX !== 0 || dirY !== 0) {
+                this.isGamepadActive = true;
+                if (now - this.lastNavTime > NAVIGATION_REPEAT_DELAY_MS) {
+                    this.lastNavTime = now;
+                    this.navigateDirection(dirX, dirY);
+                }
             }
 
             // 2. Process Action Buttons (Rising Edge Detection)
@@ -230,6 +250,7 @@
             const wasDown = Boolean(this.prevButtonStates[btnIdx]);
 
             if (isDown && !wasDown) {
+                this.isGamepadActive = true;
                 if (typeof this.onButtonPress === 'function') {
                     this.onButtonPress(btnName, btnIdx);
                 }
@@ -291,9 +312,9 @@
             }
 
             // 3. Check if Sub-screen is active (Settings, Dev, Catalog, Editor, Prepare Choice, Team Setup)
-            const activeSub = document.querySelector('.start-menu-container > div:not([style*="display: none"])');
+            const activeSub = document.querySelector('.start-menu-container > div:not([style*=\"display: none\"])');
             if (activeSub && activeSub.id && activeSub.id !== 'sub-menu-main') {
-                const backBtn = activeSub.querySelector('.btn-close-modal, .catalog-top-back-btn, .btn-back-lobby, .btn-back, [onclick*="showSubScreen"], [onclick*="backToMainMenu"]');
+                const backBtn = activeSub.querySelector('.btn-close-modal, .catalog-top-back-btn, .btn-back-lobby, .btn-back, [onclick*=\"showSubScreen\"], [onclick*=\"backToMainMenu\"]');
                 if (backBtn) {
                     backBtn.click();
                     return;
@@ -495,7 +516,7 @@
             }
 
             // 2. If Turn Order or Cat / Auction modal active
-            const activeModal = document.querySelector('.modal[style*="display: block"], .modal.active');
+            const activeModal = document.querySelector('.modal[style*=\"display: block\"], .modal.active');
             if (activeModal) {
                 return Array.from(activeModal.querySelectorAll('button:not([disabled]), input:not([disabled])'))
                     .filter(el => el.offsetParent !== null);
@@ -558,7 +579,10 @@
             }
         }
 
-        ensureInitialFocus() {
+        ensureInitialFocus(force = false) {
+            // Only auto-focus with outline if a gamepad is active or forced
+            if (!this.isGamepadActive && !force) return;
+
             const elements = this.getFocusableElements();
             if (elements.length > 0 && (!this.focusedElement || !elements.includes(this.focusedElement))) {
                 this.setFocus(elements[0]);

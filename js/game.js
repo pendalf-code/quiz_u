@@ -2673,11 +2673,55 @@
         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
         if (activeTag === 'input' || activeTag === 'textarea') return;
 
+        const lobbySettingsModal = document.getElementById('lobby-settings-modal');
+        if (lobbySettingsModal && (lobbySettingsModal.classList.contains('active') || lobbySettingsModal.style.display === 'flex')) {
+            if (event.key === 'Escape' || event.code === 'Escape') {
+                event.preventDefault();
+                closeLobbySettingsModal();
+                return;
+            }
+        }
+
         const rulesModal = document.getElementById('rules-modal');
         if (rulesModal && (rulesModal.classList.contains('active') || rulesModal.style.display === 'flex')) {
             if (event.key === 'Escape' || event.code === 'Escape') {
                 event.preventDefault();
                 closeRulesModal();
+                return;
+            }
+            if (event.key === 'ArrowRight' || event.code === 'ArrowRight') {
+                event.preventDefault();
+                const tabs = ['local', 'lan', 'special'];
+                const activeBtn = rulesModal.querySelector('.rules-tab-btn.active');
+                const currentId = activeBtn ? activeBtn.id.replace('tab-btn-', '') : 'local';
+                const curIdx = tabs.indexOf(currentId);
+                const nextTab = tabs[(curIdx + 1) % tabs.length];
+                switchRulesTab(nextTab);
+                return;
+            }
+            if (event.key === 'ArrowLeft' || event.code === 'ArrowLeft') {
+                event.preventDefault();
+                const tabs = ['local', 'lan', 'special'];
+                const activeBtn = rulesModal.querySelector('.rules-tab-btn.active');
+                const currentId = activeBtn ? activeBtn.id.replace('tab-btn-', '') : 'local';
+                const curIdx = tabs.indexOf(currentId);
+                const prevTab = tabs[(curIdx - 1 + tabs.length) % tabs.length];
+                switchRulesTab(prevTab);
+                return;
+            }
+            if (event.key === '1' || event.code === 'Digit1') {
+                event.preventDefault();
+                switchRulesTab('local');
+                return;
+            }
+            if (event.key === '2' || event.code === 'Digit2') {
+                event.preventDefault();
+                switchRulesTab('lan');
+                return;
+            }
+            if (event.key === '3' || event.code === 'Digit3') {
+                event.preventDefault();
+                switchRulesTab('special');
                 return;
             }
         }
@@ -3452,12 +3496,28 @@
         const modal = document.getElementById('lobby-settings-modal');
         if (modal) {
             modal.style.display = 'flex';
+            modal.style.opacity = '1';
+            modal.classList.add('active');
+            const card = modal.querySelector('.lobby-settings-modal-card') || modal.querySelector('.modal-card');
+            if (card) {
+                card.classList.remove('zoom-in');
+                setTimeout(() => card.classList.add('zoom-in'), 10);
+            }
+            if (!modal.dataset.backdropBound) {
+                modal.dataset.backdropBound = 'true';
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        closeLobbySettingsModal();
+                    }
+                });
+            }
         }
     }
 
     function closeLobbySettingsModal() {
         const modal = document.getElementById('lobby-settings-modal');
         if (modal) {
+            modal.classList.remove('active');
             modal.style.display = 'none';
         }
     }
@@ -3728,6 +3788,9 @@
                 currentOnlineRoomCode = data.roomCode;
                 if (data && data.options) {
                     syncLobbySettings(data.options);
+                }
+                if (gameData && gameData.length > 0) {
+                    hostNetworkClient.setPack(gameData);
                 }
                 const codeEl = document.getElementById('lobby-room-code');
                 if (codeEl) codeEl.textContent = data.roomCode;
@@ -4121,7 +4184,9 @@
     }
 
     function reconnectHostLobby() {
-        initHostNetwork();
+        const urlInput = document.getElementById('lobby-server-url-input');
+        const customUrl = (urlInput && urlInput.value && urlInput.value.trim()) ? urlInput.value.trim() : null;
+        initHostNetwork(customUrl);
     }
 
     function startOnlineGame() {

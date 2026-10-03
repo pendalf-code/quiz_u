@@ -88,19 +88,28 @@ function parseMessage(rawMessage) {
     }
 }
 
-// Universal export
+const ProtocolObject = {
+    MSG_TYPES,
+    ERROR_CODES,
+    createMessage,
+    parseMessage
+};
+
+// Universal export (Node.js CommonJS + Browser global)
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        MSG_TYPES,
-        ERROR_CODES,
-        createMessage,
-        parseMessage
-    };
+    module.exports = ProtocolObject;
 }
 
 if (typeof window !== 'undefined') {
+    window.QuizProtocol = ProtocolObject;
+    window.Protocol = ProtocolObject;
     window.MSG_TYPES = MSG_TYPES;
     window.ERROR_CODES = ERROR_CODES;
     window.createMessage = createMessage;
     window.parseMessage = parseMessage;
+}
+
+if (typeof globalThis !== 'undefined') {
+    globalThis.QuizProtocol = ProtocolObject;
+    globalThis.Protocol = ProtocolObject;
 }

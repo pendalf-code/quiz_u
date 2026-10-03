@@ -3,13 +3,62 @@
  * Manages host and client WebSocket communication with the room server.
  */
 
-// If running in Node, resolve protocol; in browser, use window.QuizProtocol
-const Protocol = (typeof QuizProtocol !== 'undefined')
+// Universal protocol resolution (Browser, Web Worker, globalThis, Node.js CommonJS)
+const Protocol = (typeof QuizProtocol !== 'undefined' && QuizProtocol)
     ? QuizProtocol
-    : (typeof require !== 'undefined' ? require('./Protocol') : null);
+    : (typeof window !== 'undefined' && (window.QuizProtocol || window.Protocol))
+        ? (window.QuizProtocol || window.Protocol)
+        : (typeof globalThis !== 'undefined' && (globalThis.QuizProtocol || globalThis.Protocol))
+            ? (globalThis.QuizProtocol || globalThis.Protocol)
+            : (typeof require !== 'undefined' ? require('./Protocol') : null);
 
-const MSG = Protocol ? Protocol.MSG_TYPES : {};
-const ERR = Protocol ? Protocol.ERROR_CODES : {};
+// Fallback message types dictionary to guarantee type safety in case of loading order
+const DEFAULT_MSG_TYPES = {
+    HOST_CREATE_ROOM: 'HOST_CREATE_ROOM',
+    HOST_SET_PACK: 'HOST_SET_PACK',
+    HOST_START_GAME: 'HOST_START_GAME',
+    HOST_SELECT_QUESTION: 'HOST_SELECT_QUESTION',
+    HOST_ACTIVATE_BUZZER: 'HOST_ACTIVATE_BUZZER',
+    HOST_JUDGE_ANSWER: 'HOST_JUDGE_ANSWER',
+    HOST_SHOW_ANSWER: 'HOST_SHOW_ANSWER',
+    HOST_TOGGLE_PAUSE: 'HOST_TOGGLE_PAUSE',
+    HOST_CLOSE_QUESTION: 'HOST_CLOSE_QUESTION',
+    HOST_PASS_QUESTION: 'HOST_PASS_QUESTION',
+    HOST_UPDATE_SCORE: 'HOST_UPDATE_SCORE',
+    HOST_KICK_PLAYER: 'HOST_KICK_PLAYER',
+    HOST_NEXT_ROUND: 'HOST_NEXT_ROUND',
+    HOST_SET_LOCAL_HOST: 'HOST_SET_LOCAL_HOST',
+    HOST_UPDATE_ROOM_SETTINGS: 'HOST_UPDATE_ROOM_SETTINGS',
+    PLAYER_JOIN: 'PLAYER_JOIN',
+    PLAYER_BUZZ: 'PLAYER_BUZZ',
+    PLAYER_SUBMIT_ANSWER: 'PLAYER_SUBMIT_ANSWER',
+    PLAYER_AUCTION_BET: 'PLAYER_AUCTION_BET',
+    PLAYER_CAT_TRANSFER: 'PLAYER_CAT_TRANSFER',
+    ROOM_CREATED: 'ROOM_CREATED',
+    PLAYER_JOINED: 'PLAYER_JOINED',
+    PLAYER_LEFT: 'PLAYER_LEFT',
+    ROOM_STATE: 'ROOM_STATE',
+    ROOM_SETTINGS_UPDATED: 'ROOM_SETTINGS_UPDATED',
+    QUESTION_ACTIVE: 'QUESTION_ACTIVE',
+    BUZZER_READY: 'BUZZER_READY',
+    BUZZ_LOCKED: 'BUZZ_LOCKED',
+    BUZZ_RESET: 'BUZZ_RESET',
+    ANSWER_SUBMITTED: 'ANSWER_SUBMITTED',
+    AUCTION_BET_MADE: 'AUCTION_BET_MADE',
+    CAT_TRANSFERRED: 'CAT_TRANSFERRED',
+    ANSWER_TIMEOUT: 'ANSWER_TIMEOUT',
+    ROUND_CHANGED: 'ROUND_CHANGED',
+    GAME_FINISHED: 'GAME_FINISHED',
+    SCORE_UPDATED: 'SCORE_UPDATED',
+    JUDGE_RESULT: 'JUDGE_RESULT',
+    GAME_PAUSED: 'GAME_PAUSED',
+    SHOW_ANSWER: 'SHOW_ANSWER',
+    QUESTION_CLOSED: 'QUESTION_CLOSED',
+    ERROR: 'ERROR'
+};
+
+const MSG = (Protocol && Protocol.MSG_TYPES) ? Protocol.MSG_TYPES : (typeof MSG_TYPES !== 'undefined' ? MSG_TYPES : DEFAULT_MSG_TYPES);
+const ERR = (Protocol && Protocol.ERROR_CODES) ? Protocol.ERROR_CODES : (typeof ERROR_CODES !== 'undefined' ? ERROR_CODES : {});
 
 class NetworkClient {
     constructor(options = {}) {
