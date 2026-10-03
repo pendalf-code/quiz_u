@@ -842,8 +842,19 @@
     </div>
 </div>
 
+<!-- Баннер авто-паузы при дисконнекте игрока (TASK-05) -->
+<div class="disconnect-pause-banner hidden" id="disconnect-pause-banner">
+    <div class="disconnect-pause-icon">⏸️</div>
+    <div class="disconnect-pause-info">
+        <div class="disconnect-pause-title">Игра приостановлена</div>
+        <div class="disconnect-pause-desc" id="disconnect-pause-desc">Игрок отключился. Ожидание переподключения...</div>
+    </div>
+    <button type="button" class="btn btn-resume-game" id="btn-resume-from-disconnect" onclick="resumeFromDisconnect()">▶️ Продолжить игру</button>
+</div>
+
 <div class="modal" id="question-modal">
-    <div class="modal-card">
+    <div class="question-modal-layout" id="question-modal-layout">
+        <div class="modal-card">
         <div class="timer-hint" id="timer-hint">Чтение вопроса</div>
         <div class="timer reading" id="timer">7</div>
         <div class="modal-text" id="modal-question-text">Текст вопроса</div>
@@ -896,6 +907,41 @@
         <div class="modal-controls" id="modal-buttons-area">
             <button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>
         </div>
+    </div>
+        <!-- Боковая модалка: Отвечает игрок N (появляется рядом с окном вопроса) -->
+        <aside class="answering-player-modal hidden" id="answering-player-modal">
+            <div class="answering-card-header">
+                <span class="answering-status-badge">🎙️ ОТВЕТ</span>
+                <h3 class="answering-player-title" id="answering-player-num">Отвечает игрок #1</h3>
+            </div>
+
+            <div class="answering-avatar-box">
+                <div class="answering-avatar-glow"></div>
+                <div class="answering-avatar" id="answering-modal-avatar">🐱</div>
+            </div>
+
+            <div class="answering-name-box">
+                <div class="answering-player-name" id="answering-modal-name">Игрок</div>
+                <div class="answering-player-sub" id="answering-modal-sub">Команда 1</div>
+            </div>
+
+            <div class="answering-timer-box">
+                <svg class="answering-ring-svg" viewBox="0 0 100 100">
+                    <circle class="answering-ring-bg" cx="50" cy="50" r="42"></circle>
+                    <circle class="answering-ring-progress" id="answering-ring-progress" cx="50" cy="50" r="42"></circle>
+                </svg>
+                <div class="answering-ring-seconds" id="answering-ring-seconds">5</div>
+            </div>
+
+            <div class="answering-controls-row">
+                <button type="button" class="btn btn-judge-ok" id="btn-judge-modal-correct" onclick="judgeOnlineAnswer(true)" title="Зачесть ответ (+очки)">
+                    <span>✅ Зачесть</span>
+                </button>
+                <button type="button" class="btn btn-judge-no" id="btn-judge-modal-wrong" onclick="judgeOnlineAnswer(false)" title="Отклонить ответ (-очки)">
+                    <span>❌ Отклонить</span>
+                </button>
+            </div>
+        </aside>
     </div>
 </div>
 

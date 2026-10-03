@@ -276,6 +276,18 @@ class Room {
                 playerName: this.hostPlayer.name,
                 role: 'host'
             });
+
+            // Auto-pause if game is running (question active or board active)
+            const isGameRunning = (this.stateMachine.state !== 'INIT' && this.stateMachine.state !== 'LOBBY');
+            if (isGameRunning && !this.isPaused) {
+                this.isPaused = true;
+                this.broadcastToAll(MSG_TYPES.GAME_PAUSED, {
+                    isPaused: true,
+                    reason: 'disconnect',
+                    disconnectedPlayerName: this.hostPlayer.name
+                });
+            }
+
             this.broadcastRoomState();
             return;
         }
@@ -290,6 +302,17 @@ class Room {
                     playerName: player.name,
                     role: 'player'
                 });
+
+                // Auto-pause if game is running (question active or board active)
+                const isGameRunning = (this.stateMachine.state !== 'INIT' && this.stateMachine.state !== 'LOBBY');
+                if (isGameRunning && !this.isPaused) {
+                    this.isPaused = true;
+                    this.broadcastToAll(MSG_TYPES.GAME_PAUSED, {
+                        isPaused: true,
+                        reason: 'disconnect',
+                        disconnectedPlayerName: player.name
+                    });
+                }
 
                 // If currently answering player disconnects, cancel answer timer
                 if (this.activeBuzzerPlayerId === id) {
@@ -456,7 +479,20 @@ class Room {
         this.isPaused = false;
 
         const qType = (questionData && questionData.type) ? questionData.type : 'normal';
-        this.stateMachine.startQuestion(this.currentCost, qType);
+
+        try {
+            if (this.stateMachine.state !== 'BOARD') {
+                this.stateMachine.showBoard();
+            }
+            this.stateMachine.startQuestion(questionData, { turnTeamId: null });
+        } catch (err) {
+            console.warn('[Room] stateMachine.startQuestion fallback:', err.message);
+            this.stateMachine.state = (qType === 'cat' || qType === 'secret')
+                ? 'CAT_CHOOSING'
+                : ((qType === 'auction' || qType === 'auction_all' || qType === 'auction_leader')
+                    ? 'AUCTION_BETTING'
+                    : 'QUESTION_READING');
+        }
 
         // Send full question to host (both PC screen and mobile host)
         this.sendToHost(MSG_TYPES.QUESTION_ACTIVE, {
@@ -502,9 +538,13 @@ class Room {
         }
 
         try {
+            if (this.stateMachine.state !== 'QUESTION_READING') {
+                this.stateMachine.state = 'QUESTION_READING';
+            }
             this.stateMachine.openBuzzer();
-        } catch {
-            return;
+        } catch (err) {
+            console.warn('[Room] openBuzzer fallback:', err.message);
+            this.stateMachine.state = 'BUZZ_ACTIVE';
         }
 
         this.broadcastToAll(MSG_TYPES.BUZZER_READY, {

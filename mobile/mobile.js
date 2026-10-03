@@ -21,6 +21,12 @@
         headerScore: document.getElementById('header-score'),
         themeToggleBtn: document.getElementById('theme-toggle-btn'),
         themeIcon: document.getElementById('theme-icon'),
+        exitMenuBtn: document.getElementById('exit-menu-btn'),
+        modalExitConfirm: document.getElementById('modal-exit-confirm'),
+        btnCancelExit: document.getElementById('btn-cancel-exit'),
+        btnConfirmExit: document.getElementById('btn-confirm-exit'),
+        mobilePauseBanner: document.getElementById('mobile-pause-banner'),
+        mobilePauseText: document.getElementById('mobile-pause-text'),
 
         // Screens
         screens: {
@@ -195,6 +201,14 @@
                 }
             }
         });
+
+        if (elements.exitMenuBtn) {
+            if (screenName === 'join') {
+                elements.exitMenuBtn.classList.add('hidden');
+            } else {
+                elements.exitMenuBtn.classList.remove('hidden');
+            }
+        }
     }
 
     // =========================================================================
@@ -976,9 +990,68 @@
     }
 
     // =========================================================================
+    // =========================================================================
+    // Leave to Main Menu
+    // =========================================================================
+    function leaveToMainMenu() {
+        if (elements.modalExitConfirm) {
+            elements.modalExitConfirm.classList.add('hidden');
+        }
+        stopAnswerTimer();
+        if (netClient) {
+            try {
+                netClient.disconnect();
+            } catch (e) {}
+        }
+        state.roomCode = null;
+        state.sessionToken = null;
+        state.selfPlayer = null;
+        state.activeQuestion = null;
+        state.activeAnsweringPlayer = null;
+        state.isPaused = false;
+        localStorage.removeItem(STORAGE_KEYS.TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.ROOM);
+
+        if (elements.headerRoomBadge) elements.headerRoomBadge.classList.add('hidden');
+        if (elements.headerPlayerBadge) elements.headerPlayerBadge.classList.add('hidden');
+        if (elements.reconnectBanner) elements.reconnectBanner.classList.add('hidden');
+        if (elements.exitMenuBtn) elements.exitMenuBtn.classList.add('hidden');
+
+        if (elements.mobilePauseBanner) elements.mobilePauseBanner.classList.add('hidden');
+
+        showScreen('join');
+        showToast('Вы вышли в главное меню', 'info');
+
+        // Reconnect network client so user can enter new room immediately
+        initNetworkClient();
+    }
+
     // UI Event Handlers
     // =========================================================================
     function setupEventHandlers() {
+        // Exit to Menu Handlers
+        if (elements.exitMenuBtn) {
+            elements.exitMenuBtn.addEventListener('click', () => {
+                if (elements.modalExitConfirm) {
+                    elements.modalExitConfirm.classList.remove('hidden');
+                }
+            });
+        }
+
+        if (elements.btnCancelExit) {
+            elements.btnCancelExit.addEventListener('click', () => {
+                if (elements.modalExitConfirm) {
+                    elements.modalExitConfirm.classList.add('hidden');
+                }
+            });
+        }
+
+        if (elements.btnConfirmExit) {
+            elements.btnConfirmExit.addEventListener('click', () => {
+                leaveToMainMenu();
+            });
+        }
+
         // Host Phone Remote Controls (TASK-04)
         if (elements.btnHostJudgeCorrect) {
             elements.btnHostJudgeCorrect.addEventListener('click', () => {
@@ -1202,6 +1275,27 @@
                 const current = parseInt(elements.betInput.value, 10) || 100;
                 elements.betInput.value = current + add;
             });
+        });
+
+        netClient.on('game_paused', (payload) => {
+            state.isPaused = payload.isPaused;
+            if (state.selectedRole === 'host') {
+                updateHostScreen(state.roomState);
+            }
+            const pauseBanner = elements.mobilePauseBanner;
+            if (pauseBanner) {
+                if (payload.isPaused) {
+                    pauseBanner.classList.remove('hidden');
+                    if (elements.mobilePauseText) {
+                        elements.mobilePauseText.textContent = payload.reason === 'disconnect'
+                            ? `⏸️ Игра на паузе: игрок ${payload.disconnectedPlayerName || ''} отключился`
+                            : '⏸️ Игра на паузе';
+                    }
+                } else {
+                    pauseBanner.classList.add('hidden');
+                }
+            }
+            showToast(payload.isPaused ? 'Игра на паузе' : 'Игра возобновлена', 'info');
         });
 
         elements.btnVaBank.addEventListener('click', () => {

@@ -103,7 +103,7 @@ const server = http.createServer((req, res) => {
     const cleanPath = decodedUrl.split('?')[0];
 
     // Global Path Traversal Protection
-    if (cleanPath.includes('..') || cleanPath.includes('/.') || cleanPath.includes('\\')) {
+    if (cleanPath.includes('..') || cleanPath.includes('/.') || cleanPath.includes('\\\\')) {
         res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
         return res.end('Forbidden');
     }
@@ -303,7 +303,15 @@ function handleClientMessage(ws, message) {
                     message: 'Некорректные параметры вопроса'
                 }));
             }
-            room.selectQuestion(payload.themeIdx, payload.questionIdx, payload.question);
+            try {
+                room.selectQuestion(payload.themeIdx, payload.questionIdx, payload.question);
+            } catch (err) {
+                console.error('Error selecting question:', err);
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_ACTION,
+                    message: 'Не удалось выбрать вопрос: ' + err.message
+                }));
+            }
             break;
         }
 

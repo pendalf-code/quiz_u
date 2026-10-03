@@ -39,6 +39,7 @@
             </div>
 
             <div class="header-right">
+                <button class="icon-btn exit-menu-btn hidden" id="exit-menu-btn" aria-label="Выйти в меню" title="Выйти в меню"><span class="exit-icon">🚪</span></button>
                 <button class="icon-btn theme-btn" id="theme-toggle-btn" aria-label="Сменить тему" title="Сменить тему">
                     <span class="theme-icon" id="theme-icon">☀️</span>
                 </button>
@@ -413,7 +414,26 @@
         </main>
 
         <!-- Всплывающее уведомление (Toast) -->
-        <div class="mobile-toast hidden" id="mobile-toast">
+        <!-- Модалка подтверждения выхода в меню -->
+    <div class="mobile-modal-overlay hidden" id="modal-exit-confirm">
+        <div class="mobile-modal-card">
+            <div class="modal-icon">🚪</div>
+            <h3 class="modal-title">Выйти в меню?</h3>
+            <p class="modal-desc">Вы покинете текущую комнату и вернётесь на стартовый экран ввода кода.</p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-exit">Отмена</button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-exit">Выйти</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Баннер авто-паузы при дисконнекте -->
+    <div class="mobile-pause-banner hidden" id="mobile-pause-banner">
+        <div class="pause-pulse">⏸️</div>
+        <div class="pause-text" id="mobile-pause-text">Игра на паузе</div>
+    </div>
+
+    <div class="mobile-toast hidden" id="mobile-toast">
             <span class="toast-icon" id="toast-icon">ℹ️</span>
             <span class="toast-message" id="toast-message">Уведомление</span>
         </div>

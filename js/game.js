@@ -905,6 +905,8 @@
         }
         const ringWrap = document.getElementById('online-buzzer-ring-wrap');
         if (ringWrap) ringWrap.style.display = 'none';
+        const modal = document.getElementById('answering-player-modal');
+        if (modal) modal.classList.add('hidden');
     }
 
     function startOnlineAnswerCountdown(seconds) {
@@ -913,6 +915,10 @@
         const ringWrap = document.getElementById('online-buzzer-ring-wrap');
         const ringProgress = document.getElementById('online-buzzer-ring-progress');
         const ringSecs = document.getElementById('online-buzzer-ring-seconds');
+
+        const modalRingProgress = document.getElementById('answering-ring-progress');
+        const modalRingSecs = document.getElementById('answering-ring-seconds');
+
         const circumference = 2 * Math.PI * 42; // ~263.89
 
         if (ringWrap) ringWrap.style.display = 'flex';
@@ -921,6 +927,13 @@
             ringProgress.style.strokeDasharray = `${circumference}`;
             ringProgress.style.strokeDashoffset = '0';
             ringProgress.style.stroke = '#fdcb6e';
+        }
+
+        if (modalRingSecs) modalRingSecs.textContent = seconds;
+        if (modalRingProgress) {
+            modalRingProgress.style.strokeDasharray = `${circumference}`;
+            modalRingProgress.style.strokeDashoffset = '0';
+            modalRingProgress.style.stroke = '#38bdf8';
         }
 
         const stepMs = 100;
@@ -933,15 +946,22 @@
             const secsLeft = Math.ceil(progress * seconds);
 
             if (ringSecs) ringSecs.textContent = secsLeft;
+            if (modalRingSecs) modalRingSecs.textContent = secsLeft;
+
+            let strokeColor = '#38bdf8';
+            if (progress <= 0.3) {
+                strokeColor = '#ff7675';
+            } else if (progress <= 0.6) {
+                strokeColor = '#f39c12';
+            }
+
             if (ringProgress) {
                 ringProgress.style.strokeDashoffset = `${circumference * (1 - progress)}`;
-                if (progress <= 0.3) {
-                    ringProgress.style.stroke = '#ff7675';
-                } else if (progress <= 0.6) {
-                    ringProgress.style.stroke = '#f39c12';
-                } else {
-                    ringProgress.style.stroke = '#fdcb6e';
-                }
+                ringProgress.style.stroke = strokeColor;
+            }
+            if (modalRingProgress) {
+                modalRingProgress.style.strokeDashoffset = `${circumference * (1 - progress)}`;
+                modalRingProgress.style.stroke = strokeColor;
             }
 
             if (currentStep <= 0) {
@@ -2173,6 +2193,8 @@
 
         const oldBadge = document.getElementById('modal-special-badge');
         if (oldBadge) oldBadge.remove();
+            const answeringModal = document.getElementById('answering-player-modal');
+            if (answeringModal) answeringModal.classList.add('hidden');
         const oldCatAnim = document.getElementById('modal-cat-animation');
         if (oldCatAnim) oldCatAnim.remove();
 
@@ -2561,6 +2583,7 @@
     }
 
     function startTimer() {
+        if (isAnswerTimerActive) return;
         stopTimer();
         timerInterval = setInterval(() => {
             timeLeft--;
@@ -2625,15 +2648,51 @@
             playStartThinkingSound();
 
             if (timerElem && hintElem) {
-                timerElem.textContent = currentAnswerSec;
-                timerElem.className = "timer answering";
-                hintElem.textContent = "🎙️ Ответ команды!";
-                hintElem.style.color = "#f1c40f";
+                timerElem.textContent = timeLeft;
+                timerElem.classList.add('paused');
+                timerElem.classList.add('frozen');
+                hintElem.textContent = "❄️ Таймер заморожен (ответ команды)";
+                hintElem.style.color = "#38bdf8";
+            }
+
+            // Show answering side modal
+            const answeringModal = document.getElementById('answering-player-modal');
+            const playerNumElem = document.getElementById('answering-player-num');
+            const avatarElem = document.getElementById('answering-modal-avatar');
+            const nameElem = document.getElementById('answering-modal-name');
+            const subElem = document.getElementById('answering-modal-sub');
+            const modalRingSecs = document.getElementById('answering-ring-seconds');
+            const modalRingProgress = document.getElementById('answering-ring-progress');
+
+            const activeTeam = teams[currentTurnIndex] || teams[0];
+            const activeTeamNum = (currentTurnIndex >= 0 ? currentTurnIndex + 1 : 1);
+
+            if (answeringModal) {
+                answeringModal.classList.remove('hidden');
+                if (playerNumElem) playerNumElem.textContent = `Отвечает игрок #${activeTeamNum}`;
+                if (avatarElem) avatarElem.textContent = (activeTeam && activeTeam.avatar) || '🐱';
+                if (nameElem) nameElem.textContent = (activeTeam && activeTeam.name) || 'Команда';
+                if (subElem) subElem.textContent = activeTeam ? `${activeTeam.score} очков` : `Команда ${activeTeamNum}`;
+                if (modalRingSecs) modalRingSecs.textContent = currentAnswerSec;
+            }
+
+            const circumference = 2 * Math.PI * 42;
+            if (modalRingProgress) {
+                modalRingProgress.style.strokeDasharray = `${circumference}`;
+                modalRingProgress.style.strokeDashoffset = '0';
+                modalRingProgress.style.stroke = '#38bdf8';
             }
 
             answerCountdownInterval = setInterval(() => {
                 currentAnswerSec--;
-                if (timerElem) timerElem.textContent = currentAnswerSec;
+                if (modalRingSecs) modalRingSecs.textContent = currentAnswerSec;
+                if (modalRingProgress) {
+                    const frac = Math.max(0, currentAnswerSec / configAnswerTime);
+                    modalRingProgress.style.strokeDashoffset = `${circumference * (1 - frac)}`;
+                    if (frac <= 0.3) modalRingProgress.style.stroke = '#ff7675';
+                    else if (frac <= 0.6) modalRingProgress.style.stroke = '#f39c12';
+                    else modalRingProgress.style.stroke = '#38bdf8';
+                }
                 if (currentAnswerSec > 0 && currentAnswerSec <= 3) playTickSound();
 
                 if (currentAnswerSec <= 0) {
@@ -2650,11 +2709,19 @@
             }, 1000);
 
         } else {
-            stopTimer();
+            if (answerCountdownInterval) {
+                clearInterval(answerCountdownInterval);
+                answerCountdownInterval = null;
+            }
+            const answeringModal = document.getElementById('answering-player-modal');
+            if (answeringModal) answeringModal.classList.add('hidden');
+
             isAnswerTimerActive = false;
             timeLeft = savedThinkingTime;
 
             if (timerElem && hintElem) {
+                timerElem.classList.remove('frozen');
+                timerElem.classList.remove('paused');
                 timerElem.textContent = timeLeft;
                 timerElem.className = isReadingTime ? "timer reading" : "timer thinking";
                 hintElem.textContent = isReadingTime ? "⏱️ Внимание! Чтение вопроса" : "🔥 Время пошло! Обсуждение";
@@ -2861,6 +2928,8 @@
 
     function showAnswer() {
         stopTimer();
+        const answeringModal = document.getElementById('answering-player-modal');
+        if (answeringModal) answeringModal.classList.add('hidden');
         stopQuestionAudio();
         isAnswerTimerActive = false;
 
@@ -3836,7 +3905,7 @@
                 activeOnlineBuzzer = payload;
                 playBuzzerSound();
 
-                // Pause common question timer (TASK-02)
+                // Freeze common question timer (Requirement 1)
                 if (timerInterval) {
                     savedThinkingTime = timeLeft;
                     clearInterval(timerInterval);
@@ -3847,11 +3916,40 @@
                 const timerElem = document.getElementById('timer');
                 const hintElem = document.getElementById('timer-hint');
                 if (timerElem) {
+                    timerElem.textContent = timeLeft;
                     timerElem.classList.add('paused');
+                    timerElem.classList.add('frozen');
                 }
                 if (hintElem) {
-                    hintElem.textContent = '⏳ Общий таймер на паузе (ответ игрока)';
-                    hintElem.style.color = '#fdcb6e';
+                    hintElem.textContent = '❄️ Таймер заморожен (ответ игрока)';
+                    hintElem.style.color = '#38bdf8';
+                }
+
+                // Determine player display number (Requirement 2)
+                let playerIndex = -1;
+                if (hostNetworkClient && typeof hostNetworkClient.getPlayersList === 'function') {
+                    const list = hostNetworkClient.getPlayersList();
+                    playerIndex = list.findIndex(p => p.id === payload.playerId);
+                }
+                if (playerIndex === -1) {
+                    playerIndex = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
+                }
+                const playerDisplayNum = playerIndex >= 0 ? (playerIndex + 1) : 1;
+
+                // Show answering side modal
+                const answeringModal = document.getElementById('answering-player-modal');
+                const playerNumElem = document.getElementById('answering-player-num');
+                const avatarElem = document.getElementById('answering-modal-avatar');
+                const nameElem = document.getElementById('answering-modal-name');
+                const subElem = document.getElementById('answering-modal-sub');
+
+                if (answeringModal) {
+                    answeringModal.classList.remove('hidden');
+                    if (playerNumElem) playerNumElem.textContent = `Отвечает игрок #${playerDisplayNum}`;
+                    if (avatarElem) avatarElem.textContent = payload.avatar || '👤';
+                    if (nameElem) nameElem.textContent = payload.playerName || 'Игрок';
+                    const matchingTeam = teams.find(t => t.id === payload.playerId || t.name === payload.playerName);
+                    if (subElem) subElem.textContent = matchingTeam ? `${matchingTeam.score} очков` : `Игрок #${playerDisplayNum}`;
                 }
 
                 // Stylized answering banner (TASK-02)
@@ -3872,14 +3970,14 @@
                 }
                 if (status) {
                     status.style.display = 'block';
-                    status.textContent = 'Отвечает игрок:';
+                    status.textContent = `Отвечает игрок #${playerDisplayNum}:`;
                 }
                 if (text) {
                     text.innerHTML = `<b>${payload.playerName}</b>`;
                 }
 
                 // Start synchronized circular countdown ring (TASK-02)
-                startOnlineAnswerCountdown(configAnswerTime);
+                startOnlineAnswerCountdown(payload.answerTime || configAnswerTime);
             });
 
             hostNetworkClient.on('buzzer_ready', () => {
@@ -3962,7 +4060,12 @@
                         isAnswerTimerActive = false;
                         const timerElem = document.getElementById('timer');
                         const hintElem = document.getElementById('timer-hint');
-                        if (timerElem) timerElem.classList.remove('paused');
+                        const answeringModal = document.getElementById('answering-player-modal');
+            if (answeringModal) answeringModal.classList.add('hidden');
+            if (timerElem) {
+                timerElem.classList.remove('paused');
+                timerElem.classList.remove('frozen');
+            }
                         if (hintElem) {
                             hintElem.textContent = '🔥 Время пошло! Обсуждение';
                             hintElem.style.color = '#ff7675';
@@ -3992,9 +4095,18 @@
             });
 
             hostNetworkClient.on('game_paused', (payload) => {
+                const banner = document.getElementById('disconnect-pause-banner');
+                const desc = document.getElementById('disconnect-pause-desc');
                 if (payload.isPaused) {
                     pauseTimer();
+                    if (payload.reason === 'disconnect' && banner) {
+                        if (desc) {
+                            desc.textContent = `Игрок ${payload.disconnectedPlayerName || ''} отключился (звонок/потеря сети). Ожидание переподключения...`;
+                        }
+                        banner.classList.remove('hidden');
+                    }
                 } else {
+                    if (banner) banner.classList.add('hidden');
                     resumeTimer();
                 }
             });
@@ -4374,3 +4486,16 @@
     }
 
     window.addEventListener('resize', generateStarrySky);
+
+
+    function resumeFromDisconnect() {
+        if (isOnlineGame && hostNetworkClient) {
+            hostNetworkClient.togglePause(false);
+        }
+        const banner = document.getElementById('disconnect-pause-banner');
+        if (banner) banner.classList.add('hidden');
+        resumeTimer();
+    }
+    if (typeof window !== 'undefined') {
+        window.resumeFromDisconnect = resumeFromDisconnect;
+    }

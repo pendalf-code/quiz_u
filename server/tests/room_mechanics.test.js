@@ -373,4 +373,22 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         assert.equal(room.currentQuestion, null);
         assert.equal(room.stateMachine.state, 'BOARD');
     });
+
+    await t.test('Auto-pause on disconnect and selectQuestion resilience', () => {
+        const p1Ws = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
+        const p2Ws = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
+        const p1 = room.addPlayer('Плеер 1', '🐱', p1Ws).player;
+        const p2 = room.addPlayer('Плеер 2', '🐶', p2Ws).player;
+        assert.doesNotThrow(() => {
+            room.selectQuestion(0, 0, { q: 'Вопрос', a: 'Ответ', cost: 100 });
+        });
+        assert.equal(room.currentCost, 100);
+        room.removePlayer(p1Ws);
+        assert.equal(room.isPaused, true, 'Room must be paused on disconnect during gameplay');
+        const pauseMsg = mockHostWs.messages.find(m => m.type === 'GAME_PAUSED');
+        assert.ok(pauseMsg, 'GAME_PAUSED message must be broadcast');
+        assert.equal(pauseMsg.payload.isPaused, true);
+        assert.equal(pauseMsg.payload.reason, 'disconnect');
+        assert.equal(pauseMsg.payload.disconnectedPlayerName, 'Плеер 1');
+    });
 });
