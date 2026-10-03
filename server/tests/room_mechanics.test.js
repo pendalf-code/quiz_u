@@ -329,4 +329,48 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         testRoom.selectQuestion(0, 0, { q: 'Q', a: 'A', price: 100 });
         assert.equal(testRoom.stateMachine.state, 'BUZZ_ACTIVE', 'State must immediately be BUZZ_ACTIVE when readingTime is 0');
     });
+
+    await t.test('Disconnect cleanup: removePlayer handles socket and playerId, resets active buzzer and cleans question on finish', () => {
+        const p1Ws = { messages: [], readyState: 1, send(d) {} };
+        const p2Ws = { messages: [], readyState: 1, send(d) {} };
+        const join1 = room.addPlayer('Игрок 1', '🐱', p1Ws);
+        const join2 = room.addPlayer('Игрок 2', '🐶', p2Ws);
+        const p1Id = join1.player.id;
+        const p2Id = join2.player.id;
+
+        // Player 1 disconnects by socket
+        room.removePlayer(p1Ws);
+        assert.equal(room.players.get(p1Id).isConnected, false);
+        assert.equal(room.players.get(p1Id).ws, null);
+
+        // Player 2 disconnects by ID
+        room.removePlayer(p2Id);
+        assert.equal(room.players.get(p2Id).isConnected, false);
+        assert.equal(room.players.get(p2Id).ws, null);
+
+        // Reconnect player 1 & 2
+        p1Ws.readyState = 1;
+        join1.player.isConnected = true;
+        join1.player.ws = p1Ws;
+        p2Ws.readyState = 1;
+        join2.player.isConnected = true;
+        join2.player.ws = p2Ws;
+
+        room.stateMachine.state = 'BUZZ_ACTIVE';
+        room.handleBuzz(p1Id);
+        assert.equal(room.activeBuzzerPlayerId, p1Id);
+        assert.ok(room.answerTimer);
+
+        // Disconnecting active buzzer player resets buzzer and reopens for player 2
+        room.removePlayer(p1Ws);
+        assert.equal(room.activeBuzzerPlayerId, null);
+        assert.equal(room.answerTimer, null);
+        assert.equal(room.stateMachine.state, 'BUZZ_ACTIVE');
+
+        // Finish question returns state to BOARD and cleans currentQuestion
+        room.currentQuestion = { q: 'Вопрос', a: 'Ответ', price: 200 };
+        room.finishQuestion();
+        assert.equal(room.currentQuestion, null);
+        assert.equal(room.stateMachine.state, 'BOARD');
+    });
 });

@@ -290,10 +290,10 @@
                 }
             }
 
-            // 3. Check if Sub-screen is active (Settings, Dev, Catalog, Editor, Prepare Choice)
-            const activeSub = document.querySelector('.start-menu-container > div[id^="sub-menu-"]:not([style*="display: none"])');
-            if (activeSub && activeSub.id !== 'sub-menu-main') {
-                const backBtn = activeSub.querySelector('.btn-close-modal, .catalog-top-back-btn, .btn-back-lobby');
+            // 3. Check if Sub-screen is active (Settings, Dev, Catalog, Editor, Prepare Choice, Team Setup)
+            const activeSub = document.querySelector('.start-menu-container > div:not([style*="display: none"])');
+            if (activeSub && activeSub.id && activeSub.id !== 'sub-menu-main') {
+                const backBtn = activeSub.querySelector('.btn-close-modal, .catalog-top-back-btn, .btn-back-lobby, .btn-back, [onclick*="showSubScreen"], [onclick*="backToMainMenu"]');
                 if (backBtn) {
                     backBtn.click();
                     return;
@@ -302,14 +302,14 @@
         }
 
         /**
-         * Button X: Quick Action / Secondary
+         * Button X: Quick Action / Secondary / Judge Correct
          */
         handleButtonX() {
             if (typeof document === 'undefined') return;
 
             // In Question modal with host judging: Judge Correct / +
             const btnCorrect = document.querySelector('#online-host-controls .btn-judge-correct, #question-modal .btn-correct');
-            if (btnCorrect && btnCorrect.offsetParent !== null) {
+            if (btnCorrect && (btnCorrect.offsetParent !== null || btnCorrect.style.display !== 'none')) {
                 btnCorrect.click();
                 return;
             }
@@ -321,18 +321,21 @@
         }
 
         /**
-         * Button Y: Pause / Resume countdown timer
+         * Button Y: Pause / Resume countdown timer OR Judge Incorrect
          */
         handleButtonY() {
+            // In Question modal with host judging: Judge Incorrect / -
+            if (typeof document !== 'undefined') {
+                const btnWrong = document.querySelector('#online-host-controls .btn-judge-wrong, #question-modal .btn-wrong');
+                if (btnWrong && (btnWrong.offsetParent !== null || btnWrong.style.display !== 'none')) {
+                    btnWrong.click();
+                    return;
+                }
+            }
+
             if (typeof window !== 'undefined' && typeof window.toggleTimerPause === 'function') {
                 window.toggleTimerPause();
                 return;
-            }
-
-            // In Question modal with host judging: Judge Incorrect / -
-            const btnWrong = document.querySelector('#online-host-controls .btn-judge-wrong, #question-modal .btn-wrong');
-            if (btnWrong && btnWrong.offsetParent !== null) {
-                btnWrong.click();
             }
         }
 
@@ -361,7 +364,9 @@
             }
 
             // Check if we are navigating the Jeopardy Game Board grid
-            const currentCell = this.focusedElement.closest('.cell');
+            const currentCell = (typeof this.focusedElement.closest === 'function')
+                ? (this.focusedElement.closest('.cell') || this.focusedElement.closest('.question-cost') || this.focusedElement.closest('.cell, .question-cost'))
+                : null;
             if (currentCell) {
                 const movedCell = this.navigateBoardGrid(currentCell, dx, dy);
                 if (movedCell) {
@@ -394,7 +399,15 @@
             const rowIndex = rows.indexOf(currentRow);
             if (rowIndex === -1) return null;
 
-            const cellsInRow = Array.from(currentRow.querySelectorAll('.cell'));
+            const getRowCells = (row) => {
+                const list = Array.from(row.querySelectorAll('.cell, .question-cost') || []);
+                if (list.length > 0) return list;
+                const fallbackCell = Array.from(row.querySelectorAll('.cell') || []);
+                if (fallbackCell.length > 0) return fallbackCell;
+                return Array.from(row.querySelectorAll('.question-cost') || []);
+            };
+
+            const cellsInRow = getRowCells(currentRow);
             const colIndex = cellsInRow.indexOf(cell);
             if (colIndex === -1) return null;
 
@@ -406,7 +419,7 @@
             if (targetRowIdx >= rows.length) targetRowIdx = 0;
 
             // Target row cells
-            const targetRowCells = Array.from(rows[targetRowIdx].querySelectorAll('.cell'));
+            const targetRowCells = getRowCells(rows[targetRowIdx]);
             if (targetRowCells.length === 0) return null;
 
             // Wrap or clamp col
@@ -490,9 +503,15 @@
 
             // 3. If Game Board is active
             const gameBoard = document.getElementById('game-board');
-            if (gameBoard && gameBoard.offsetParent !== null && !gameBoard.classList.contains('hidden')) {
+            if (gameBoard && gameBoard.style.display !== 'none' && !gameBoard.classList.contains('hidden') && (gameBoard.offsetParent !== null || typeof window === 'undefined' || (typeof window.getComputedStyle === 'function' && window.getComputedStyle(gameBoard).display !== 'none'))) {
                 // Focus available unplayed cells
-                const activeCells = Array.from(gameBoard.querySelectorAll('.cell:not(.used)'));
+                let activeCells = Array.from(gameBoard.querySelectorAll('.cell:not(.used), .question-cost:not(.used)') || []);
+                if (activeCells.length === 0) {
+                    activeCells = Array.from(gameBoard.querySelectorAll('.cell:not(.used)') || []);
+                }
+                if (activeCells.length === 0) {
+                    activeCells = Array.from(gameBoard.querySelectorAll('.question-cost:not(.used)') || []);
+                }
                 if (activeCells.length > 0) return activeCells;
             }
 
@@ -505,7 +524,7 @@
 
             // 5. Default to visible buttons in active menu screen
             const activeScreen = document.querySelector('.screen.active') || document.body;
-            return Array.from(activeScreen.querySelectorAll('button:not([disabled]), .cell:not(.used), input:not([disabled])'))
+            return Array.from(activeScreen.querySelectorAll('button:not([disabled]), .cell:not(.used), .question-cost:not(.used), input:not([disabled])'))
                 .filter(el => el.offsetParent !== null);
         }
 

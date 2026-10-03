@@ -181,4 +181,42 @@ test('Server: Real WebSocket Integration Test', async (t) => {
         const res = await fetch(`http://127.0.0.1:${port}/..%2fpackage.json`);
         assert.equal(res.status, 403);
     });
+
+    await t.test('Server rejects messages with missing required payload fields with INVALID_PAYLOAD', async () => {
+        const clientWs = new WebSocket(wsUrl);
+        await new Promise((res) => clientWs.on('open', res));
+
+        // 1. PLAYER_JOIN with empty payload
+        clientWs.send(JSON.stringify({ type: MSG_TYPES.PLAYER_JOIN }));
+        const errEmpty = await waitForMessage(clientWs, MSG_TYPES.ERROR);
+        assert.equal(errEmpty.payload.code, ERROR_CODES.INVALID_PAYLOAD);
+
+        // 2. PLAYER_JOIN with missing name
+        clientWs.send(createMessage(MSG_TYPES.PLAYER_JOIN, { roomCode: 'ABCD' }));
+        const errMissingName = await waitForMessage(clientWs, MSG_TYPES.ERROR);
+        assert.equal(errMissingName.payload.code, ERROR_CODES.INVALID_PAYLOAD);
+
+        clientWs.close();
+    });
+
+    await t.test('Host creating new room cleans up previously created room on same socket', async () => {
+        const hostWs = new WebSocket(wsUrl);
+        await new Promise((res) => hostWs.on('open', res));
+
+        // 1. Create first room
+        hostWs.send(createMessage(MSG_TYPES.HOST_CREATE_ROOM));
+        const res1 = await waitForMessage(hostWs, MSG_TYPES.ROOM_CREATED);
+        const code1 = res1.payload.roomCode;
+        assert.ok(roomManager.getRoom(code1));
+
+        // 2. Create second room on same socket -> first room should be deleted
+        hostWs.send(createMessage(MSG_TYPES.HOST_CREATE_ROOM));
+        const res2 = await waitForMessage(hostWs, MSG_TYPES.ROOM_CREATED);
+        const code2 = res2.payload.roomCode;
+        assert.notEqual(code1, code2);
+        assert.equal(roomManager.getRoom(code1), null, 'Old room must be deleted');
+        assert.ok(roomManager.getRoom(code2), 'New room must exist');
+
+        hostWs.close();
+    });
 });

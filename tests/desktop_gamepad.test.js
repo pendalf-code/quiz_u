@@ -194,4 +194,84 @@ describe('Gamepad & Steam Deck Navigation Tests (Stage 5.2)', () => {
         assert.strictEqual(gm.focusedElement, null);
         assert.strictEqual(classes.has('gamepad-focused'), false);
     });
+
+    it('navigates board using .question-cost elements as created by game.js', () => {
+        const gm = new GamepadManager();
+        const rows = [];
+        for (let r = 0; r < 2; r++) {
+            const cells = [];
+            const rowElem = {
+                className: 'theme-row',
+                querySelectorAll: (sel) => (sel.includes('.question-cost') || sel === '.question-cost') ? cells : []
+            };
+            for (let c = 0; c < 3; c++) {
+                const cellElem = {
+                    r, c,
+                    className: 'question-cost cell',
+                    closest: (sel) => sel === '.theme-row' ? rowElem : (sel.includes('.question-cost') || sel.includes('.cell') ? cellElem : null)
+                };
+                cells.push(cellElem);
+            }
+            rows.push(rowElem);
+        }
+
+        const fakeBoard = {
+            querySelectorAll: (sel) => sel === '.theme-row' ? rows : []
+        };
+
+        const origDoc = global.document;
+        global.document = {
+            getElementById: (id) => id === 'game-board' ? fakeBoard : null
+        };
+
+        try {
+            const startCell = rows[0].querySelectorAll('.question-cost')[1]; // row 0, col 1
+            const movedRight = gm.navigateBoardGrid(startCell, 1, 0);
+            assert.strictEqual(movedRight.r, 0);
+            assert.strictEqual(movedRight.c, 2);
+
+            const movedDown = gm.navigateBoardGrid(startCell, 0, 1);
+            assert.strictEqual(movedDown.r, 1);
+            assert.strictEqual(movedDown.c, 1);
+        } finally {
+            global.document = origDoc;
+        }
+    });
+
+    it('handleButtonY prioritizes host judging incorrect button over timer pause', () => {
+        const gm = new GamepadManager();
+        let wrongClicked = false;
+        let timerPaused = false;
+
+        const fakeBtnWrong = {
+            offsetParent: {},
+            style: { display: 'inline-block' },
+            click: () => { wrongClicked = true; }
+        };
+
+        const origDoc = global.document;
+        const origWindow = global.window;
+        global.document = {
+            querySelector: (sel) => sel.includes('btn-judge-wrong') ? fakeBtnWrong : null
+        };
+        global.window = {
+            toggleTimerPause: () => { timerPaused = true; }
+        };
+
+        try {
+            gm.handleButtonY();
+            assert.strictEqual(wrongClicked, true, 'Must click host judging button when present');
+            assert.strictEqual(timerPaused, false, 'Must not toggle timer pause when judging button is active');
+
+            // Now when judging button is absent, fallback to timer pause
+            wrongClicked = false;
+            global.document.querySelector = () => null;
+            gm.handleButtonY();
+            assert.strictEqual(wrongClicked, false);
+            assert.strictEqual(timerPaused, true, 'Must fallback to timer pause when judging is not active');
+        } finally {
+            global.document = origDoc;
+            global.window = origWindow;
+        }
+    });
 });

@@ -17,6 +17,7 @@ describe('Desktop & Tauri Configuration Tests (Stage 5.1)', () => {
         const cargoToml = fs.readFileSync(cargoTomlPath, 'utf8');
         assert.ok(cargoToml.includes('name = "quiz-u-desktop"'), 'Cargo.toml must define quiz-u-desktop');
         assert.ok(cargoToml.includes('tauri'), 'Cargo.toml must include tauri dependency');
+        assert.ok(cargoToml.includes('tauri-plugin-shell'), 'Cargo.toml must include tauri-plugin-shell dependency');
     });
 
     it('src-tauri/tauri.conf.json is valid JSON with Steam Deck 1280x800 resolution', () => {

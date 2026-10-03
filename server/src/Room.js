@@ -126,7 +126,7 @@ class Room {
 
     addPlayer(name, avatar, ws, sessionToken = null, role = 'player') {
         this.touch();
-        const trimmedName = (name || '').trim();
+        const trimmedName = (typeof name === 'string' ? name : '').trim();
         if (!trimmedName) {
             return { success: false, error: ERROR_CODES.INVALID_PAYLOAD, message: 'Имя игрока не может быть пустым' };
         }
@@ -265,10 +265,10 @@ class Room {
         return { success: true, player: newPlayer, role: 'player' };
     }
 
-    removePlayer(ws) {
+    removePlayer(target) {
         this.touch();
         // Check mobile host disconnect
-        if (this.hostPlayer && this.hostPlayer.ws === ws) {
+        if (this.hostPlayer && (this.hostPlayer.ws === target || this.hostPlayer.id === target)) {
             this.hostPlayer.isConnected = false;
             this.hostPlayer.ws = null;
             this.broadcastToAll(MSG_TYPES.PLAYER_LEFT, {
@@ -281,7 +281,7 @@ class Room {
         }
 
         for (const [id, player] of this.players.entries()) {
-            if (player.ws === ws) {
+            if (player.ws === target || id === target) {
                 player.isConnected = false;
                 player.ws = null;
 
@@ -299,6 +299,14 @@ class Room {
                     }
                     this.activeBuzzerPlayerId = null;
                     this.broadcastToAll(MSG_TYPES.BUZZ_RESET, {});
+
+                    const remainingPlayers = Array.from(this.players.values()).filter(p => p.isConnected && !this.buzzedPlayers.has(p.id));
+                    if (remainingPlayers.length > 0) {
+                        this.stateMachine.state = 'BUZZ_ACTIVE';
+                        this.activateBuzzer();
+                    } else {
+                        this.finishQuestion();
+                    }
                 }
 
                 this.broadcastRoomState();
@@ -708,12 +716,13 @@ class Room {
         this.touch();
         const player = this.players.get(playerId);
         if (player) {
-            player.score += delta;
+            const numDelta = Number(delta) || 0;
+            player.score += numDelta;
             this.broadcastToAll(MSG_TYPES.SCORE_UPDATED, {
                 playerId,
                 playerName: player.name,
                 newScore: player.score,
-                delta,
+                delta: numDelta,
                 players: this.getSanitizedPlayers()
             });
         }
@@ -726,6 +735,7 @@ class Room {
         this.answerTimer = null;
         this.readingTimer = null;
         this.activeBuzzerPlayerId = null;
+        this.currentQuestion = null;
 
         try {
             this.stateMachine.showBoard();

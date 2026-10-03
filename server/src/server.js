@@ -197,12 +197,16 @@ wss.on('connection', (ws, req) => {
 });
 
 function handleClientMessage(ws, message) {
-    const { type, payload } = message;
+    const { type } = message;
+    const payload = (message.payload && typeof message.payload === 'object') ? message.payload : {};
 
     switch (type) {
         // --- HOST ACTIONS ---
         case MSG_TYPES.HOST_CREATE_ROOM: {
-            const room = roomManager.createRoom(ws, payload ? payload.options : {});
+            if (ws.roomCode) {
+                roomManager.deleteRoom(ws.roomCode);
+            }
+            const room = roomManager.createRoom(ws, payload.options || {});
             ws.isHost = true;
             ws.roomCode = room.code;
 
@@ -217,6 +221,12 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_SET_PACK: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
+            if (!payload.pack) {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: 'Пакет вопросов не указан'
+                }));
+            }
             room.setPack(payload.pack);
             ws.send(createMessage(MSG_TYPES.ROOM_STATE, room.getStateSnapshot(false)));
             break;
@@ -238,14 +248,14 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_SET_LOCAL_HOST: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
-            room.setHostOnPC(Boolean(payload && payload.isHostOnPC));
+            room.setHostOnPC(Boolean(payload.isHostOnPC));
             break;
         }
 
         case MSG_TYPES.HOST_UPDATE_ROOM_SETTINGS: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
-            const newOpts = payload && (payload.settings || payload.options);
+            const newOpts = payload.settings || payload.options || payload;
             room.updateOptions(newOpts);
             break;
         }
@@ -253,6 +263,12 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_SELECT_QUESTION: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
+            if (payload.themeIdx === undefined || payload.questionIdx === undefined || !payload.question) {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: 'Некорректные параметры вопроса'
+                }));
+            }
             room.selectQuestion(payload.themeIdx, payload.questionIdx, payload.question);
             break;
         }
@@ -281,7 +297,7 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_TOGGLE_PAUSE: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
-            room.togglePause(payload && payload.isPaused);
+            room.togglePause(payload.isPaused);
             break;
         }
 
@@ -296,12 +312,25 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_UPDATE_SCORE: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
+            if (!payload.playerId || typeof payload.delta !== 'number') {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: 'Не указан ID игрока или числовое значение изменения очков'
+                }));
+            }
             room.updatePlayerScore(payload.playerId, payload.delta);
             break;
         }
 
         // --- PLAYER / PARTICIPANT ACTIONS ---
         case MSG_TYPES.PLAYER_JOIN: {
+            if (!payload.roomCode || !payload.name || typeof payload.name !== 'string' || !payload.name.trim()) {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: 'Не указан код комнаты или имя игрока'
+                }));
+            }
+
             const room = roomManager.getRoom(payload.roomCode);
             if (!room) {
                 ws.send(createMessage(MSG_TYPES.ERROR, {
@@ -344,13 +373,26 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.PLAYER_AUCTION_BET: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.playerId) return;
-            room.handleAuctionBet(ws.playerId, payload.amount);
+            const amount = Number(payload.amount);
+            if (isNaN(amount) || amount <= 0) {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: 'Некорректная сумма ставки'
+                }));
+            }
+            room.handleAuctionBet(ws.playerId, amount);
             break;
         }
 
         case MSG_TYPES.PLAYER_CAT_TRANSFER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.playerId) return;
+            if (!payload.targetPlayerId) {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: 'Не указан целевой игрок'
+                }));
+            }
             room.handleCatTransfer(ws.playerId, payload.targetPlayerId);
             break;
         }
@@ -370,9 +412,7 @@ function handleClientDisconnect(ws) {
     if (ws.roomCode) {
         const room = roomManager.getRoom(ws.roomCode);
         if (room) {
-            if (ws.playerId) {
-                room.removePlayer(ws.playerId);
-            }
+            room.removePlayer(ws);
             if (room.hostWs === ws) {
                 room.hostWs = null;
                 room.broadcastRoomState();

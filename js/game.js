@@ -1948,7 +1948,9 @@
 
             theme.questions.forEach((q, qIdx) => {
                 const qDiv = document.createElement('div');
-                qDiv.classList.add('question-cost');
+                qDiv.classList.add('question-cost', 'cell');
+                qDiv.setAttribute('tabindex', '0');
+                qDiv.setAttribute('role', 'button');
                 qDiv.textContent = q.cost;
                 if (q.used) qDiv.classList.add('used');
                 else qDiv.onclick = (event) => openQuestion(themeIdx, qIdx, qDiv, event);
@@ -1956,6 +1958,17 @@
             });
             if (board) board.appendChild(row);
         });
+
+        if (window.gamepadManager) {
+            setTimeout(() => window.gamepadManager.ensureInitialFocus(), 60);
+        }
+        if (window.steamIntegration && round) {
+            const packTitle = (typeof currentPackTitle !== 'undefined' && currentPackTitle) ? currentPackTitle : '';
+            window.steamIntegration.updateGameStatus({
+                activity: round.roundName || 'В игре',
+                packTitle: packTitle
+            });
+        }
     }
 
     function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overrideQuestion = null) {
@@ -1967,6 +1980,17 @@
         const question = overrideQuestion || (gameData[currentRoundIndex]?.themes?.[themeIdx]?.questions?.[qIdx]);
         if (!question) return;
         currentActiveQuestion = question;
+
+        if (window.steamIntegration) {
+            const themeName = gameData[currentRoundIndex]?.themes?.[themeIdx]?.name || '';
+            window.steamIntegration.updateGameStatus({
+                activity: `Вопрос за ${question.cost || 0}`,
+                theme: themeName
+            });
+        }
+        if (window.gamepadManager) {
+            setTimeout(() => window.gamepadManager.ensureInitialFocus(), 60);
+        }
 
         const isFinalRound = !isTestMode && ((currentRoundIndex === gameData.length - 1) ||
             (gameData[currentRoundIndex]?.roundName && (gameData[currentRoundIndex].roundName.toLowerCase().includes('финал') || gameData[currentRoundIndex].roundName.toLowerCase().includes('final'))));
@@ -3190,6 +3214,16 @@
             if (hintElem) hintElem.style.display = 'block';
             if (listContainer) listContainer.style.display = 'flex';
             if (shouldCheckRound) checkRoundEnd();
+            if (window.gamepadManager) {
+                setTimeout(() => window.gamepadManager.ensureInitialFocus(), 60);
+            }
+            if (window.steamIntegration && typeof gameData !== 'undefined' && gameData[currentRoundIndex]) {
+                const round = gameData[currentRoundIndex];
+                window.steamIntegration.updateGameStatus({
+                    activity: round.roundName || 'В игре',
+                    packTitle: (typeof currentPackTitle !== 'undefined' && currentPackTitle) ? currentPackTitle : ''
+                });
+            }
         }
     }
 
