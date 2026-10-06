@@ -296,6 +296,7 @@ class Room {
             if (player.ws === target || id === target) {
                 player.isConnected = false;
                 player.ws = null;
+                this.buzzedPlayers.delete(id);
 
                 this.broadcastToAll(MSG_TYPES.PLAYER_LEFT, {
                     playerId: id,
