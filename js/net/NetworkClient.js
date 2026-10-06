@@ -263,6 +263,9 @@ class NetworkClient {
             case MSG.ROOM_STATE:
                 this.lastState = payload;
                 this._syncPlayersFromState(payload);
+                if (payload.isHostOnPC !== undefined) {
+                    this.isHostOnPC = Boolean(payload.isHostOnPC);
+                }
                 if (payload.self) {
                     this.selfPlayer = payload.self;
                 }
