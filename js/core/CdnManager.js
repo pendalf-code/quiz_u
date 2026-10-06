@@ -28,7 +28,7 @@
             if (this._localBaseUrl === '/') this._localBaseUrl = '';
             
             // Если в браузере есть сохраненный конфиг в localStorage
-            if (!this._cdnBaseUrl && typeof localStorage !== 'undefined') {
+            if (!this._cdnBaseUrl && typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
                 try {
                     const savedCdn = localStorage.getItem('quiz_cdn_base_url');
                     if (savedCdn) {
