@@ -338,3 +338,14 @@
      ```
 4. **Обновление статуса:**
    - Измените статус задачи в таблице [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) с `[ ]` на `[x]`, обновите счётчики в сводном прогрессе и синхронизируйте [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md).
+
+---
+
+## 🐛 Исправленные баги (2026-10-07)
+
+| ID | Описание | Файл | Статус |
+|:---|:---------|:-----|:------:|
+| **BUG-08** | `CdnManager.js` использовал `localStorage` без проверки на существование `window` -> `ReferenceError` в Node.js | `js/core/CdnManager.js` | `[x] Устранено` |
+| **BUG-09** | `NetworkClient.js` не обновлял `isHostOnPC` из payload `ROOM_STATE` -> некорректное отображение статуса хоста | `js/net/NetworkClient.js` | `[x] Устранено` |
+| **BUG-10** | `Room.js` не удалял игрока из `buzzedPlayers` при отключении -> игрок не мог баззить в следующем вопросе | `server/src/Room.js` | `[x] Устранено` |
+| **BUG-11** | Тест `review_guide_integrity.test.js` искал документы в корне проекта после их перемещения в `docs/` | `tests/review_guide_integrity.test.js` | `[x] Устранено` |
