@@ -175,4 +175,79 @@ describe('Catalog Logic Tests', () => {
     result = vm.runInContext("getFilteredPacks();", catalogContext);
     assert.strictEqual(result[0].roundsCount, 3);
   });
+
+  
+  describe('Pack Download & HTML Viewer Generation', () => {
+    it('catalog card template contains "📥 Скачать пак" instead of ".JSON"', () => {
+      const catalogCode = fs.readFileSync(path.join(__dirname, '..', 'js', 'catalog.js'), 'utf8');
+      assert.ok(catalogCode.includes('📥 Скачать пак'), 'Card template must have "📥 Скачать пак"');
+      assert.strictEqual(catalogCode.includes('>📥 .JSON</button>'), false, 'Card template must not contain ">📥 .JSON</button>"');
+    });
+
+    it('preview modal button in index.html contains "📥 Скачать пак"', () => {
+      const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+      const btnIdx = indexHtml.indexOf('id="preview-btn-download"');
+      assert.ok(btnIdx !== -1, 'preview-btn-download button must exist in index.html');
+      const btnSlice = indexHtml.slice(btnIdx, btnIdx + 250);
+      assert.ok(btnSlice.includes('📥 Скачать пак'), 'preview-btn-download must say "📥 Скачать пак"');
+      assert.strictEqual(btnSlice.includes('Скачать файл (.json)'), false, 'Must not say "Скачать файл (.json)"');
+    });
+
+    it('generatePackHtmlDocument generates a complete, interactive, self-contained HTML document with questions and answers', () => {
+      const generatePackHtmlDocument = catalogContext.generatePackHtmlDocument;
+      assert.strictEqual(typeof generatePackHtmlDocument, 'function', 'generatePackHtmlDocument must be a function');
+
+      const mockPack = {
+        title: 'Тестовый Пак <Кино>',
+        category: 'Кино и Сериалы',
+        categoryIcon: '🎬',
+        difficulty: 'medium',
+        description: 'Увлекательные вопросы о фильмах & сериалах',
+        hasCat: true,
+        hasAuction: true
+      };
+
+      const mockRounds = [
+        {
+          roundName: 'Раунд 1: Советские комедии',
+          themes: [
+            {
+              name: 'Бриллиантовая рука',
+              questions: [
+                { q: 'Какую фразу произносит управдом <Плющ>?', a: 'Собака — друг человека!', cost: 100 },
+                { q: 'Пароль в аптеке?', a: 'Чёрт побери!', cost: 200 }
+              ]
+            }
+          ]
+        }
+      ];
+
+      const html = generatePackHtmlDocument(mockPack, mockRounds);
+      assert.ok(typeof html === 'string', 'Returned html must be a string');
+      assert.ok(html.startsWith('<!DOCTYPE html>'), 'Must start with <!DOCTYPE html>');
+      assert.ok(html.includes('<title>Тестовый Пак &lt;Кино&gt; — Вопросы и ответы (Quiz U)</title>'), 'Title must be escaped');
+      assert.ok(html.includes('Тестовый Пак &lt;Кино&gt;'), 'Title must be present in header');
+      assert.ok(html.includes('Увлекательные вопросы о фильмах &amp; сериалах'), 'Description must be present and escaped');
+      assert.ok(html.includes('🎬 Кино и Сериалы'), 'Category must be present');
+      assert.ok(html.includes('⭐ Средняя'), 'Difficulty label must be mapped and present');
+      assert.ok(html.includes('🐱 Кот в мешке'), 'Cat in bag badge must be present');
+      assert.ok(html.includes('💰 Аукцион'), 'Auction badge must be present');
+      assert.ok(html.includes('Раунд 1: Советские комедии'), 'Round name must be present');
+      assert.ok(html.includes('Бриллиантовая рука'), 'Theme name must be present');
+      assert.ok(html.includes('Какую фразу произносит управдом &lt;Плющ&gt;?'), 'Question must be present and escaped');
+      assert.ok(html.includes('Собака — друг человека!'), 'Answer must be present');
+      assert.ok(html.includes('100 очков'), 'Cost must be formatted');
+      assert.ok(html.includes('200 очков'), 'Cost must be formatted');
+
+      // Verify interactive controls
+      assert.ok(html.includes('id="search-input"'), 'Must have search input for live question filter');
+      assert.ok(html.includes('id="btn-toggle-answers"'), 'Must have toggle answers button');
+      assert.ok(html.includes('window.print()'), 'Must have print/PDF action');
+      assert.ok(html.includes('toggleTheme()'), 'Must have dark/light theme switch');
+      assert.ok(html.includes('copyPlainQa()'), 'Must have copy questions and answers as text action');
+      assert.ok(html.includes('downloadRawJson()'), 'Must have raw JSON export action');
+      assert.ok(html.includes('@media print'), 'Must have print stylesheet');
+    });
+  });
+
 });

@@ -138,7 +138,8 @@
                 </div>
 
 
-                <div class="prepare-choice-footer" style="margin-top: 52px; margin-bottom: 32px; text-align: center; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+                <div class="prepare-choice-footer"
+                     style="margin-top: 52px; margin-bottom: 32px; text-align: center; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
 
                     <button class="btn btn-check" onclick="backFromPrepareChoice()"
                             style="font-size: 18px; padding: 16px 36px; border-radius: 18px;">⬅️ Назад к подготовке
@@ -453,7 +454,9 @@
             <div id="sub-menu-settings" style="display: none; width: 100%;">
                 <div class="lobby-card" style="max-width: 650px; margin: 0 auto; text-align: left;">
                     <div class="lobby-card-title-row" style="margin-bottom: 22px;">
-                        <div class="lobby-card-title" style="font-size: 24px; color: var(--gold-accent);">⚙️ Настройки викторины</div>
+                        <div class="lobby-card-title" style="font-size: 24px; color: var(--gold-accent);">⚙️ Настройки
+                            викторины
+                        </div>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 20px;">
@@ -462,33 +465,43 @@
 
                             <div class="settings-row-box">
                                 <div class="setting-info">
-                                    <label class="settings-label" for="setting-reading-time">⏱️ Время на чтение ведущим</label>
-                                    <div class="settings-subtext">Пауза для зачитывания вопроса перед активацией кнопок</div>
+                                    <label class="settings-label" for="setting-reading-time">⏱️ Время на чтение
+                                        ведущим</label>
+                                    <div class="settings-subtext">Пауза для зачитывания вопроса перед активацией
+                                        кнопок
+                                    </div>
                                 </div>
                                 <div class="setting-input-wrapper">
-                                    <input class="setting-input-field" id="setting-reading-time" max="60" min="0" type="number" value="7">
+                                    <input class="setting-input-field" id="setting-reading-time" max="60" min="0"
+                                           type="number" value="7">
                                     <span class="setting-unit">сек</span>
                                 </div>
                             </div>
 
                             <div class="settings-row-box">
                                 <div class="setting-info">
-                                    <label class="settings-label" for="setting-thinking-time">🔥 Общее время / окно баззера</label>
+                                    <label class="settings-label" for="setting-thinking-time">🔥 Общее время / окно
+                                        баззера</label>
                                     <div class="settings-subtext">Время на размышление и нажатие кнопки командами</div>
                                 </div>
                                 <div class="setting-input-wrapper">
-                                    <input class="setting-input-field" id="setting-thinking-time" max="120" min="1" type="number" value="30">
+                                    <input class="setting-input-field" id="setting-thinking-time" max="120" min="1"
+                                           type="number" value="30">
                                     <span class="setting-unit">сек</span>
                                 </div>
                             </div>
 
                             <div class="settings-row-box">
                                 <div class="setting-info">
-                                    <label class="settings-label" for="setting-answer-time">🎤 Персональное время на ответ</label>
-                                    <div class="settings-subtext">Время команды на озвучивание ответа после нажатия кнопки</div>
+                                    <label class="settings-label" for="setting-answer-time">🎤 Персональное время на
+                                        ответ</label>
+                                    <div class="settings-subtext">Время команды на озвучивание ответа после нажатия
+                                        кнопки
+                                    </div>
                                 </div>
                                 <div class="setting-input-wrapper">
-                                    <input class="setting-input-field" id="setting-answer-time" max="60" min="1" type="number" value="5">
+                                    <input class="setting-input-field" id="setting-answer-time" max="60" min="1"
+                                           type="number" value="5">
                                     <span class="setting-unit">сек</span>
                                 </div>
                             </div>
@@ -498,7 +511,8 @@
                             <label class="settings-group-title">🎲 Особые типы вопросов в игре</label>
 
                             <div class="settings-row-box">
-                                <label class="settings-checkbox-label" for="setting-type-cat" style="width: 100%; cursor: pointer;">
+                                <label class="settings-checkbox-label" for="setting-type-cat"
+                                       style="width: 100%; cursor: pointer;">
                                     <input checked id="setting-type-cat" type="checkbox">
                                     <div class="setting-info">
                                         <span class="settings-label">🐱 «Кот в мешке»</span>
@@ -508,7 +522,8 @@
                             </div>
 
                             <div class="settings-row-box">
-                                <label class="settings-checkbox-label" for="setting-type-auction" style="width: 100%; cursor: pointer;">
+                                <label class="settings-checkbox-label" for="setting-type-auction"
+                                       style="width: 100%; cursor: pointer;">
                                     <input checked id="setting-type-auction" type="checkbox">
                                     <div class="setting-info">
                                         <span class="settings-label">💰 «Аукцион (для всех)»</span>
@@ -518,7 +533,8 @@
                             </div>
 
                             <div class="settings-row-box">
-                                <label class="settings-checkbox-label" for="setting-type-auction-leader" style="width: 100%; cursor: pointer;">
+                                <label class="settings-checkbox-label" for="setting-type-auction-leader"
+                                       style="width: 100%; cursor: pointer;">
                                     <input checked id="setting-type-auction-leader" type="checkbox">
                                     <div class="setting-info">
                                         <span class="settings-label">🔨 «Аукцион (только лидеру)»</span>
@@ -529,7 +545,8 @@
                         </div>
                     </div>
 
-                    <div class="setup-actions" style="justify-content: center; gap: 16px; margin-top: 32px; margin-bottom: 8px;">
+                    <div class="setup-actions"
+                         style="justify-content: center; gap: 16px; margin-top: 32px; margin-bottom: 8px;">
                         <button class="btn btn-success" onclick="saveSettings()">💾 Сохранить настройки</button>
                         <button class="btn btn-close-modal" onclick="backFromSettings()">⬅️ Назад к подготовке</button>
                     </div>
@@ -729,7 +746,7 @@
                                 </button>
                                 <label class="btn-mini btn-upload-lobby-pack" for="lobby-pack-file-input"
                                        title="Загрузить пользовательский .JSON пак с вопросами">
-                                    📂 Свой .JSON
+                                    📂 Свой пак
                                 </label>
                                 <input accept=".json" id="lobby-pack-file-input" onchange="uploadLobbyCustomPack(event)"
                                        style="display: none;" type="file">
@@ -797,8 +814,12 @@
             <div id="team-setup-container" style="display: none; width: 100%;">
                 <h3>⭐ Настройка команд перед игрой</h3>
                 <div class="setup-actions team-setup-actions-vertical" style="margin-top: 30px; margin-bottom: 25px;">
-                    <button class="btn btn-success" id="btn-start-local-game" onclick="saveTeamsFromSetup()">✅ Запустить игру</button>
-                    <div class="local-start-hint" id="local-start-hint" style="display: none;">⚠️ Для старта игры необходимо выбрать пак вопросов</div>
+                    <button class="btn btn-success" id="btn-start-local-game" onclick="saveTeamsFromSetup()">✅ Запустить
+                        игру
+                    </button>
+                    <div class="local-start-hint" id="local-start-hint" style="display: none;">⚠️ Для старта игры
+                        необходимо выбрать пак вопросов
+                    </div>
                     <button class="btn btn-check" onclick="addInputRow()">➕ Добавить команду</button>
                     <button class="btn btn-check" onclick="openPreGameSettings()">⚙️ Настройки викторины</button>
                     <button class="btn btn-close-modal" onclick="backToMainMenu()">🏠 В главное меню</button>
@@ -808,20 +829,25 @@
                 <div class="lobby-pack-info-card team-setup-pack-card" id="local-pack-info-card">
                     <div class="lobby-pack-info-header">
                         <span class="lobby-pack-label">📚 Пакет вопросов</span>
-                        <span class="lobby-pack-status-badge badge-unselected" id="local-pack-status-badge">НЕ ВЫБРАН</span>
+                        <span class="lobby-pack-status-badge badge-unselected"
+                              id="local-pack-status-badge">НЕ ВЫБРАН</span>
                     </div>
                     <div class="lobby-pack-title-box">
                         <span class="lobby-pack-title-icon">📖</span>
-                        <div class="lobby-pack-name" id="local-active-pack-title">Пак не выбран (выберите в каталоге или загрузите свой)</div>
+                        <div class="lobby-pack-name" id="local-active-pack-title">Пак не выбран (выберите в каталоге или
+                            загрузите свой)
+                        </div>
                     </div>
                     <div class="lobby-pack-actions">
                         <button class="btn-mini btn-change-pack" onclick="openPrepareQuestionsChoice()" type="button">
                             📁 Выбрать пак
                         </button>
-                        <label class="btn-mini btn-upload-lobby-pack" for="local-pack-file-input" title="Загрузить свой .JSON файл с вопросами">
-                            📂 Свой .JSON
+                        <label class="btn-mini btn-upload-lobby-pack" for="local-pack-file-input"
+                               title="Загрузить свой пак файл с вопросами">
+                            📂 Свой пак
                         </label>
-                        <input accept=".json" id="local-pack-file-input" onchange="uploadPack(event)" style="display: none;" type="file">
+                        <input accept=".json" id="local-pack-file-input" onchange="uploadPack(event)"
+                               style="display: none;" type="file">
                     </div>
                 </div>
 
@@ -1174,8 +1200,7 @@
             </button>
 
             <button class="btn btn-pack-modal-download" id="preview-btn-download"
-                    style="font-size: 16px; padding: 14px 24px;">📥
-                Скачать файл (.json)
+                    style="font-size: 16px; padding: 14px 24px;">📥 Скачать пак
             </button>
 
             <button class="btn btn-pack-modal-close" onclick="closePackPreviewModal()"

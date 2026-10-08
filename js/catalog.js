@@ -436,7 +436,7 @@ function renderCatalogPacks() {
                 <div class="pack-card-actions">
                     <button type="button" class="btn btn-pack-play" onclick="selectPackToPlay('${pack.id}')" title="Начать викторину с этим паком">▶️ Играть</button>
                     <button type="button" class="btn btn-pack-preview" onclick="previewPack('${pack.id}')" title="Посмотреть темы и структуру вопросов">👁️ Темы</button>
-                    <button type="button" class="btn btn-pack-download" onclick="downloadPackById('${pack.id}')" title="Скачать файл пака (.json)">📥 .JSON</button>
+                    <button type="button" class="btn btn-pack-download" onclick="downloadPackById('${pack.id}')" title="Скачать пак">📥 Скачать пак</button>
                 </div>
             </div>
         `;
@@ -717,6 +717,803 @@ function closePackPreviewModal() {
     }
 }
 
+/**
+ * Generates an interactive, standalone HTML document for viewing questions and answers of a pack.
+ * @param {Object} pack - Pack metadata
+ * @param {Array} rounds - Array of rounds with themes and questions
+ * @returns {string} - Complete HTML page markup
+ */
+function generatePackHtmlDocument(pack, rounds) {
+    function esc(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    const p = pack || {};
+    const title = p.title || 'Пак вопросов Quiz U';
+    const description = p.description || '';
+    const category = p.category || 'Викторина';
+    const categoryIcon = p.categoryIcon || '📁';
+    const difficulty = p.difficulty || 'medium';
+    const diffMap = {
+        easy: 'Лёгкая',
+        medium: 'Средняя',
+        hard: 'Сложная',
+        expert: 'Экспертная'
+    };
+    const difficultyLabel = diffMap[difficulty] || difficulty;
+
+    const normalizedRounds = Array.isArray(rounds) ? rounds : (rounds ? [rounds] : []);
+    let totalQuestions = 0;
+    let totalThemes = 0;
+
+    normalizedRounds.forEach(r => {
+        (r.themes || []).forEach(t => {
+            totalThemes++;
+            totalQuestions += (t.questions || []).length;
+        });
+    });
+
+    const roundsHtml = normalizedRounds.map((round, rIdx) => {
+        const roundTitle = round.roundName || round.name || ('Раунд ' + (rIdx + 1));
+        const themes = round.themes || [];
+        let roundQuestionsCount = 0;
+        themes.forEach(t => { roundQuestionsCount += (t.questions || []).length; });
+
+        const themesHtml = themes.map((theme, tIdx) => {
+            const themeName = theme.name || ('Тема ' + (tIdx + 1));
+            const questions = theme.questions || [];
+
+            const questionsHtml = questions.map((q, qIdx) => {
+                const cost = q.cost != null ? q.cost : (qIdx + 1) * 100;
+                const audioBadge = q.audio ? '<div class="q-audio-badge">🎵 Аудио-вопрос</div>' : '';
+                const qText = esc(q.q || '');
+                const aText = esc(q.a || '');
+
+                return `
+                <div class="question-card" data-q-text="${esc((q.q || '') + ' ' + (q.a || '') + ' ' + themeName).toLowerCase()}">
+                  <div class="q-top-row">
+                    <span class="q-cost-badge">💰 ${esc(String(cost))} очков</span>
+                    <span class="q-num-label">Вопрос #${qIdx + 1}</span>
+                  </div>
+                  ${audioBadge}
+                  <div class="q-text">${qText}</div>
+                  <button type="button" class="answer-spoiler-btn" onclick="revealSpoiler(this)">👁️ Показать ответ</button>
+                  <div class="answer-box">
+                    <span class="answer-label">✅ Ответ:</span>
+                    <span class="answer-text">${aText}</span>
+                  </div>
+                </div>`;
+            }).join('\n');
+
+            return `
+            <div class="theme-box" data-theme-name="${esc(themeName).toLowerCase()}">
+              <div class="theme-header">
+                <span class="theme-title">🏷️ ${esc(themeName)}</span>
+                <span class="theme-count">${questions.length} вопр.</span>
+              </div>
+              <div class="questions-grid">
+                ${questionsHtml}
+              </div>
+            </div>`;
+        }).join('\n');
+
+        return `
+        <section class="round-section" id="round-${rIdx + 1}">
+          <div class="round-header">
+            <span class="round-title">🏆 ${esc(roundTitle)}</span>
+            <span class="round-meta">${roundQuestionsCount} вопр. • ${themes.length} тем</span>
+          </div>
+          ${themesHtml}
+        </section>`;
+    }).join('\n');
+
+    const tocHtml = normalizedRounds.length > 1 ? `
+    <div class="round-nav">
+      <span class="round-nav-title">Раунды:</span>
+      ${normalizedRounds.map((r, idx) => {
+        const name = r.roundName || ('Раунд ' + (idx + 1));
+        return `<a class="round-nav-link" href="#round-${idx + 1}">${esc(name)}</a>`;
+      }).join(' ')}
+    </div>` : '';
+
+    const safeJsonString = JSON.stringify(normalizedRounds).replace(/<\/script/gi, '<\\/script');
+
+    return `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${esc(title)} — Вопросы и ответы (Quiz U)</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #8b5cf6;
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.15);
+      --toolbar-bg: rgba(15, 23, 42, 0.85);
+      --round-bg: rgba(255, 255, 255, 0.04);
+      --theme-bg: rgba(255, 255, 255, 0.03);
+    }
+    body.light-theme {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #6d28d9;
+      --success: #059669;
+      --success-bg: rgba(5, 150, 105, 0.1);
+      --amber: #d97706;
+      --amber-bg: rgba(217, 119, 6, 0.12);
+      --toolbar-bg: rgba(255, 255, 255, 0.95);
+      --round-bg: #f1f5f9;
+      --theme-bg: #f8fafc;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 60px;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+    .pack-header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 26px 24px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .pack-title {
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1.25;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .pack-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 18px;
+    }
+    .badges-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+    }
+    body.light-theme .badge {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+    .badge-diff-easy { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399; }
+    .badge-diff-medium { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4); color: #60a5fa; }
+    .badge-diff-hard { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.4); color: #fbbf24; }
+    .badge-diff-expert { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #f87171; }
+
+    .toolbar-sticky {
+      position: sticky;
+      top: 12px;
+      z-index: 100;
+      background: var(--toolbar-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .search-box {
+      flex: 1 1 240px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      font-size: 14.5px;
+      padding: 9px 14px 9px 36px;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    body.light-theme .search-input {
+      background: #ffffff;
+      border-color: #cbd5e1;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+    body.light-theme .btn {
+      background: #ffffff;
+      border-color: #cbd5e1;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      transform: translateY(-1px);
+    }
+    body.light-theme .btn:hover {
+      background: #f1f5f9;
+    }
+
+    .round-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    .round-nav-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+    .round-nav-link {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      transition: all 0.15s ease;
+    }
+    .round-nav-link:hover {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .round-section {
+      background: var(--round-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 22px 20px;
+      margin-bottom: 28px;
+    }
+    .round-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .round-title {
+      font-size: 21px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .round-meta {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .theme-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .theme-box:last-child {
+      margin-bottom: 0;
+    }
+    .theme-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed var(--card-border);
+    }
+    .theme-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .theme-count {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .questions-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .question-card {
+      background: var(--theme-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      transition: all 0.15s ease;
+    }
+    .question-card:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    body.light-theme .question-card:hover {
+      border-color: #cbd5e1;
+    }
+    .q-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .q-cost-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--amber);
+      background: var(--amber-bg);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 3px 10px;
+      border-radius: 8px;
+    }
+    .q-num-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .q-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.5;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+    }
+    .q-audio-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .answer-box {
+      background: var(--success-bg);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-left: 4px solid var(--success);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+    .answer-label {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--success);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      margin-top: 1px;
+    }
+    .answer-text {
+      font-size: 15.5px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    body.answers-hidden .answer-box {
+      display: none;
+    }
+    body.answers-hidden .answer-spoiler-btn {
+      display: inline-flex;
+    }
+    .answer-spoiler-btn {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--success);
+      background: var(--success-bg);
+      border: 1px dashed var(--success);
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .answer-spoiler-btn:hover {
+      background: rgba(16, 185, 129, 0.2);
+    }
+    .answer-box.spoiler-revealed {
+      display: flex !important;
+      margin-top: 8px;
+      animation: fadeIn 0.2s ease;
+    }
+    .answer-spoiler-btn.spoiler-revealed-btn {
+      display: none !important;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .question-card.search-hidden,
+    .theme-box.search-hidden,
+    .round-section.search-hidden {
+      display: none !important;
+    }
+    .search-stats-bar {
+      width: 100%;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+      display: none;
+      margin-top: 4px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e293b;
+      border: 1px solid var(--success);
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+      }
+      .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      .toolbar-sticky, .round-nav, .toast, .answer-spoiler-btn {
+        display: none !important;
+      }
+      .pack-header {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        background: #ffffff !important;
+        padding: 16px !important;
+        margin-bottom: 16px !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .round-section {
+        background: #ffffff !important;
+        border: 1px solid #ddd !important;
+        margin-bottom: 20px !important;
+        padding: 14px !important;
+      }
+      .theme-box {
+        background: #ffffff !important;
+        border: 1px solid #eee !important;
+        padding: 12px !important;
+        margin-bottom: 12px !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .question-card {
+        background: #ffffff !important;
+        border: 1px solid #eee !important;
+        margin-bottom: 8px !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .answer-box {
+        display: flex !important;
+        background: #f0fdf4 !important;
+        border-color: #86efac !important;
+        border-left: 3px solid #16a34a !important;
+        color: #000000 !important;
+      }
+      .answer-text, .q-text, .pack-title {
+        color: #000000 !important;
+      }
+      .badge {
+        background: #f3f4f6 !important;
+        color: #111827 !important;
+        border-color: #d1d5db !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="pack-header">
+      <div class="brand-row">
+        <span>🎮 Quiz U</span>
+        <span>•</span>
+        <span>Просмотр вопросов и ответов</span>
+      </div>
+      <h1 class="pack-title">${esc(title)}</h1>
+      ${description ? `<p class="pack-desc">${esc(description)}</p>` : ''}
+      <div class="badges-row">
+        <span class="badge">${esc(categoryIcon)} ${esc(category)}</span>
+        <span class="badge badge-diff-${esc(difficulty)}">⭐ ${esc(difficultyLabel)}</span>
+        <span class="badge">⏱️ ${normalizedRounds.length} ${normalizedRounds.length === 1 ? 'раунд' : 'раунда'}</span>
+        <span class="badge">❓ ${totalQuestions} вопросов</span>
+        <span class="badge">🏷️ ${totalThemes} тем</span>
+        ${p.hasCat ? '<span class="badge">🐱 Кот в мешке</span>' : ''}
+        ${p.hasAuction ? '<span class="badge">💰 Аукцион</span>' : ''}
+      </div>
+    </header>
+
+    <div class="toolbar-sticky">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="search" class="search-input" id="search-input" placeholder="Поиск по вопросам, ответам и темам..." oninput="filterQuestions(this.value)">
+      </div>
+      <div class="btn-group">
+        <button type="button" class="btn" id="btn-toggle-answers" onclick="toggleAnswers()">👁️ <span id="toggle-answers-text">Скрыть ответы</span></button>
+        <button type="button" class="btn" onclick="window.print()">🖨️ Печать / PDF</button>
+        <button type="button" class="btn" onclick="toggleTheme()">🌓 Тема</button>
+        <button type="button" class="btn" onclick="copyPlainQa()">📋 Копировать текст</button>
+        <button type="button" class="btn" onclick="downloadRawJson()">💾 JSON</button>
+      </div>
+      <div class="search-stats-bar" id="search-stats-bar"></div>
+    </div>
+
+    ${tocHtml}
+
+    <main id="pack-content">
+      ${roundsHtml}
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="application/json" id="pack-raw-json">
+${safeJsonString}
+  </script>
+
+  <script>
+    let areAnswersHidden = false;
+
+    function toggleAnswers() {
+      areAnswersHidden = !areAnswersHidden;
+      document.body.classList.toggle('answers-hidden', areAnswersHidden);
+      const label = document.getElementById('toggle-answers-text');
+      if (label) {
+        label.textContent = areAnswersHidden ? 'Показать все ответы' : 'Скрыть ответы';
+      }
+      if (!areAnswersHidden) {
+        document.querySelectorAll('.spoiler-revealed').forEach(el => el.classList.remove('spoiler-revealed'));
+        document.querySelectorAll('.spoiler-revealed-btn').forEach(el => el.classList.remove('spoiler-revealed-btn'));
+      }
+    }
+
+    function revealSpoiler(btn) {
+      const card = btn.closest('.question-card');
+      if (!card) return;
+      const box = card.querySelector('.answer-box');
+      if (box) {
+        box.classList.add('spoiler-revealed');
+        btn.classList.add('spoiler-revealed-btn');
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+    }
+
+    function filterQuestions(rawQuery) {
+      const query = (rawQuery || '').trim().toLowerCase();
+      const statsBar = document.getElementById('search-stats-bar');
+      const cards = document.querySelectorAll('.question-card');
+      const themes = document.querySelectorAll('.theme-box');
+      const rounds = document.querySelectorAll('.round-section');
+
+      if (!query) {
+        cards.forEach(c => c.classList.remove('search-hidden'));
+        themes.forEach(t => t.classList.remove('search-hidden'));
+        rounds.forEach(r => r.classList.remove('search-hidden'));
+        if (statsBar) statsBar.style.display = 'none';
+        return;
+      }
+
+      let matches = 0;
+      cards.forEach(card => {
+        const text = card.getAttribute('data-q-text') || '';
+        const isMatch = text.includes(query);
+        if (isMatch) matches++;
+        card.classList.toggle('search-hidden', !isMatch);
+      });
+
+      themes.forEach(theme => {
+        const hasVisible = theme.querySelectorAll('.question-card:not(.search-hidden)').length > 0;
+        theme.classList.toggle('search-hidden', !hasVisible);
+      });
+
+      rounds.forEach(round => {
+        const hasVisible = round.querySelectorAll('.theme-box:not(.search-hidden)').length > 0;
+        round.classList.toggle('search-hidden', !hasVisible);
+      });
+
+      if (statsBar) {
+        statsBar.style.display = 'block';
+        statsBar.textContent = 'Найдено вопросов: ' + matches + ' из ' + cards.length;
+      }
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.textContent = text;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 2500);
+    }
+
+    function copyPlainQa() {
+      let output = '${esc(title).replace(/'/g, "\\'")}\\n\\n';
+      const rounds = document.querySelectorAll('.round-section');
+      rounds.forEach(r => {
+        const rTitle = r.querySelector('.round-title')?.textContent?.trim() || '';
+        output += '=== ' + rTitle + ' ===\\n\\n';
+        const themes = r.querySelectorAll('.theme-box');
+        themes.forEach(t => {
+          const tTitle = t.querySelector('.theme-title')?.textContent?.trim() || '';
+          output += '-- ' + tTitle + ' --\\n';
+          const cards = t.querySelectorAll('.question-card');
+          cards.forEach((c, idx) => {
+            const cost = c.querySelector('.q-cost-badge')?.textContent?.trim() || '';
+            const q = c.querySelector('.q-text')?.textContent?.trim() || '';
+            const a = c.querySelector('.answer-text')?.textContent?.trim() || '';
+            output += (idx + 1) + '. [' + cost + '] ' + q + '\\n   Ответ: ' + a + '\\n\\n';
+          });
+        });
+      });
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(output).then(() => {
+          showToast('✅ Список вопросов и ответов скопирован!');
+        }).catch(() => {
+          fallbackCopy(output);
+        });
+      } else {
+        fallbackCopy(output);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('✅ Список вопросов и ответов скопирован!');
+      } catch (e) {
+        showToast('Не удалось скопировать в буфер');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function downloadRawJson() {
+      const script = document.getElementById('pack-raw-json');
+      if (!script) return;
+      const blob = new Blob([script.textContent.trim()], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '${esc(title).replace(/'/g, "\\'")}.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>`;
+}
+
+
 async function downloadPackById(packId) {
     const packs = window.AVAILABLE_PACKS || [];
     const pack = packs.find(p => p.id === packId);
@@ -727,12 +1524,13 @@ async function downloadPackById(packId) {
         if (!rounds || rounds.length === 0) {
             rounds = await loadPackJsonData(pack);
         }
-        const jsonStr = JSON.stringify(rounds, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+        const htmlDoc = generatePackHtmlDocument(pack, rounds);
+        const blob = new Blob([htmlDoc], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = (pack.title || 'quiz_pack').replace(/[\\/:*?"<>|]/g, '_') + '.json';
+        const safeTitle = (pack.title || 'quiz_pack').replace(/[\\/:*?"<>|]/g, '_').trim();
+        a.download = safeTitle + '.html';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -763,5 +1561,14 @@ window.selectPackToPlay = selectPackToPlay;
 window.previewPack = previewPack;
 window.closePackPreviewModal = closePackPreviewModal;
 window.downloadPackById = downloadPackById;
+window.generatePackHtmlDocument = generatePackHtmlDocument;
 window.loadPackJsonData = loadPackJsonData;
 window.ensureCatalogLoaded = ensureCatalogLoaded;
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        generatePackHtmlDocument,
+        downloadPackById,
+        loadPackJsonData
+    };
+}
