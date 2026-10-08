@@ -1302,7 +1302,7 @@
             }
             if (pane) {
                 pane.classList.toggle('active', isActive);
-                pane.style.display = isActive ? 'block' : 'none';
+                pane.style.display = isActive ? 'flex' : 'none';
             }
         });
         const contentScroll = document.getElementById('rules-content-scroll');

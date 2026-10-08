@@ -3163,9 +3163,15 @@ button:focus-visible,
         }
 
         .rules-tab-pane {
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 22px; /* Distinct spacing between sections */
+        }
+
+        .rules-tab-pane.active {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 22px !important;
         }
 
         .rules-block,
@@ -3945,6 +3951,10 @@ button:focus-visible,
         max-height: 60vh !important;
         gap: 12px !important;
         padding-right: 4px !important;
+    }
+
+    .rules-tab-pane {
+        gap: 16px !important;
     }
 
     .rules-block {
