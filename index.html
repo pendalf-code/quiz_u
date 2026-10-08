@@ -677,25 +677,21 @@
                         </div>
                     </div>
 
-                    <!-- Zone 3: Пакет вопросов и настройки игры -->
+                    <!-- Zone 3: Пак и настройки игры -->
                     <div class="lobby-card lobby-pack-card">
                         <div class="lobby-card-title-row">
-                            <div class="lobby-card-title">📦 Пакет и настройки</div>
+                            <div class="lobby-card-title">📦 Пак и настройки</div>
                         </div>
 
                         <!-- Pack info block -->
                         <div class="lobby-pack-info-card">
                             <div class="lobby-pack-info-header">
-                                <span class="lobby-pack-label">📚 Выбранный пакет</span>
-                                <span class="lobby-pack-status-badge">АКТИВЕН</span>
+                                <span class="lobby-pack-label">📚 Пак</span>
+                                <span class="lobby-pack-status-badge" id="lobby-pack-status-badge">АКТИВЕН</span>
                             </div>
                             <div class="lobby-pack-title-box">
                                 <span class="lobby-pack-title-icon">📖</span>
                                 <div class="lobby-pack-name" id="lobby-active-pack-title">Загрузка пака...</div>
-                            </div>
-                            <div class="lobby-pack-meta" id="lobby-active-pack-meta">
-                                <span class="pack-meta-pill" id="pack-meta-rounds">🎯 Раунды: —</span>
-                                <span class="pack-meta-pill" id="pack-meta-themes">📚 Темы: —</span>
                             </div>
                             <div class="lobby-pack-actions">
                                 <button class="btn-mini btn-change-pack" onclick="openPrepareQuestionsChoice()"
@@ -711,7 +707,7 @@
                             </div>
                         </div>
 
-                        <!-- Game & Timer Settings Bar in Hub (TASK-01) -->
+                        <!-- Game & Timer Settings Bar in Hub -->
                         <div class="lobby-settings-bar" id="lobby-settings-bar">
                             <div class="lobby-settings-header-row">
                                 <div class="lobby-settings-header-label">⚙️ Настройки</div>
@@ -721,23 +717,39 @@
                                     ✏️ Изменить
                                 </button>
                             </div>
-                            <div class="lobby-settings-chips" id="lobby-settings-chips"
+                            <div class="lobby-settings-list" id="lobby-settings-chips"
                                  onclick="openLobbySettingsModal()" title="Нажмите для изменения настроек">
-                                <span class="setting-summary-chip" id="chip-reading-time">⏱️ Чтение: 7с</span>
-                                <span class="setting-summary-chip" id="chip-thinking-time">🔥 Баззер: 30с</span>
-                                <span class="setting-summary-chip" id="chip-answer-time">🎤 Ответ: 5с</span>
-                                <span class="setting-summary-chip" id="chip-penalty">⚖️ Штраф: Номинал</span>
+                                <div class="lobby-setting-row">
+                                    <div class="lobby-setting-left">
+                                        <span class="lobby-setting-icon">⏱️</span>
+                                        <span class="lobby-setting-label">Чтение вопроса</span>
+                                    </div>
+                                    <span class="lobby-setting-value" id="chip-reading-time">7 сек</span>
+                                </div>
+                                <div class="lobby-setting-row">
+                                    <div class="lobby-setting-left">
+                                        <span class="lobby-setting-icon">🔥</span>
+                                        <span class="lobby-setting-label">Таймер баззера</span>
+                                    </div>
+                                    <span class="lobby-setting-value" id="chip-thinking-time">30 сек</span>
+                                </div>
+                                <div class="lobby-setting-row">
+                                    <div class="lobby-setting-left">
+                                        <span class="lobby-setting-icon">🗣️</span>
+                                        <span class="lobby-setting-label">Время на ответ</span>
+                                    </div>
+                                    <span class="lobby-setting-value" id="chip-answer-time">5 сек</span>
+                                </div>
+                                <div class="lobby-setting-row">
+                                    <div class="lobby-setting-left">
+                                        <span class="lobby-setting-icon">⚖️</span>
+                                        <span class="lobby-setting-label">Штраф за ошибку</span>
+                                    </div>
+                                    <span class="lobby-setting-value" id="chip-penalty">Номинал</span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Mini Quick Guide for visual balance -->
-                        <div class="lobby-quick-guide-card">
-                            <div class="quick-guide-title">💡 Игра со смартфонов</div>
-                            <div class="quick-guide-text">
-                                Игроки сканируют QR-код со своих смартфонов и сразу участвуют в игре через веб-браузер
-                                без установки приложений.
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -847,67 +859,72 @@
     <div class="disconnect-pause-icon">⏸️</div>
     <div class="disconnect-pause-info">
         <div class="disconnect-pause-title">Игра приостановлена</div>
-        <div class="disconnect-pause-desc" id="disconnect-pause-desc">Игрок отключился. Ожидание переподключения...</div>
+        <div class="disconnect-pause-desc" id="disconnect-pause-desc">Игрок отключился. Ожидание переподключения...
+        </div>
     </div>
-    <button type="button" class="btn btn-resume-game" id="btn-resume-from-disconnect" onclick="resumeFromDisconnect()">▶️ Продолжить игру</button>
+    <button class="btn btn-resume-game" id="btn-resume-from-disconnect" onclick="resumeFromDisconnect()" type="button">
+        ▶️ Продолжить игру
+    </button>
 </div>
 
 <div class="modal" id="question-modal">
     <div class="question-modal-layout" id="question-modal-layout">
         <div class="modal-card">
-        <div class="timer-hint" id="timer-hint">Чтение вопроса</div>
-        <div class="timer reading" id="timer">7</div>
-        <div class="modal-text" id="modal-question-text">Текст вопроса</div>
+            <div class="timer-hint" id="timer-hint">Чтение вопроса</div>
+            <div class="timer reading" id="timer">7</div>
+            <div class="modal-text" id="modal-question-text">Текст вопроса</div>
 
-        <img alt="Иллюстрация" id="modal-question-img"
-             onerror="this.classList.add('img-error'); this.style.display='none';"
-             src="" style="display: none;">
-        <video controls id="modal-question-video"
-               style="display: none; width: 100%; max-width: 880px; max-height: 500px; border-radius: 20px; margin: 0 auto 20px auto; box-shadow: 0 6px 20px rgba(0,0,0,0.4);"></video>
-        <div id="modal-question-iframe-container"
-             style="display: none; width: 100%; max-width: 880px; aspect-ratio: 16/9; margin: 0 auto 20px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.4);">
-            <iframe allow="autoplay; encrypted-media; fullscreen" allowfullscreen id="modal-question-iframe"
-                    src="" style="width:100%; height:100%; border:none;"></iframe>
-        </div>
-        <audio controls id="modal-question-audio"
-               style="display: none; width: 100%; max-width: 400px; margin: 0 auto 20px auto; outline: none;"></audio>
-
-        <div class="modal-answer" id="modal-answer-text">Ответ: Правильный ответ</div>
-        <img alt="Иллюстрация ответа" id="modal-answer-img"
-             onerror="this.classList.add('img-error'); this.style.display='none';"
-             src="" style="display: none;">
-        <video controls id="modal-answer-video"
-               style="display: none; width: 100%; max-width: 880px; max-height: 500px; border-radius: 20px; margin: 0 auto 20px auto; box-shadow: 0 6px 20px rgba(0,0,0,0.4);"></video>
-        <div id="modal-answer-iframe-container"
-             style="display: none; width: 100%; max-width: 880px; aspect-ratio: 16/9; margin: 0 auto 20px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.4);">
-            <iframe allow="autoplay; encrypted-media; fullscreen" allowfullscreen id="modal-answer-iframe"
-                    src="" style="width:100%; height:100%; border:none;"></iframe>
-        </div>
-
-        <!-- Online Buzzer Notification & Answering Player Banner (TASK-02) -->
-        <div class="online-buzzer-banner" id="online-buzzer-banner" style="display: none;">
-            <div class="online-buzzer-icon" id="online-buzzer-icon">🔔</div>
-            <div class="online-buzzer-avatar" id="online-buzzer-avatar" style="display: none;">👤</div>
-            <div class="online-buzzer-text-wrap">
-                <div class="online-buzzer-status" id="online-buzzer-status" style="display: none;">Отвечает игрок:</div>
-                <div class="online-buzzer-text" id="online-buzzer-text">Ожидание нажатия кнопки на смартфонах...</div>
+            <img alt="Иллюстрация" id="modal-question-img"
+                 onerror="this.classList.add('img-error'); this.style.display='none';"
+                 src="" style="display: none;">
+            <video controls id="modal-question-video"
+                   style="display: none; width: 100%; max-width: 880px; max-height: 500px; border-radius: 20px; margin: 0 auto 20px auto; box-shadow: 0 6px 20px rgba(0,0,0,0.4);"></video>
+            <div id="modal-question-iframe-container"
+                 style="display: none; width: 100%; max-width: 880px; aspect-ratio: 16/9; margin: 0 auto 20px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.4);">
+                <iframe allow="autoplay; encrypted-media; fullscreen" allowfullscreen id="modal-question-iframe"
+                        src="" style="width:100%; height:100%; border:none;"></iframe>
             </div>
-            <div class="online-buzzer-ring-wrap" id="online-buzzer-ring-wrap" style="display: none;">
-                <svg class="online-ring-svg" viewBox="0 0 100 100">
-                    <circle class="online-ring-bg" cx="50" cy="50" r="42"></circle>
-                    <circle class="online-ring-progress" cx="50" cy="50" id="online-buzzer-ring-progress"
-                            r="42"></circle>
-                </svg>
-                <div class="online-ring-seconds" id="online-buzzer-ring-seconds">5</div>
+            <audio controls id="modal-question-audio"
+                   style="display: none; width: 100%; max-width: 400px; margin: 0 auto 20px auto; outline: none;"></audio>
+
+            <div class="modal-answer" id="modal-answer-text">Ответ: Правильный ответ</div>
+            <img alt="Иллюстрация ответа" id="modal-answer-img"
+                 onerror="this.classList.add('img-error'); this.style.display='none';"
+                 src="" style="display: none;">
+            <video controls id="modal-answer-video"
+                   style="display: none; width: 100%; max-width: 880px; max-height: 500px; border-radius: 20px; margin: 0 auto 20px auto; box-shadow: 0 6px 20px rgba(0,0,0,0.4);"></video>
+            <div id="modal-answer-iframe-container"
+                 style="display: none; width: 100%; max-width: 880px; aspect-ratio: 16/9; margin: 0 auto 20px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.4);">
+                <iframe allow="autoplay; encrypted-media; fullscreen" allowfullscreen id="modal-answer-iframe"
+                        src="" style="width:100%; height:100%; border:none;"></iframe>
+            </div>
+
+            <!-- Online Buzzer Notification & Answering Player Banner (TASK-02) -->
+            <div class="online-buzzer-banner" id="online-buzzer-banner" style="display: none;">
+                <div class="online-buzzer-icon" id="online-buzzer-icon">🔔</div>
+                <div class="online-buzzer-avatar" id="online-buzzer-avatar" style="display: none;">👤</div>
+                <div class="online-buzzer-text-wrap">
+                    <div class="online-buzzer-status" id="online-buzzer-status" style="display: none;">Отвечает игрок:
+                    </div>
+                    <div class="online-buzzer-text" id="online-buzzer-text">Ожидание нажатия кнопки на смартфонах...
+                    </div>
+                </div>
+                <div class="online-buzzer-ring-wrap" id="online-buzzer-ring-wrap" style="display: none;">
+                    <svg class="online-ring-svg" viewBox="0 0 100 100">
+                        <circle class="online-ring-bg" cx="50" cy="50" r="42"></circle>
+                        <circle class="online-ring-progress" cx="50" cy="50" id="online-buzzer-ring-progress"
+                                r="42"></circle>
+                    </svg>
+                    <div class="online-ring-seconds" id="online-buzzer-ring-seconds">5</div>
+                </div>
+            </div>
+
+            <div id="teams-modal-list" style="width: 100%; margin-top: 20px;"></div>
+
+            <div class="modal-controls" id="modal-buttons-area">
+                <button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>
             </div>
         </div>
-
-        <div id="teams-modal-list" style="width: 100%; margin-top: 20px;"></div>
-
-        <div class="modal-controls" id="modal-buttons-area">
-            <button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>
-        </div>
-    </div>
         <!-- Боковая модалка: Отвечает игрок N (появляется рядом с окном вопроса) -->
         <aside class="answering-player-modal hidden" id="answering-player-modal">
             <div class="answering-card-header">
@@ -928,16 +945,19 @@
             <div class="answering-timer-box">
                 <svg class="answering-ring-svg" viewBox="0 0 100 100">
                     <circle class="answering-ring-bg" cx="50" cy="50" r="42"></circle>
-                    <circle class="answering-ring-progress" id="answering-ring-progress" cx="50" cy="50" r="42"></circle>
+                    <circle class="answering-ring-progress" cx="50" cy="50" id="answering-ring-progress"
+                            r="42"></circle>
                 </svg>
                 <div class="answering-ring-seconds" id="answering-ring-seconds">5</div>
             </div>
 
             <div class="answering-controls-row">
-                <button type="button" class="btn btn-judge-ok" id="btn-judge-modal-correct" onclick="judgeOnlineAnswer(true)" title="Зачесть ответ (+очки)">
+                <button class="btn btn-judge-ok" id="btn-judge-modal-correct" onclick="judgeOnlineAnswer(true)"
+                        title="Зачесть ответ (+очки)" type="button">
                     <span>✅ Зачесть</span>
                 </button>
-                <button type="button" class="btn btn-judge-no" id="btn-judge-modal-wrong" onclick="judgeOnlineAnswer(false)" title="Отклонить ответ (-очки)">
+                <button class="btn btn-judge-no" id="btn-judge-modal-wrong" onclick="judgeOnlineAnswer(false)"
+                        title="Отклонить ответ (-очки)" type="button">
                     <span>❌ Отклонить</span>
                 </button>
             </div>
@@ -1131,27 +1151,44 @@
                 <label class="settings-group-title">⏱️ Тайминги раунда и вопросов</label>
 
                 <div class="settings-row-box">
-                    <label class="settings-label" for="lobby-setting-reading-time">
-                        ⏱️ Время на чтение ведущим (сек):
-                    </label>
-                    <input class="setting-input-field" id="lobby-setting-reading-time" max="60" min="0" type="number"
-                           value="7">
+                    <div class="setting-info">
+                        <label class="settings-label" for="lobby-setting-reading-time">⏱️ Время на чтение
+                            ведущим</label>
+                        <div class="settings-subtext">Пауза для зачитывания вопроса перед активацией кнопок</div>
+                    </div>
+                    <div class="setting-input-wrapper">
+                        <input class="setting-input-field" id="lobby-setting-reading-time" max="60" min="0"
+                               type="number"
+                               value="7">
+                        <span class="setting-unit">сек</span>
+                    </div>
                 </div>
 
                 <div class="settings-row-box">
-                    <label class="settings-label" for="lobby-setting-thinking-time">
-                        🔥 Общее время на размышление / окно баззера (сек):
-                    </label>
-                    <input class="setting-input-field" id="lobby-setting-thinking-time" max="120" min="5" type="number"
-                           value="30">
+                    <div class="setting-info">
+                        <label class="settings-label" for="lobby-setting-thinking-time">🔥 Общее время / окно
+                            баззера</label>
+                        <div class="settings-subtext">Время на размышление и нажатие кнопки игроками</div>
+                    </div>
+                    <div class="setting-input-wrapper">
+                        <input class="setting-input-field" id="lobby-setting-thinking-time" max="120" min="5"
+                               type="number"
+                               value="30">
+                        <span class="setting-unit">сек</span>
+                    </div>
                 </div>
 
                 <div class="settings-row-box">
-                    <label class="settings-label" for="lobby-setting-answer-time">
-                        🎤 Персональное время игрока на ответ (сек):
-                    </label>
-                    <input class="setting-input-field" id="lobby-setting-answer-time" max="60" min="1" type="number"
-                           value="5">
+                    <div class="setting-info">
+                        <label class="settings-label" for="lobby-setting-answer-time">🎤 Персональное время на
+                            ответ</label>
+                        <div class="settings-subtext">Время игрока на озвучивание ответа после нажатия кнопки</div>
+                    </div>
+                    <div class="setting-input-wrapper">
+                        <input class="setting-input-field" id="lobby-setting-answer-time" max="60" min="1" type="number"
+                               value="5">
+                        <span class="setting-unit">сек</span>
+                    </div>
                 </div>
             </div>
 
@@ -1162,13 +1199,19 @@
                     <label class="settings-checkbox-label" for="lobby-setting-penalty-enabled">
                         <input checked id="lobby-setting-penalty-enabled" onchange="toggleLobbyPenaltyInputs()"
                                type="checkbox">
-                        <span>Списывать очки при неверном ответе или таймауте</span>
+                        <div class="setting-info">
+                            <span class="settings-label">Списывать очки при ошибке или таймауте</span>
+                            <span class="settings-subtext">Отнимать баллы у команды за неправильный ответ</span>
+                        </div>
                     </label>
                 </div>
 
                 <div class="settings-row-box" id="lobby-penalty-mode-row">
-                    <label class="settings-label" for="lobby-setting-penalty-mode">Режим списания:</label>
-                    <select class="catalog-sort-dropdown" id="lobby-setting-penalty-mode"
+                    <div class="setting-info">
+                        <label class="settings-label" for="lobby-setting-penalty-mode">📊 Режим списания</label>
+                        <div class="settings-subtext">Правило расчета штрафа при неверном ответе</div>
+                    </div>
+                    <select class="catalog-sort-dropdown setting-dropdown-field" id="lobby-setting-penalty-mode"
                             onchange="toggleLobbyPenaltyInputs()">
                         <option value="nominal">Номинал вопроса (полная цена)</option>
                         <option value="fixed">Фиксированный штраф</option>
@@ -1176,11 +1219,15 @@
                 </div>
 
                 <div class="settings-row-box" id="lobby-penalty-fixed-group" style="display: none;">
-                    <label class="settings-label" for="lobby-setting-penalty-fixed-amount">
-                        Сумма штрафа (очков):
-                    </label>
-                    <input class="setting-input-field" id="lobby-setting-penalty-fixed-amount" min="10" step="50"
-                           type="number" value="100">
+                    <div class="setting-info">
+                        <label class="settings-label" for="lobby-setting-penalty-fixed-amount">💰 Сумма штрафа</label>
+                        <div class="settings-subtext">Количество очков, списываемых при ошибке</div>
+                    </div>
+                    <div class="setting-input-wrapper">
+                        <input class="setting-input-field" id="lobby-setting-penalty-fixed-amount" min="10" step="50"
+                               type="number" value="100">
+                        <span class="setting-unit">очков</span>
+                    </div>
                 </div>
             </div>
         </div>

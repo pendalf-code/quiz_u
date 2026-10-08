@@ -542,6 +542,7 @@ async function selectPackToPlay(packId) {
         }
 
         window.currentPackTitle = pack.title;
+        window.isPackSelected = true;
 
         // Clear previous in-progress game save
         if (typeof clearGameState === 'function') {

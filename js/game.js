@@ -28,6 +28,7 @@
     }
     window.normalizeGameData = normalizeGameData;
 
+    window.isPackSelected = false;
     let rawSavedPack = null;
     try {
         rawSavedPack = JSON.parse(localStorage.getItem('jeopardy_pack'));
@@ -1018,13 +1019,15 @@
                         text: "🔄 Начать заново", class: "btn-danger", action: () => {
                             clearGameState();
                             closeSystemModal();
-                            showTeamSetup();
+                            window.isPackSelected = false;
+                            openPrepareQuestionsChoice();
                         }
                     }
                 ]
             );
         } else {
-            showTeamSetup();
+            window.isPackSelected = false;
+            openPrepareQuestionsChoice();
         }
     }
 
@@ -1699,8 +1702,10 @@
     }
 
     function saveTeamsFromSetup() {
-        if (!gameData || gameData.length === 0) {
-            showSystemModal("❌ ОШИБКА ЗАПУСКА", "Вопросы не загружены. Пожалуйста, выберите пак в каталоге или загрузите свой JSON-файл.");
+        if (!gameData || gameData.length === 0 || !window.isPackSelected) {
+            showSystemModal("⚠️ Выберите пак", "Перед стартом игры необходимо выбрать пак вопросов. Пожалуйста, выберите пак в каталоге или загрузите свой JSON-файл.", [
+                {text: "📁 Выбрать пак", class: "btn-success", action: () => { closeSystemModal(); openPrepareQuestionsChoice(); }}
+            ]);
             return;
         }
         const inputs = document.querySelectorAll('#team-inputs .team-input');
@@ -1827,6 +1832,8 @@
             const parsed = JSON.parse(document.getElementById('json-editor').value);
             gameData = normalizeGameData(parsed);
             window.gameData = gameData;
+            window.currentPackTitle = 'Пользовательский пак';
+            window.isPackSelected = true;
             localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
             currentRoundIndex = 0;
             if (isOnlineGame) {
@@ -3499,24 +3506,24 @@
 
         if (readingChip) {
             if (currentLobbySettings.readingTime === 0) {
-                readingChip.textContent = '⏱️ Чтение: 0с (без задержки)';
+                readingChip.textContent = '0 сек (без задержки)';
             } else {
-                readingChip.textContent = `⏱️ Чтение: ${currentLobbySettings.readingTime}с`;
+                readingChip.textContent = `${currentLobbySettings.readingTime} сек`;
             }
         }
         if (thinkingChip) {
-            thinkingChip.textContent = `🔔 Таймер: ${currentLobbySettings.thinkingTime}с`;
+            thinkingChip.textContent = `${currentLobbySettings.thinkingTime} сек`;
         }
         if (answerChip) {
-            answerChip.textContent = `🗣️ Ответ: ${currentLobbySettings.answerTime}с`;
+            answerChip.textContent = `${currentLobbySettings.answerTime} сек`;
         }
         if (penaltyChip) {
             if (!currentLobbySettings.penaltyEnabled) {
-                penaltyChip.textContent = '⚠️ Штраф: отключен';
+                penaltyChip.textContent = 'Отключен';
             } else if (currentLobbySettings.penaltyMode === 'fixed') {
-                penaltyChip.textContent = `⚠️ Штраф: ${currentLobbySettings.penaltyFixedAmount} фикс.`;
+                penaltyChip.textContent = `-${currentLobbySettings.penaltyFixedAmount} очк.`;
             } else {
-                penaltyChip.textContent = '⚠️ Штраф: номинал';
+                penaltyChip.textContent = 'Номинал';
             }
         }
     }
@@ -3533,7 +3540,7 @@
         }
         if (fixedGroup) {
             if (isEnabled && modeSelect && modeSelect.value === 'fixed') {
-                fixedGroup.style.display = 'block';
+                fixedGroup.style.display = 'flex';
             } else {
                 fixedGroup.style.display = 'none';
             }
@@ -3700,29 +3707,24 @@
 
     function updateLobbyPackDisplay() {
         const titleEl = document.getElementById('lobby-active-pack-title');
-        const roundsPill = document.getElementById('pack-meta-rounds');
-        const themesPill = document.getElementById('pack-meta-themes');
+        const badgeEl = document.getElementById('lobby-pack-status-badge');
         if (!titleEl) return;
-        if (gameData && gameData.length > 0) {
+        if (window.isPackSelected && gameData && gameData.length > 0) {
             const title = window.currentPackTitle ? `«${window.currentPackTitle}»` : 'Выбранный пак';
             titleEl.textContent = title;
-            const roundsCount = gameData.length;
-            let totalThemes = 0;
-            let totalQuestions = 0;
-            gameData.forEach(r => {
-                if (r && r.themes) {
-                    totalThemes += r.themes.length;
-                    r.themes.forEach(t => {
-                        if (t && t.questions) totalQuestions += t.questions.length;
-                    });
-                }
-            });
-            if (roundsPill) roundsPill.textContent = `🎯 Раундов: ${roundsCount}`;
-            if (themesPill) themesPill.textContent = `📚 Тем: ${totalThemes} (${totalQuestions} вопр.)`;
+            if (badgeEl) {
+                badgeEl.className = 'lobby-pack-status-badge';
+                badgeEl.textContent = 'АКТИВЕН';
+            }
         } else {
-            titleEl.textContent = 'Пакет не выбран (выберите в каталоге)';
-            if (roundsPill) roundsPill.textContent = '🎯 Раундов: —';
-            if (themesPill) themesPill.textContent = '📚 Тем: —';
+            titleEl.textContent = 'Пак не выбран (выберите в каталоге или загрузите свой)';
+            if (badgeEl) {
+                badgeEl.className = 'lobby-pack-status-badge badge-unselected';
+                badgeEl.textContent = 'НЕ ВЫБРАН';
+            }
+        }
+        if (typeof renderLobbyPlayers === 'function') {
+            renderLobbyPlayers();
         }
     }
 
@@ -3736,6 +3738,7 @@
                 gameData = normalizeGameData(parsed);
                 window.gameData = gameData;
                 window.currentPackTitle = file.name.replace(/\.json$/i, '');
+                window.isPackSelected = true;
                 try {
                     localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
                 } catch (err) {}
@@ -4220,14 +4223,17 @@
             }
         }
 
-        // Validation for Start Button (TASK-05: requires host AND at least 2 players)
-        const canStart = hasHost && (activeCount >= 2);
+        // Validation for Start Button (requires host, at least 2 players, and selected pack)
+        const hasPack = Boolean(window.isPackSelected && gameData && gameData.length > 0);
+        const canStart = hasHost && (activeCount >= 2) && hasPack;
         if (startBtn) {
             startBtn.disabled = !canStart;
         }
 
         if (hintEl) {
-            if (!hasHost && activeCount < 2) {
+            if (!hasPack) {
+                hintEl.textContent = '⚠️ Для старта игры необходимо выбрать пак вопросов (в блоке «Пак и настройки»)';
+            } else if (!hasHost && activeCount < 2) {
                 hintEl.textContent = '⚠️ Для старта игры требуется подключить ведущего и минимум 2 игрока';
             } else if (!hasHost) {
                 hintEl.textContent = '⚠️ Для старта игры требуется подключить ведущего (отсканируйте QR-код со смартфона или выберите «Вести с этого ПК»)';
@@ -4303,8 +4309,8 @@
 
     function startOnlineGame() {
         if (!hostNetworkClient) return;
-        if (!gameData || gameData.length === 0) {
-            showSystemModal("⚠️ Нет вопросов", "Пакет вопросов не выбран или пуст. Выберите пак перед началом игры.");
+        if (!gameData || gameData.length === 0 || !window.isPackSelected) {
+            showSystemModal("⚠️ Пак не выбран", "Перед стартом сетевой игры необходимо выбрать пак вопросов в каталоге или загрузить свой .JSON.");
             return;
         }
         const host = hostNetworkClient.getHost();
