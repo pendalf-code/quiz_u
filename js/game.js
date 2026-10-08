@@ -1020,14 +1020,14 @@
                             clearGameState();
                             closeSystemModal();
                             window.isPackSelected = false;
-                            openPrepareQuestionsChoice();
+                            showTeamSetup();
                         }
                     }
                 ]
             );
         } else {
             window.isPackSelected = false;
-            openPrepareQuestionsChoice();
+            showTeamSetup();
         }
     }
 
@@ -1239,6 +1239,12 @@
         }
         const target = document.getElementById(screenId);
         if (target) target.style.display = 'block';
+
+        if (screenId === 'team-setup-container') {
+            updateLocalGameSetupState();
+        } else if (screenId === 'sub-menu-online-lobby') {
+            updateLobbyPackDisplay();
+        }
 
         if (window.gamepadManager) {
             setTimeout(() => window.gamepadManager.ensureInitialFocus(), 60);
@@ -1591,7 +1597,16 @@
         localStorage.setItem('cfg_allow_auction', configAllowAuction);
         localStorage.setItem('cfg_allow_auction_leader', configAllowAuctionLeader);
 
-        showSystemModal("🏁 Готовы к игре!", "Настройки успешно сохранены!");
+        showSystemModal("🏁 Готовы к игре!", "Настройки успешно сохранены!", [
+            {
+                text: "OK",
+                class: "btn-success",
+                action: () => {
+                    closeSystemModal();
+                    backFromSettings();
+                }
+            }
+        ]);
     }
 
     function showTeamSetup() {
@@ -3192,6 +3207,7 @@
         const reader = new FileReader();
         reader.onload = function (e) {
             document.getElementById('json-editor').value = e.target.result;
+            window.currentPackTitle = file.name.replace(/\.json$/i, '');
             applyCustomQuestions();
             event.target.value = '';
         };
@@ -3683,7 +3699,76 @@
     }
 
     function openPreGameSettings() {
+        const r = document.getElementById('setting-reading-time');
+        const t = document.getElementById('setting-thinking-time');
+        const a = document.getElementById('setting-answer-time');
+        const cat = document.getElementById('setting-type-cat');
+        const auc = document.getElementById('setting-type-auction');
+        const lead = document.getElementById('setting-type-auction-leader');
+        if (r) r.value = configReadingTime;
+        if (t) t.value = configThinkingTime;
+        if (a) a.value = configAnswerTime;
+        if (cat) cat.checked = configAllowCat;
+        if (auc) auc.checked = configAllowAuction;
+        if (lead) lead.checked = configAllowAuctionLeader;
         showSubScreen('sub-menu-settings');
+    }
+
+    function backFromSettings() {
+        if (isOnlineGame) {
+            showSubScreen('sub-menu-online-lobby');
+        } else {
+            showSubScreen('team-setup-container');
+        }
+    }
+
+    function backFromPrepareChoice() {
+        if (isOnlineGame) {
+            showSubScreen('sub-menu-online-lobby');
+        } else {
+            showSubScreen('team-setup-container');
+        }
+    }
+
+    function updateLocalGameSetupState() {
+        const hasPack = Boolean(window.isPackSelected && gameData && gameData.length > 0);
+        const startBtn = document.getElementById('btn-start-local-game');
+        const hintEl = document.getElementById('local-start-hint');
+        const titleEl = document.getElementById('local-active-pack-title');
+        const badgeEl = document.getElementById('local-pack-status-badge');
+
+        if (startBtn) {
+            startBtn.disabled = !hasPack;
+            if (!hasPack) {
+                startBtn.classList.add('btn-disabled');
+                startBtn.title = "Перед стартом игры выберите пак";
+            } else {
+                startBtn.classList.remove('btn-disabled');
+                startBtn.title = "Запустить игру";
+            }
+        }
+
+        if (hintEl) {
+            if (!hasPack) {
+                hintEl.style.display = 'block';
+                hintEl.textContent = '⚠️ Для старта игры необходимо выбрать пак вопросов';
+            } else {
+                hintEl.style.display = 'none';
+            }
+        }
+
+        if (titleEl && badgeEl) {
+            if (hasPack) {
+                const title = window.currentPackTitle ? `«${window.currentPackTitle}»` : 'Выбранный пак';
+                titleEl.textContent = title;
+                badgeEl.className = 'lobby-pack-status-badge';
+                badgeEl.textContent = 'АКТИВЕН';
+            } else {
+                titleEl.textContent = 'Пак не выбран (выберите в каталоге или загрузите свой)';
+                badgeEl.className = 'lobby-pack-status-badge badge-unselected';
+                badgeEl.textContent = 'НЕ ВЫБРАН';
+            }
+        }
     }
 
     function openOnlineLobby() {
@@ -4409,6 +4494,9 @@
         window.closeLobbySettingsModal = closeLobbySettingsModal;
         window.saveLobbySettings = saveLobbySettings;
         window.openPreGameSettings = openPreGameSettings;
+        window.backFromSettings = backFromSettings;
+        window.backFromPrepareChoice = backFromPrepareChoice;
+        window.updateLocalGameSetupState = updateLocalGameSetupState;
         window.toggleLobbyPenaltyInputs = toggleLobbyPenaltyInputs;
         window.getLobbySettings = getLobbySettings;
         window.syncLobbySettings = syncLobbySettings;

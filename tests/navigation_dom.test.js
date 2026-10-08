@@ -67,15 +67,15 @@ describe('Navigation & DOM Integrity Tests', () => {
     }
   });
 
-  it('sub-menu-settings back button must navigate to main menu via backToMainMenu()', () => {
+  it('sub-menu-settings back button must navigate back to game setup via backFromSettings()', () => {
     const settingsIdx = indexHtml.indexOf('id="sub-menu-settings"');
     const devIdx = indexHtml.indexOf('id="sub-menu-dev"');
     assert.ok(settingsIdx !== -1, 'sub-menu-settings found');
     const settingsSlice = indexHtml.slice(settingsIdx, devIdx !== -1 ? devIdx : settingsIdx + 5000);
 
     assert.ok(
-      settingsSlice.includes('backToMainMenu()'),
-      'sub-menu-settings must have a button with onclick="backToMainMenu()"'
+      settingsSlice.includes('backFromSettings()'),
+      'sub-menu-settings must have a button with onclick="backFromSettings()"'
     );
     assert.ok(
       !settingsSlice.includes("showSubScreen('sub-menu-prepare-choice')"),

@@ -169,10 +169,8 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         assert.ok(htmlContent.includes('class="lobby-card lobby-players-card"'), 'Zone 2: Players card must exist');
         assert.ok(htmlContent.includes('class="lobby-card lobby-pack-card"'), 'Zone 3: Pack card must exist');
 
-        // Zone 3: Pack meta & upload controls
-        assert.ok(htmlContent.includes('id="lobby-active-pack-meta"'), 'Pack metadata container must exist');
-        assert.ok(htmlContent.includes('id="pack-meta-rounds"'), 'Pack rounds pill must exist');
-        assert.ok(htmlContent.includes('id="pack-meta-themes"'), 'Pack themes pill must exist');
+        // Zone 3: Pack status badge & upload controls
+        assert.ok(htmlContent.includes('id="lobby-pack-status-badge"'), 'Pack status badge must exist');
         assert.ok(htmlContent.includes('btn-change-pack'), 'Change pack button must exist');
         assert.ok(htmlContent.includes('btn-upload-lobby-pack'), 'Upload pack button must exist');
         assert.ok(htmlContent.includes('id="lobby-pack-file-input"'), 'Lobby pack file input must exist');

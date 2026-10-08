@@ -2459,8 +2459,8 @@
             margin: 0;
             padding: 0 6px;
             border-radius: 10px;
-            border: 2px solid var(--purple-medium);
-            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(253, 216, 53, 0.45);
+            background: rgba(0, 0, 0, 0.45);
             font-size: 18px;
             font-weight: 800;
             color: var(--gold-accent);
@@ -2469,9 +2469,13 @@
             transition: all 0.2s ease;
         }
 
+        .setting-input-field:hover {
+            border-color: var(--gold-accent);
+        }
+
         .setting-input-field:focus {
             border-color: var(--gold-accent);
-            box-shadow: 0 0 12px rgba(253, 216, 53, 0.3);
+            box-shadow: 0 0 14px rgba(253, 216, 53, 0.45);
         }
 
         .setting-dropdown-field {
@@ -2684,6 +2688,19 @@
             backdrop-filter: blur(8px);
             width: 100%;
             box-sizing: border-box;
+        }
+
+        .team-setup-pack-card {
+            max-width: 960px !important;
+            width: 100% !important;
+            margin: 0 auto 30px auto !important;
+            box-sizing: border-box !important;
+            border-radius: 20px !important;
+            padding: 22px 28px !important;
+        }
+
+        .team-setup-pack-card .lobby-pack-actions {
+            max-width: 440px;
         }
 
         .team-setup-card-title {
@@ -5548,6 +5565,37 @@ body.light-theme .katex {
     text-align: center;
     color: var(--lavender-light);
     opacity: 0.85;
+}
+
+.local-start-hint {
+    font-size: 13.5px;
+    text-align: center;
+    color: #fbbf24;
+    font-weight: 700;
+    margin-top: -6px;
+    margin-bottom: 6px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+body.light-theme .local-start-hint {
+    color: #d97706;
+    text-shadow: none;
+}
+
+.btn:disabled,
+.btn.btn-disabled {
+    background: #4a5568 !important;
+    color: #a0aec0 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 0.65;
+}
+
+body.light-theme .btn:disabled,
+body.light-theme .btn.btn-disabled {
+    background: #cbd5e1 !important;
+    color: #64748b !important;
 }
 
 /* In-game Buzzer Notification & Answering Player Banner */
