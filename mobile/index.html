@@ -394,8 +394,8 @@
                     <div class="host-controls-panel">
                         <div class="host-controls-title">🎮 Управление игрой</div>
 
-                        <!-- Группа 1: Быстрое судейство ответа и добавление/убавление очков игроку -->
-                        <div class="host-btn-row judging-row">
+                        <!-- Группа 1: Быстрое судейство ответа (Зачесть, Отклонить без вычета, Отклонить с вычетом) -->
+                        <div class="host-btn-row judging-row judging-grid-3">
                             <button type="button" class="btn btn-judge-accept" id="btn-host-judge-correct" disabled>
                                 <span class="btn-icon">✅</span>
                                 <span class="btn-text" id="btn-host-judge-correct-text">Зачесть (+100)</span>
@@ -404,27 +404,31 @@
                                 <span class="btn-icon">❌</span>
                                 <span class="btn-text" id="btn-host-judge-wrong-text">Отклонить (без вычета)</span>
                             </button>
-                        </div>
-                        <div class="host-btn-row score-adjust-row">
-                            <button type="button" class="btn btn-host-score-add" id="btn-host-add-score" disabled>
-                                <span class="btn-icon">➕</span>
-                                <span class="btn-text" id="btn-host-add-score-text">+100 игроку</span>
-                            </button>
-                            <button type="button" class="btn btn-host-score-sub" id="btn-host-subtract-score" disabled>
-                                <span class="btn-icon">➖</span>
-                                <span class="btn-text" id="btn-host-subtract-score-text">-100 игроку</span>
+                            <button type="button" class="btn btn-judge-reject-penalty" id="btn-host-judge-wrong-penalty" disabled>
+                                <span class="btn-icon">⚠️</span>
+                                <span class="btn-text" id="btn-host-judge-wrong-penalty-text">Отклонить с вычетом (-100)</span>
                             </button>
                         </div>
 
-                        <!-- Группа 2: Управление таймером и баззером -->
-                        <div class="host-btn-row timing-row">
-                            <button type="button" class="btn btn-host-secondary" id="btn-host-open-buzzer" disabled>
-                                <span class="btn-icon">⚡</span>
-                                <span class="btn-text">Открыть баззер</span>
-                            </button>
+                        <!-- Группа 2: Управление игрой (Пауза, Передать ход, Пропустить раунд, Прибавить всем очки) -->
+                        <div class="host-btn-row flow-extra-row">
                             <button type="button" class="btn btn-host-secondary" id="btn-host-pause">
                                 <span class="btn-icon" id="host-pause-icon">⏸️</span>
                                 <span class="btn-text" id="host-pause-text">Пауза</span>
+                            </button>
+                            <button type="button" class="btn btn-host-secondary" id="btn-host-pass-turn">
+                                <span class="btn-icon">🔄</span>
+                                <span class="btn-text">Передать ход</span>
+                            </button>
+                        </div>
+                        <div class="host-btn-row flow-extra-row">
+                            <button type="button" class="btn btn-host-secondary" id="btn-host-skip-round">
+                                <span class="btn-icon">⏭️</span>
+                                <span class="btn-text">Пропустить раунд</span>
+                            </button>
+                            <button type="button" class="btn btn-host-secondary" id="btn-host-add-all-scores">
+                                <span class="btn-icon">⭐</span>
+                                <span class="btn-text">Прибавить всем очки</span>
                             </button>
                         </div>
 
@@ -492,5 +496,32 @@
     <script src="../js/net/Protocol.js"></script>
     <script src="../js/net/NetworkClient.js"></script>
     <script src="mobile.js"></script>
+
+    <!-- Модальное окно: Добавить очки всем командам -->
+    <div class="modal hidden" id="modal-host-all-scores">
+        <div class="modal-backdrop" id="modal-all-scores-backdrop"></div>
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">⭐ Прибавить очки всем</h3>
+                <button type="button" class="modal-close-btn" id="btn-close-all-scores-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Введите количество очков, которое будет начислено всем игрокам:</p>
+                <div class="form-group">
+                    <input type="number" id="host-all-scores-input" class="form-input text-center text-lg" value="100" min="1" step="50" inputmode="numeric">
+                </div>
+                <div class="all-scores-presets">
+                    <button type="button" class="btn btn-sm btn-secondary preset-score-btn" data-val="100">+100</button>
+                    <button type="button" class="btn btn-sm btn-secondary preset-score-btn" data-val="200">+200</button>
+                    <button type="button" class="btn btn-sm btn-secondary preset-score-btn" data-val="300">+300</button>
+                    <button type="button" class="btn btn-sm btn-secondary preset-score-btn" data-val="500">+500</button>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-all-scores">Отмена</button>
+                <button type="button" class="btn btn-success" id="btn-confirm-all-scores">Начислить всем</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -364,7 +364,7 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_JUDGE_ANSWER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
-            room.judgeAnswer(payload.isCorrect);
+            room.judgeAnswer(payload.isCorrect, payload.withPenalty);
             break;
         }
 
@@ -379,6 +379,27 @@ function handleClientMessage(ws, message) {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
             room.togglePause(payload.isPaused);
+            break;
+        }
+
+        case MSG_TYPES.HOST_SKIP_ROUND: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.skipRound();
+            break;
+        }
+
+        case MSG_TYPES.HOST_PASS_TURN: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.passTurn();
+            break;
+        }
+
+        case MSG_TYPES.HOST_UPDATE_ALL_SCORES: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.updateAllScores(payload.delta);
             break;
         }
 

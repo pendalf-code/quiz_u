@@ -109,24 +109,20 @@
         btnHostJudgeCorrectText: document.getElementById('btn-host-judge-correct-text'),
         btnHostJudgeWrong: document.getElementById('btn-host-judge-wrong'),
         btnHostJudgeWrongText: document.getElementById('btn-host-judge-wrong-text'),
-        btnHostOpenBuzzer: document.getElementById('btn-host-open-buzzer'),
+        btnHostJudgeWrongPenalty: document.getElementById('btn-host-judge-wrong-penalty'),
+        btnHostJudgeWrongPenaltyText: document.getElementById('btn-host-judge-wrong-penalty-text'),
         btnHostPause: document.getElementById('btn-host-pause'),
         hostPauseIcon: document.getElementById('host-pause-icon'),
         hostPauseText: document.getElementById('host-pause-text'),
-        btnHostShowAnswer: document.getElementById('btn-host-show-answer'),
-        btnHostCloseQuestion: document.getElementById('btn-host-close-question'),
-        btnHostStartGame: document.getElementById('btn-host-start-game'),
-        hostLobbyAction: document.getElementById('host-lobby-action'),
-        hostPlayersList: document.getElementById('host-players-list'),
-        hostPlayersCount: document.getElementById('host-players-count'),
-        hostAnsweringScore: document.getElementById('host-answering-score'),
-        hostAnsweringSecretAnswer: document.getElementById('host-answering-secret-answer'),
-        hostPlayerSubmittedBox: document.getElementById('host-player-submitted-box'),
-        hostPlayerSubmittedVal: document.getElementById('host-player-submitted-val'),
-        btnHostAddScore: document.getElementById('btn-host-add-score'),
-        btnHostAddScoreText: document.getElementById('btn-host-add-score-text'),
-        btnHostSubtractScore: document.getElementById('btn-host-subtract-score'),
-        btnHostSubtractScoreText: document.getElementById('btn-host-subtract-score-text'),
+        btnHostPassTurn: document.getElementById('btn-host-pass-turn'),
+        btnHostSkipRound: document.getElementById('btn-host-skip-round'),
+        btnHostAddAllScores: document.getElementById('btn-host-add-all-scores'),
+        modalHostAllScores: document.getElementById('modal-host-all-scores'),
+        modalAllScoresBackdrop: document.getElementById('modal-all-scores-backdrop'),
+        btnCloseAllScoresModal: document.getElementById('btn-close-all-scores-modal'),
+        hostAllScoresInput: document.getElementById('host-all-scores-input'),
+        btnCancelAllScores: document.getElementById('btn-cancel-all-scores'),
+        btnConfirmAllScores: document.getElementById('btn-confirm-all-scores'),
         hostAuctionPanel: document.getElementById('host-auction-panel'),
         hostAuctionCount: document.getElementById('host-auction-count'),
         hostAuctionSecretAnswer: document.getElementById('host-auction-secret-answer'),
@@ -416,6 +412,7 @@
         let currentStep = totalSteps;
 
         state.answerTimerInterval = setInterval(() => {
+            if (state.isAnswerTimerPaused) return;
             currentStep--;
             const progress = Math.max(0, currentStep / totalSteps);
             elements.answerTimerBar.style.width = `${progress * 100}%`;
@@ -476,7 +473,7 @@
 
         // Meta (Theme & Cost)
         if (elements.hostThemeBadge) {
-            const theme = meta.themeName || (state.activeQuestion && (state.activeQuestion.theme || state.activeQuestion.themeName)) || '—';
+            const theme = meta.themeName || state.activeThemeName || (state.activeQuestion && (state.activeQuestion.theme || state.activeQuestion.themeName)) || '—';
             elements.hostThemeBadge.textContent = `Тема: ${theme}`;
         }
         if (elements.hostCostBadge) {
@@ -581,40 +578,16 @@
             }
             if (elements.btnHostJudgeCorrect) elements.btnHostJudgeCorrect.disabled = false;
             if (elements.btnHostJudgeWrong) elements.btnHostJudgeWrong.disabled = false;
+            if (elements.btnHostJudgeWrongPenalty) elements.btnHostJudgeWrongPenalty.disabled = false;
             if (elements.btnHostJudgeCorrectText) elements.btnHostJudgeCorrectText.textContent = `Зачесть (+${state.currentCost})`;
             if (elements.btnHostJudgeWrongText) elements.btnHostJudgeWrongText.textContent = 'Отклонить (без вычета)';
-
-            if (elements.btnHostAddScore) {
-                elements.btnHostAddScore.disabled = false;
-                if (elements.btnHostAddScoreText) elements.btnHostAddScoreText.textContent = `+${state.currentCost} игроку`;
-            }
-            if (elements.btnHostSubtractScore) {
-                elements.btnHostSubtractScore.disabled = false;
-                if (elements.btnHostSubtractScoreText) elements.btnHostSubtractScoreText.textContent = `-${state.currentCost} игроку`;
-            }
+            if (elements.btnHostJudgeWrongPenaltyText) elements.btnHostJudgeWrongPenaltyText.textContent = `Отклонить с вычетом (-${state.currentCost})`;
         } else {
             if (elements.hostAnsweringBanner) elements.hostAnsweringBanner.classList.add('hidden');
             if (elements.hostPlayerSubmittedBox) elements.hostPlayerSubmittedBox.classList.add('hidden');
             if (elements.btnHostJudgeCorrect) elements.btnHostJudgeCorrect.disabled = true;
             if (elements.btnHostJudgeWrong) elements.btnHostJudgeWrong.disabled = true;
-            const targetPlayer = state.activeAnsweringPlayer || state.lastAnsweringPlayer;
-            if (elements.btnHostAddScore) {
-                elements.btnHostAddScore.disabled = !targetPlayer;
-                if (elements.btnHostAddScoreText && targetPlayer) {
-                    elements.btnHostAddScoreText.textContent = `+${state.currentCost} (${targetPlayer.playerName || 'игроку'})`;
-                }
-            }
-            if (elements.btnHostSubtractScore) {
-                elements.btnHostSubtractScore.disabled = !targetPlayer;
-                if (elements.btnHostSubtractScoreText && targetPlayer) {
-                    elements.btnHostSubtractScoreText.textContent = `-${state.currentCost} (${targetPlayer.playerName || 'игроку'})`;
-                }
-            }
-        }
-
-        // Buzzer open button
-        if (elements.btnHostOpenBuzzer) {
-            elements.btnHostOpenBuzzer.disabled = (currentRoomState !== 'QUESTION_READING');
+            if (elements.btnHostJudgeWrongPenalty) elements.btnHostJudgeWrongPenalty.disabled = true;
         }
 
         // Pause button
@@ -692,7 +665,7 @@
             return;
         }
 
-        const qCost = state.currentCost || 100;
+        const initialN = state.hostCustomN || state.currentCost || 100;
         playerList.forEach((p) => {
             const row = document.createElement('div');
             row.className = 'host-player-row';
@@ -703,41 +676,60 @@
                 </div>
                 <div class="host-player-actions">
                     <button type="button" class="score-step-btn minus-cost" data-id="${p.id}" title="Снять ${qCost}">-${qCost}</button>
-                    <button type="button" class="score-step-btn minus" data-id="${p.id}" title="Снять 100">-100</button>
                     <span class="host-player-score">${p.score || 0}</span>
-                    <button type="button" class="score-step-btn plus" data-id="${p.id}" title="Добавить 100">+100</button>
                     <button type="button" class="score-step-btn plus-cost" data-id="${p.id}" title="Начислить ${qCost}">+${qCost}</button>
+                    <div class="host-score-n-wrap">
+                        <input type="number" class="score-n-input" value="${initialN}" min="1" step="50" inputmode="numeric" />
+                        <button type="button" class="score-step-btn minus btn-score-sub" data-id="${p.id}" title="Вычесть N очков">-N</button>
+                        <button type="button" class="score-step-btn plus btn-score-add" data-id="${p.id}" title="Прибавить N очков">+N</button>
+                    </div>
                 </div>
             `;
 
-            row.querySelector('.minus-cost').addEventListener('click', () => {
-                if (netClient) {
+            const qCost = state.currentCost || 100;
+            const btnMinusCost = row.querySelector('.minus-cost');
+            if (btnMinusCost) {
+                btnMinusCost.addEventListener('click', () => {
+                    if (!netClient) return;
                     netClient.updateScore(p.id, -qCost);
                     haptic('buzz_press');
                     showToast(`-${qCost} очков (${p.name})`, 'info');
-                }
-            });
+                });
+            }
 
-            row.querySelector('.minus').addEventListener('click', () => {
-                if (netClient) {
-                    netClient.updateScore(p.id, -100);
-                    haptic('buzz_press');
-                }
-            });
-
-            row.querySelector('.plus').addEventListener('click', () => {
-                if (netClient) {
-                    netClient.updateScore(p.id, 100);
-                    haptic('buzz_press');
-                }
-            });
-
-            row.querySelector('.plus-cost').addEventListener('click', () => {
-                if (netClient) {
+            const btnPlusCost = row.querySelector('.plus-cost');
+            if (btnPlusCost) {
+                btnPlusCost.addEventListener('click', () => {
+                    if (!netClient) return;
                     netClient.updateScore(p.id, qCost);
                     haptic('buzz_press');
                     showToast(`+${qCost} очков (${p.name})`, 'success');
-                }
+                });
+            }
+
+            const input = row.querySelector('.score-n-input');
+            input.addEventListener('change', () => {
+                const val = Math.abs(parseInt(input.value, 10)) || 100;
+                state.hostCustomN = val;
+                input.value = val;
+            });
+
+            row.querySelector('.btn-score-add').addEventListener('click', () => {
+                if (!netClient) return;
+                const delta = Math.abs(parseInt(input.value, 10)) || 100;
+                state.hostCustomN = delta;
+                netClient.updateScore(p.id, delta);
+                haptic('buzz_press');
+                showToast(`+${delta} очков (${p.name})`, 'success');
+            });
+
+            row.querySelector('.btn-score-sub').addEventListener('click', () => {
+                if (!netClient) return;
+                const delta = Math.abs(parseInt(input.value, 10)) || 100;
+                state.hostCustomN = delta;
+                netClient.updateScore(p.id, -delta);
+                haptic('buzz_press');
+                showToast(`-${delta} очков (${p.name})`, 'info');
             });
 
             elements.hostPlayersList.appendChild(row);
@@ -1023,6 +1015,7 @@
             state.currentCost = payload.cost || 100;
             state.isEligibleForBuzzer = true;
             state.activeQuestion = payload.question || null;
+            state.activeThemeName = payload.themeName || (payload.question && (payload.question.theme || payload.question.themeName)) || null;
             state.activeAnsweringPlayer = null;
             state.auctionBiddingPlayers = [];
             state.auctionBets = {};
@@ -1192,6 +1185,41 @@
             showScreen('buzzer');
         });
 
+        netClient.on('game_paused', (payload) => {
+            state.isPaused = Boolean(payload.isPaused);
+            state.isAnswerTimerPaused = state.isPaused;
+
+            if (state.selectedRole === 'host') {
+                updateHostScreen(state.roomState);
+            } else {
+                if (state.isPaused) {
+                    if (elements.buzzerBtn) {
+                        elements.buzzerBtn.disabled = true;
+                        elements.buzzerBtn.classList.add('state-paused');
+                    }
+                    if (elements.buzzerText) {
+                        state.prePauseBuzzerText = elements.buzzerText.textContent;
+                        elements.buzzerText.textContent = '⏸️ ПАУЗА В ИГРЕ';
+                    }
+                    if (elements.buzzerSubtext) {
+                        state.prePauseBuzzerSubtext = elements.buzzerSubtext.textContent;
+                        elements.buzzerSubtext.textContent = 'Ожидайте снятия паузы ведущим';
+                    }
+                    showToast('⏸️ Игра поставлена на паузу', 'warning');
+                } else {
+                    if (elements.buzzerBtn) {
+                        elements.buzzerBtn.classList.remove('state-paused');
+                    }
+                    if (state.buzzerState === 'ready') {
+                        setBuzzerState('ready');
+                    } else if (state.buzzerState === 'locked') {
+                        setBuzzerState('locked');
+                    }
+                    showToast('▶️ Игра возобновлена', 'info');
+                }
+            }
+        });
+
         netClient.on('score_updated', (payload) => {
             if (payload.players) {
                 renderPlayersList(payload.players);
@@ -1229,6 +1257,7 @@
         netClient.on('question_closed', () => {
             stopAnswerTimer();
             state.activeQuestion = null;
+            state.activeThemeName = null;
             state.activeAnsweringPlayer = null;
             if (state.selectedRole === 'host') {
                 updateHostScreen('BOARD');
@@ -1353,53 +1382,86 @@
         if (elements.btnHostJudgeCorrect) {
             elements.btnHostJudgeCorrect.addEventListener('click', () => {
                 if (!netClient) return;
-                netClient.judgeAnswer(true);
-                elements.btnHostJudgeCorrect.disabled = true;
-                elements.btnHostJudgeWrong.disabled = true;
-                haptic('success');
-                showToast(`Ответ зачтён (+${state.currentCost})`, 'success');
+                netClient.judgeAnswer(true, false);
+                haptic('buzz_won');
+                showToast('Ответ засчитан!', 'success');
             });
         }
 
         if (elements.btnHostJudgeWrong) {
             elements.btnHostJudgeWrong.addEventListener('click', () => {
                 if (!netClient) return;
-                netClient.judgeAnswer(false);
-                elements.btnHostJudgeCorrect.disabled = true;
-                elements.btnHostJudgeWrong.disabled = true;
-                haptic('error');
-                showToast('Ответ отклонён (без вычета)', 'info');
+                netClient.judgeAnswer(false, false);
+                haptic('buzz_lost');
+                showToast('Ответ отклонён без вычета', 'info');
             });
         }
 
-        // Host Manual Score Add/Subtract (Requirement 1)
-        if (elements.btnHostAddScore) {
-            elements.btnHostAddScore.addEventListener('click', () => {
-                const targetP = state.activeAnsweringPlayer || state.lastAnsweringPlayer;
-                if (!netClient || !targetP) return;
-                netClient.updateScore(targetP.playerId, state.currentCost);
-                haptic('buzz_press');
-                showToast(`+${state.currentCost} очков начислено (${targetP.playerName})`, 'success');
-            });
-        }
-
-        if (elements.btnHostSubtractScore) {
-            elements.btnHostSubtractScore.addEventListener('click', () => {
-                const targetP = state.activeAnsweringPlayer || state.lastAnsweringPlayer;
-                if (!netClient || !targetP) return;
-                netClient.updateScore(targetP.playerId, -state.currentCost);
-                haptic('buzz_press');
-                showToast(`-${state.currentCost} очков снято (${targetP.playerName})`, 'error');
-            });
-        }
-
-        if (elements.btnHostOpenBuzzer) {
-            elements.btnHostOpenBuzzer.addEventListener('click', () => {
+        if (elements.btnHostJudgeWrongPenalty) {
+            elements.btnHostJudgeWrongPenalty.addEventListener('click', () => {
                 if (!netClient) return;
-                netClient.activateBuzzer();
-                elements.btnHostOpenBuzzer.disabled = true;
+                netClient.judgeAnswer(false, true);
+                haptic('buzz_lost');
+                showToast('Ответ отклонён со штрафом!', 'error');
+            });
+        }
+
+        if (elements.btnHostPassTurn) {
+            elements.btnHostPassTurn.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.passTurn();
                 haptic('buzz_press');
-                showToast('Кнопка открыта для игроков', 'info');
+                showToast('Ход передан', 'info');
+            });
+        }
+
+        if (elements.btnHostSkipRound) {
+            elements.btnHostSkipRound.addEventListener('click', () => {
+                if (!netClient) return;
+                if (confirm('Пропустить текущий раунд и перейти к следующему?')) {
+                    netClient.skipRound();
+                    haptic('buzz_press');
+                    showToast('Раунд пропущен', 'info');
+                }
+            });
+        }
+
+        if (elements.btnHostAddAllScores && elements.modalHostAllScores) {
+            elements.btnHostAddAllScores.addEventListener('click', () => {
+                elements.modalHostAllScores.classList.remove('hidden');
+                if (elements.hostAllScoresInput) {
+                    elements.hostAllScoresInput.value = state.currentCost || 100;
+                    elements.hostAllScoresInput.focus();
+                }
+            });
+        }
+
+        const closeAllScoresModal = () => {
+            if (elements.modalHostAllScores) {
+                elements.modalHostAllScores.classList.add('hidden');
+            }
+        };
+
+        if (elements.btnCloseAllScoresModal) elements.btnCloseAllScoresModal.addEventListener('click', closeAllScoresModal);
+        if (elements.btnCancelAllScores) elements.btnCancelAllScores.addEventListener('click', closeAllScoresModal);
+        if (elements.modalAllScoresBackdrop) elements.modalAllScoresBackdrop.addEventListener('click', closeAllScoresModal);
+
+        document.querySelectorAll('.preset-score-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (elements.hostAllScoresInput) {
+                    elements.hostAllScoresInput.value = btn.dataset.val || '100';
+                }
+            });
+        });
+
+        if (elements.btnConfirmAllScores) {
+            elements.btnConfirmAllScores.addEventListener('click', () => {
+                if (!netClient) return;
+                const delta = Math.abs(parseInt(elements.hostAllScoresInput ? elements.hostAllScoresInput.value : 100, 10)) || 100;
+                netClient.updateAllScores(delta);
+                closeAllScoresModal();
+                haptic('buzz_press');
+                showToast(`Всем командам начислено +${delta} очков!`, 'success');
             });
         }
 

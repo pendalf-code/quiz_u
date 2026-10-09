@@ -2067,3 +2067,77 @@ body.light-theme .role-btn.selected {
     flex-wrap: wrap;
     justify-content: flex-end;
 }
+
+
+/* Judging 3 buttons layout */
+.judging-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+@media (min-width: 480px) {
+    .judging-grid-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}
+
+.btn-judge-reject-penalty {
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 12px 10px;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(185, 28, 28, 0.3);
+}
+
+.btn-judge-reject-penalty:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Custom score N input & buttons */
+.host-score-n-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.score-n-input {
+    width: 60px;
+    height: 30px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 2px 4px;
+}
+
+.score-n-input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+.all-scores-presets {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 12px;
+}
+
+.giant-buzzer-btn.state-paused {
+    background: linear-gradient(135deg, #475569, #334155) !important;
+    animation: none !important;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.4) !important;
+    border: 2px dashed var(--accent-gold);
+}

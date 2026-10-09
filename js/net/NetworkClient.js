@@ -346,6 +346,14 @@ class NetworkClient {
                 this.emit('question_closed', payload);
                 break;
 
+            case MSG.ROUND_SKIPPED:
+                this.emit('round_skipped', payload);
+                break;
+
+            case MSG.TURN_PASSED:
+                this.emit('turn_passed', payload);
+                break;
+
             case MSG.GAME_FINISHED:
                 this.emit('game_finished', payload);
                 break;
@@ -450,8 +458,20 @@ class NetworkClient {
         return this.send(MSG.HOST_SET_AUCTION_LEADER, { leaderPlayerId, maxBet });
     }
 
-    judgeAnswer(isCorrect) {
-        return this.send(MSG.HOST_JUDGE_ANSWER, { isCorrect: Boolean(isCorrect) });
+    judgeAnswer(isCorrect, withPenalty = false) {
+        return this.send(MSG.HOST_JUDGE_ANSWER, { isCorrect: Boolean(isCorrect), withPenalty: Boolean(withPenalty) });
+    }
+
+    skipRound() {
+        return this.send(MSG.HOST_SKIP_ROUND, {});
+    }
+
+    passTurn() {
+        return this.send(MSG.HOST_PASS_TURN, {});
+    }
+
+    updateAllScores(delta) {
+        return this.send(MSG.HOST_UPDATE_ALL_SCORES, { delta: Number(delta) || 0 });
     }
 
     showAnswer() {

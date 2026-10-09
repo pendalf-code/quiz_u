@@ -111,7 +111,12 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
         // Control buttons
         assert.ok(html.includes('id="btn-host-judge-correct"'), '#btn-host-judge-correct must exist');
         assert.ok(html.includes('id="btn-host-judge-wrong"'), '#btn-host-judge-wrong must exist');
-        assert.ok(html.includes('id="btn-host-open-buzzer"'), '#btn-host-open-buzzer must exist');
+        assert.ok(html.includes('id="btn-host-judge-wrong-penalty"'), '#btn-host-judge-wrong-penalty must exist');
+        assert.ok(html.includes('id="btn-host-pass-turn"'), '#btn-host-pass-turn must exist');
+        assert.ok(html.includes('id="btn-host-skip-round"'), '#btn-host-skip-round must exist');
+        assert.ok(html.includes('id="btn-host-add-all-scores"'), '#btn-host-add-all-scores must exist');
+        assert.ok(html.includes('id="modal-host-all-scores"'), '#modal-host-all-scores must exist');
+        assert.ok(!html.includes('id="btn-host-open-buzzer"'), '#btn-host-open-buzzer must NOT exist');
         assert.ok(html.includes('id="btn-host-pause"'), '#btn-host-pause must exist');
         assert.ok(html.includes('id="btn-host-show-answer"'), '#btn-host-show-answer must exist');
         assert.ok(html.includes('id="btn-host-close-question"'), '#btn-host-close-question must exist');
@@ -120,8 +125,8 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
         // Manual score adjustment and auction/cat controls
         assert.ok(html.includes('id="host-answering-details"'), '#host-answering-details must exist');
         assert.ok(html.includes('id="host-answering-secret-answer"'), '#host-answering-secret-answer must exist');
-        assert.ok(html.includes('id="btn-host-add-score"'), '#btn-host-add-score must exist');
-        assert.ok(html.includes('id="btn-host-subtract-score"'), '#btn-host-subtract-score must exist');
+        assert.ok(!html.includes('id="btn-host-add-score"'), '#btn-host-add-score must NOT exist in host controls');
+        assert.ok(!html.includes('id="btn-host-subtract-score"'), '#btn-host-subtract-score must NOT exist in host controls');
         assert.ok(html.includes('id="host-auction-panel"'), '#host-auction-panel must exist');
         assert.ok(html.includes('id="host-auction-list"'), '#host-auction-list must exist');
 
@@ -130,6 +135,7 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
         assert.ok(css.includes('.host-secret-box'), '.host-secret-box styles must exist in mobile.css');
         assert.ok(css.includes('.btn-judge-accept'), '.btn-judge-accept styles must exist in mobile.css');
         assert.ok(css.includes('.btn-judge-reject'), '.btn-judge-reject styles must exist in mobile.css');
+        assert.ok(css.includes('.btn-judge-reject-penalty'), '.btn-judge-reject-penalty styles must exist in mobile.css');
         assert.ok(css.includes('.score-step-btn'), '.score-step-btn styles must exist in mobile.css');
         assert.ok(css.includes('.host-answering-details'), '.host-answering-details styles must exist in mobile.css');
         assert.ok(css.includes('.host-auction-panel'), '.host-auction-panel styles must exist in mobile.css');

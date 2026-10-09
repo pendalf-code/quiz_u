@@ -40,6 +40,7 @@ class Room {
         this.currentRoundIndex = 0;
         this.currentThemeIndex = null;
         this.currentQuestionIndex = null;
+        this.currentThemeName = '';
         this.currentCost = 0;
         this.currentQuestion = null; // Full question with answer (HOST ONLY)
         this.isPaused = false;
@@ -55,6 +56,13 @@ class Room {
 
         this.answerTimer = null;
         this.readingTimer = null;
+        this.readingTimerStartedAt = 0;
+        this.readingTimerDuration = 0;
+        this.remainingReadingTime = 0;
+        this.answerTimerStartedAt = 0;
+        this.answerTimerDuration = 0;
+        this.remainingAnswerTime = 0;
+
         this.createdAt = Date.now();
         this.lastActivityAt = Date.now();
 
@@ -463,6 +471,13 @@ class Room {
         this.touch();
         this.currentThemeIndex = themeIdx;
         this.currentQuestionIndex = questionIdx;
+
+        let themeName = '';
+        if (this.currentPack && this.currentPack[this.currentRoundIndex] && this.currentPack[this.currentRoundIndex].themes && this.currentPack[this.currentRoundIndex].themes[themeIdx]) {
+            themeName = this.currentPack[this.currentRoundIndex].themes[themeIdx].name || '';
+        }
+        this.currentThemeName = themeName;
+
         let resolvedQuestion = questionData;
         if (!resolvedQuestion && this.currentPack && this.currentPack[this.currentRoundIndex]) {
             const th = this.currentPack[this.currentRoundIndex].themes && this.currentPack[this.currentRoundIndex].themes[themeIdx];
@@ -470,6 +485,10 @@ class Room {
         }
         if (this.currentPack && this.currentPack[this.currentRoundIndex] && this.currentPack[this.currentRoundIndex].themes && this.currentPack[this.currentRoundIndex].themes[themeIdx] && this.currentPack[this.currentRoundIndex].themes[themeIdx].questions && this.currentPack[this.currentRoundIndex].themes[themeIdx].questions[questionIdx]) {
             this.currentPack[this.currentRoundIndex].themes[themeIdx].questions[questionIdx].used = true;
+        }
+        if (resolvedQuestion) {
+            resolvedQuestion.theme = themeName;
+            resolvedQuestion.themeName = themeName;
         }
         this.currentQuestion = resolvedQuestion;
         this.currentCost = (resolvedQuestion && (resolvedQuestion.cost !== undefined ? resolvedQuestion.cost : resolvedQuestion.price)) ? Number(resolvedQuestion.cost !== undefined ? resolvedQuestion.cost : resolvedQuestion.price) : 100;
@@ -503,6 +522,7 @@ class Room {
         this.sendToHost(MSG_TYPES.QUESTION_ACTIVE, {
             themeIdx,
             questionIdx,
+            themeName,
             cost: this.currentCost,
             readingTime: this.options.readingTime,
             thinkingTime: this.options.thinkingTime,
@@ -514,6 +534,7 @@ class Room {
         this.broadcastToPlayers(MSG_TYPES.QUESTION_ACTIVE, {
             themeIdx,
             questionIdx,
+            themeName,
             cost: this.currentCost,
             readingTime: this.options.readingTime,
             thinkingTime: this.options.thinkingTime,
@@ -523,6 +544,10 @@ class Room {
         // Start reading timer
         if (this.readingTimer) clearTimeout(this.readingTimer);
         const rTime = (this.options.readingTime !== undefined) ? this.options.readingTime : 7;
+        this.readingTimerDuration = rTime;
+        this.remainingReadingTime = rTime;
+        this.readingTimerStartedAt = Date.now();
+
         if (rTime <= 0) {
             this.activateBuzzer();
         } else {
@@ -541,6 +566,7 @@ class Room {
             clearTimeout(this.readingTimer);
             this.readingTimer = null;
         }
+        this.remainingReadingTime = 0;
 
         const qType = (this.currentQuestion && this.currentQuestion.type) ? this.currentQuestion.type : 'normal';
 
@@ -589,6 +615,7 @@ class Room {
             clearTimeout(this.readingTimer);
             this.readingTimer = null;
         }
+        this.remainingReadingTime = 0;
 
         this.stateMachine.state = 'AUCTION_ANSWERING';
         this.auctionAnswers = new Map();
@@ -665,6 +692,10 @@ class Room {
 
     handleBuzz(playerId) {
         this.touch();
+        if (this.isPaused) {
+            return { success: false, reason: 'PAUSED', error: ERROR_CODES.INVALID_ACTION, message: 'Игра на паузе' };
+        }
+
         if (this.stateMachine.state !== 'BUZZ_ACTIVE') {
             return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Кнопка ответа сейчас не активна' };
         }
@@ -688,6 +719,9 @@ class Room {
         this.stateMachine.registerBuzz(playerId);
 
         const ansTime = (this.options.answerTime !== undefined) ? this.options.answerTime : 5;
+        this.answerTimerDuration = ansTime;
+        this.remainingAnswerTime = ansTime;
+        this.answerTimerStartedAt = Date.now();
 
         this.broadcastToAll(MSG_TYPES.BUZZ_LOCKED, {
             playerId,
@@ -810,7 +844,7 @@ class Room {
         }
     }
 
-    judgeAnswer(isCorrect) {
+    judgeAnswer(isCorrect, withPenalty = false) {
         this.touch();
         if (this.answerTimer) {
             clearTimeout(this.answerTimer);
@@ -837,9 +871,8 @@ class Room {
             this.finishQuestion();
             return { success: true, correct: true, playerId: answeringPlayerId };
         } else {
-            // In LAN mode, points are NOT automatically deducted on wrong answer
-            const penalty = this.getPenaltyAmount();
-            if (penalty > 0 && this.options.penaltyEnabled) {
+            const penalty = withPenalty ? (this.getPenaltyAmount() || this.currentCost) : 0;
+            if (penalty > 0) {
                 this.updatePlayerScore(answeringPlayerId, -penalty);
             }
             this.activeBuzzerPlayerId = null;
@@ -854,7 +887,7 @@ class Room {
                     isCorrect: false,
                     playerId: answeringPlayerId,
                     playerName: answeringPlayerName,
-                    cost: this.options.penaltyEnabled ? penalty : 0,
+                    cost: penalty,
                     reopened: true
                 });
                 this.stateMachine.state = 'BUZZ_ACTIVE';
@@ -865,7 +898,7 @@ class Room {
                     isCorrect: false,
                     playerId: answeringPlayerId,
                     playerName: answeringPlayerName,
-                    cost: this.options.penaltyEnabled ? penalty : 0,
+                    cost: penalty,
                     reopened: false
                 });
                 this.finishQuestion();
@@ -882,9 +915,74 @@ class Room {
             this.isPaused = !this.isPaused;
         }
 
+        if (this.isPaused) {
+            if (this.readingTimer) {
+                clearTimeout(this.readingTimer);
+                this.readingTimer = null;
+                const elapsed = (Date.now() - (this.readingTimerStartedAt || Date.now())) / 1000;
+                this.remainingReadingTime = Math.max(0.5, (this.readingTimerDuration || 7) - elapsed);
+            }
+            if (this.answerTimer) {
+                clearTimeout(this.answerTimer);
+                this.answerTimer = null;
+                const elapsed = (Date.now() - (this.answerTimerStartedAt || Date.now())) / 1000;
+                this.remainingAnswerTime = Math.max(0.5, (this.answerTimerDuration || 5) - elapsed);
+            }
+        } else {
+            if (this.stateMachine.state === 'QUESTION_READING' && this.remainingReadingTime > 0) {
+                const rem = this.remainingReadingTime;
+                this.readingTimerStartedAt = Date.now();
+                this.readingTimerDuration = rem;
+                this.readingTimer = setTimeout(() => {
+                    this.activateBuzzer();
+                }, rem * 1000);
+                if (this.readingTimer.unref) this.readingTimer.unref();
+            } else if (this.stateMachine.state === 'ANSWERING' && this.activeBuzzerPlayerId && this.remainingAnswerTime > 0) {
+                const rem = this.remainingAnswerTime;
+                this.answerTimerStartedAt = Date.now();
+                this.answerTimerDuration = rem;
+                this.answerTimer = setTimeout(() => {
+                    this.handleAnswerTimeout();
+                }, rem * 1000);
+                if (this.answerTimer.unref) this.answerTimer.unref();
+            }
+        }
+
         this.broadcastToAll(MSG_TYPES.GAME_PAUSED, {
             isPaused: this.isPaused
         });
+    }
+
+    skipRound() {
+        this.touch();
+        if (this.currentPack && this.currentRoundIndex < this.currentPack.length - 1) {
+            this.currentRoundIndex++;
+        }
+        this.finishQuestion();
+        this.broadcastToAll(MSG_TYPES.ROUND_SKIPPED, {
+            roundIndex: this.currentRoundIndex
+        });
+        this.broadcastRoomState();
+    }
+
+    passTurn() {
+        this.touch();
+        this.broadcastToAll(MSG_TYPES.TURN_PASSED, {});
+    }
+
+    updateAllScores(delta) {
+        this.touch();
+        const numDelta = Number(delta) || 0;
+        if (numDelta === 0) return;
+        for (const player of this.players.values()) {
+            player.score += numDelta;
+        }
+        this.broadcastToAll(MSG_TYPES.SCORE_UPDATED, {
+            delta: numDelta,
+            isAll: true,
+            players: this.getSanitizedPlayers()
+        });
+        this.broadcastRoomState();
     }
 
     showAnswer() {
@@ -928,6 +1026,9 @@ class Room {
         if (this.readingTimer) clearTimeout(this.readingTimer);
         this.answerTimer = null;
         this.readingTimer = null;
+        this.remainingReadingTime = 0;
+        this.remainingAnswerTime = 0;
+        this.currentThemeName = '';
         this.activeBuzzerPlayerId = null;
         this.allowedBuzzerPlayerIds = null;
         this.catTargetPlayerId = null;
@@ -978,6 +1079,11 @@ class Room {
             ? this.sanitizeHost(this.hostPlayer)
             : (this.isHostOnPC ? { id: 'host_pc', name: 'Ведущий (ПК)', role: 'host', isConnected: true } : null);
 
+        let currentThemeName = this.currentThemeName || '';
+        if (!currentThemeName && this.currentThemeIndex !== null && this.currentPack && this.currentPack[this.currentRoundIndex]?.themes?.[this.currentThemeIndex]) {
+            currentThemeName = this.currentPack[this.currentRoundIndex].themes[this.currentThemeIndex].name || '';
+        }
+
         return {
             roomCode: this.code,
             state: this.stateMachine.state,
@@ -988,6 +1094,8 @@ class Room {
             activePlayersCount: this.getActivePlayersCount(),
             canStartGame: startCheck.canStart,
             currentRoundIndex: this.currentRoundIndex,
+            currentThemeIndex: this.currentThemeIndex,
+            themeName: currentThemeName,
             currentCost: this.currentCost,
             activeBuzzerPlayerId: this.activeBuzzerPlayerId,
             currentQuestion: questionData,

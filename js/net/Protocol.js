@@ -15,6 +15,9 @@ const MSG_TYPES = {
     HOST_CLOSE_QUESTION: 'HOST_CLOSE_QUESTION',
     HOST_PASS_QUESTION: 'HOST_PASS_QUESTION',
     HOST_UPDATE_SCORE: 'HOST_UPDATE_SCORE',
+    HOST_UPDATE_ALL_SCORES: 'HOST_UPDATE_ALL_SCORES',
+    HOST_SKIP_ROUND: 'HOST_SKIP_ROUND',
+    HOST_PASS_TURN: 'HOST_PASS_TURN',
     HOST_KICK_PLAYER: 'HOST_KICK_PLAYER',
     HOST_NEXT_ROUND: 'HOST_NEXT_ROUND',
     HOST_SET_LOCAL_HOST: 'HOST_SET_LOCAL_HOST',
@@ -47,6 +50,8 @@ const MSG_TYPES = {
     CAT_TRANSFERRED: 'CAT_TRANSFERRED',
     ANSWER_TIMEOUT: 'ANSWER_TIMEOUT',
     ROUND_CHANGED: 'ROUND_CHANGED',
+    ROUND_SKIPPED: 'ROUND_SKIPPED',
+    TURN_PASSED: 'TURN_PASSED',
     GAME_FINISHED: 'GAME_FINISHED',
     SCORE_UPDATED: 'SCORE_UPDATED',
     JUDGE_RESULT: 'JUDGE_RESULT',
@@ -100,17 +105,10 @@ const ProtocolObject = {
     parseMessage
 };
 
-// Universal export (Node.js CommonJS + Browser global)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ProtocolObject;
 }
+
 if (typeof window !== 'undefined') {
-    window.QuizProtocol = ProtocolObject;
     window.Protocol = ProtocolObject;
-    window.MSG_TYPES = MSG_TYPES;
-    window.ERROR_CODES = ERROR_CODES;
-}
-if (typeof globalThis !== 'undefined') {
-    globalThis.QuizProtocol = ProtocolObject;
-    globalThis.Protocol = ProtocolObject;
 }

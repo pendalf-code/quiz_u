@@ -1001,8 +1001,16 @@ function startOnlineAnswerCountdown(seconds) {
         if (currentStep <= 0) {
             stopOnlineAnswerCountdown();
             playTimeUpSound();
-            if (!activeOnlineBuzzer || !activeOnlineBuzzer.judgedLocally) {
-                unfreezeQuestionTimer();
+            const timerElem = document.getElementById('timer');
+            const hintElem = document.getElementById('timer-hint');
+            if (timerElem) {
+                timerElem.textContent = Math.max(0, savedThinkingTime);
+                timerElem.className = 'timer frozen';
+                timerElem.classList.add('paused');
+            }
+            if (hintElem) {
+                hintElem.textContent = '❄️ Таймер заморожен';
+                hintElem.style.color = '#38bdf8';
             }
         }
     }, stepMs);
@@ -2222,6 +2230,12 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
             audioElement.style.setProperty('display', 'none', 'important');
         }
     } else {
+        if (gameData?.[currentRoundIndex]?.themes?.[themeIdx]?.questions?.[qIdx]) {
+            gameData[currentRoundIndex].themes[themeIdx].questions[qIdx].used = true;
+        }
+        if (overrideQuestion) {
+            overrideQuestion.used = true;
+        }
         question.used = true;
         saveGameState();
         if (element) {
@@ -2690,12 +2704,13 @@ function startTimer() {
     if (isAnswerTimerActive) return;
     stopTimer();
     timerInterval = setInterval(() => {
-        timeLeft--;
+        timeLeft = Math.max(0, timeLeft - 1);
         const timerElem = document.getElementById('timer');
         if (timerElem) timerElem.textContent = timeLeft;
         if (!isReadingTime && timeLeft > 0 && timeLeft <= 10) playTickSound();
 
         if (timeLeft <= 0) {
+            timeLeft = 0;
             if (isReadingTime) {
                 isReadingTime = false;
                 isAnswerTimerActive = false;
@@ -2733,6 +2748,8 @@ function startTimer() {
             } else {
                 stopTimer();
                 playTimeUpSound();
+                const timerElemInner = document.getElementById('timer');
+                if (timerElemInner) timerElemInner.textContent = 0;
                 const hintElemInner = document.getElementById('timer-hint');
                 if (hintElemInner) {
                     hintElemInner.textContent = "⏰ Время вышло! Нажмите кнопку";
@@ -4067,6 +4084,15 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('score_updated', (data) => {
+            if (data && data.isAll && data.delta) {
+                if (teams && Array.isArray(teams)) {
+                    teams.forEach(t => t.score += data.delta);
+                    updateTeamsPanel();
+                    renderModalTeamsList();
+                    saveGameState();
+                }
+                return;
+            }
             if (teams && Array.isArray(teams)) {
                 const team = teams.find(t => t.id === data.playerId || t.name === data.playerName);
                 if (team) {
@@ -4082,16 +4108,15 @@ function initHostNetwork(overrideUrl = null) {
             playBuzzerSound();
 
             // Freeze common question timer
-            savedThinkingTime = timeLeft;
+            savedThinkingTime = Math.max(0, timeLeft);
             stopTimer();
             isAnswerTimerActive = true;
 
             const timerElem = document.getElementById('timer');
             const hintElem = document.getElementById('timer-hint');
             if (timerElem) {
-                timerElem.textContent = timeLeft;
-                timerElem.classList.add('paused');
-                timerElem.classList.add('frozen');
+                timerElem.textContent = savedThinkingTime;
+                timerElem.className = 'timer frozen';
             }
             if (hintElem) {
                 hintElem.textContent = '❄️ Таймер заморожен (ответ игрока)';
@@ -4193,7 +4218,21 @@ function initHostNetwork(overrideUrl = null) {
 
         hostNetworkClient.on('answer_timeout', () => {
             activeOnlineBuzzer = null;
-            unfreezeQuestionTimer();
+            stopOnlineAnswerCountdown();
+            const answeringModal = document.getElementById('answering-player-modal');
+            if (answeringModal) answeringModal.classList.add('hidden');
+
+            const timerElem = document.getElementById('timer');
+            const hintElem = document.getElementById('timer-hint');
+            if (timerElem) {
+                timerElem.textContent = Math.max(0, savedThinkingTime);
+                timerElem.className = 'timer frozen';
+            }
+            if (hintElem) {
+                hintElem.textContent = '❄️ Таймер заморожен';
+                hintElem.style.color = '#38bdf8';
+            }
+
             const banner = document.getElementById('online-buzzer-banner');
             const icon = document.getElementById('online-buzzer-icon');
             const avatar = document.getElementById('online-buzzer-avatar');
@@ -4309,6 +4348,9 @@ function initHostNetwork(overrideUrl = null) {
             stopTimer();
             stopOnlineAnswerCountdown();
             stopQuestionAudio();
+            if (currentThemeIdx !== null && currentQuestionIdx !== null && gameData?.[currentRoundIndex]?.themes?.[currentThemeIdx]?.questions?.[currentQuestionIdx]) {
+                gameData[currentRoundIndex].themes[currentThemeIdx].questions[currentQuestionIdx].used = true;
+            }
             currentTurnTeamIdx = (currentTurnTeamIdx + 1) % (teams.length || 1);
             saveGameState();
             updateTurnDisplay();
@@ -4333,6 +4375,21 @@ function initHostNetwork(overrideUrl = null) {
             if (payload && payload.options) {
                 syncLobbySettings(payload.options);
             }
+            if (payload && payload.board && Array.isArray(payload.board.themes) && gameData?.[currentRoundIndex]?.themes) {
+                payload.board.themes.forEach(th => {
+                    const localTheme = gameData[currentRoundIndex].themes[th.themeIdx];
+                    if (localTheme && Array.isArray(localTheme.questions) && Array.isArray(th.questions)) {
+                        th.questions.forEach(q => {
+                            if (localTheme.questions[q.questionIdx] && q.used) {
+                                localTheme.questions[q.questionIdx].used = true;
+                            }
+                        });
+                    }
+                });
+                if (isGameStarted) {
+                    initBoard();
+                }
+            }
             if (payload.state === 'BOARD' && !isGameStarted) {
                 // If remote host pressed 'Start Game' in lobby
                 if (typeof startOnlineGame === 'function') {
@@ -4341,6 +4398,14 @@ function initHostNetwork(overrideUrl = null) {
             } else if (!isGameStarted) {
                 renderLobbyPlayers();
             }
+        });
+
+        hostNetworkClient.on('round_skipped', () => {
+            executeSkipRound();
+        });
+
+        hostNetworkClient.on('turn_passed', () => {
+            passTurnToNextTeam();
         });
 
         hostNetworkClient.on('server_error', (payload) => {
