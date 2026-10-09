@@ -908,12 +908,43 @@ function stopOnlineAnswerCountdown() {
     }
     const ringWrap = document.getElementById('online-buzzer-ring-wrap');
     if (ringWrap) ringWrap.style.display = 'none';
-    const modal = document.getElementById('answering-player-modal');
-    if (modal) modal.classList.add('hidden');
+}
+
+function unfreezeQuestionTimer() {
+    if (answerCountdownInterval) {
+        clearInterval(answerCountdownInterval);
+        answerCountdownInterval = null;
+    }
+    stopOnlineAnswerCountdown();
+    const answeringModal = document.getElementById('answering-player-modal');
+    if (answeringModal) answeringModal.classList.add('hidden');
+
+    isAnswerTimerActive = false;
+    timeLeft = savedThinkingTime;
+
+    const timerElem = document.getElementById('timer');
+    const hintElem = document.getElementById('timer-hint');
+    if (timerElem && hintElem) {
+        timerElem.classList.remove('frozen');
+        timerElem.classList.remove('paused');
+        timerElem.textContent = timeLeft;
+        timerElem.className = isReadingTime ? 'timer reading' : 'timer thinking';
+        hintElem.textContent = isReadingTime ? '⏱️ Внимание! Чтение вопроса' : '🔥 Время пошло! Обсуждение';
+        hintElem.style.color = isReadingTime ? '#81ecec' : '#ff7675';
+    }
+
+    if (timeLeft > 0) {
+        startTimer();
+    } else {
+        playTimeUpSound();
+    }
 }
 
 function startOnlineAnswerCountdown(seconds) {
-    stopOnlineAnswerCountdown();
+    if (onlineAnswerCountdownInterval) {
+        clearInterval(onlineAnswerCountdownInterval);
+        onlineAnswerCountdownInterval = null;
+    }
 
     const ringWrap = document.getElementById('online-buzzer-ring-wrap');
     const ringProgress = document.getElementById('online-buzzer-ring-progress');
@@ -970,6 +1001,9 @@ function startOnlineAnswerCountdown(seconds) {
         if (currentStep <= 0) {
             stopOnlineAnswerCountdown();
             playTimeUpSound();
+            if (!activeOnlineBuzzer || !activeOnlineBuzzer.judgedLocally) {
+                unfreezeQuestionTimer();
+            }
         }
     }, stepMs);
 }
@@ -2286,7 +2320,19 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
 
     if (question.type === 'cat') {
         playCatMeowSound();
-        teams.forEach((team, idx) => {
+        if (teams.length <= 1) {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.style.width = '100%';
+            btn.style.maxWidth = '450px';
+            btn.style.margin = '0';
+            btn.style.background = 'var(--purple-medium)';
+            btn.style.color = 'white';
+            btn.textContent = `🎯 Отвечать самому: "${teams[0]?.name || 'Игрок'}"`;
+            btn.onclick = () => selectTeamForCatInBag(0);
+            listContainer.appendChild(btn);
+        } else {
+            teams.forEach((team, idx) => {
             if (idx === currentTurnTeamIdx) return;
             const btn = document.createElement('button');
             btn.className = 'btn';
@@ -2298,7 +2344,8 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
             btn.textContent = `🎯 Отдать вопрос команде: "${team.name}"`;
             btn.onclick = () => selectTeamForCatInBag(idx);
             listContainer.appendChild(btn);
-        });
+            });
+        }
         if (btnArea) btnArea.innerHTML = '';
     } else if (['auction', 'auction_leader'].includes(question.type)) {
         let auctionListContainer = document.createElement('div');
@@ -2719,7 +2766,7 @@ function toggleAnswerPause() {
 
         if (timerElem && hintElem) {
             timerElem.textContent = timeLeft;
-            timerElem.classList.add('paused');
+            timerElem.classList.remove('paused');
             timerElem.classList.add('frozen');
             hintElem.textContent = "❄️ Таймер заморожен (ответ команды)";
             hintElem.style.color = "#38bdf8";
@@ -2779,30 +2826,7 @@ function toggleAnswerPause() {
         }, 1000);
 
     } else {
-        if (answerCountdownInterval) {
-            clearInterval(answerCountdownInterval);
-            answerCountdownInterval = null;
-        }
-        const answeringModal = document.getElementById('answering-player-modal');
-        if (answeringModal) answeringModal.classList.add('hidden');
-
-        isAnswerTimerActive = false;
-        timeLeft = savedThinkingTime;
-
-        if (timerElem && hintElem) {
-            timerElem.classList.remove('frozen');
-            timerElem.classList.remove('paused');
-            timerElem.textContent = timeLeft;
-            timerElem.className = isReadingTime ? "timer reading" : "timer thinking";
-            hintElem.textContent = isReadingTime ? "⏱️ Внимание! Чтение вопроса" : "🔥 Время пошло! Обсуждение";
-            hintElem.style.color = isReadingTime ? "#81ecec" : "#ff7675";
-        }
-
-        if (timeLeft > 0) {
-            startTimer();
-        } else {
-            playTimeUpSound();
-        }
+        unfreezeQuestionTimer();
     }
 }
 
@@ -3073,6 +3097,10 @@ function changeTeamScore(teamIdx, amount) {
         else if (amount < 0) gameStats[teamIdx].wrong++;
     }
 
+    if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected && teams[teamIdx] && teams[teamIdx].id) {
+        hostNetworkClient.updateScore(teams[teamIdx].id, amount);
+    }
+
     updateTeamsPanel();
     renderModalTeamsList();
     saveGameState();
@@ -3131,6 +3159,12 @@ function showWinnerCelebration() {
 
     let winners = teams.filter(t => t.score === maxScore);
     triggerFireworksAnimation();
+
+    if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+        hostNetworkClient.finishGame({
+            winners: winners.map(w => ({ name: w.name, score: w.score }))
+        });
+    }
 
     let winnerText = "";
     let winnerDesc = "";
@@ -4038,6 +4072,7 @@ function initHostNetwork(overrideUrl = null) {
                 if (team) {
                     team.score = data.newScore;
                     updateTeamsPanel();
+                    renderModalTeamsList();
                 }
             }
         });
@@ -4046,12 +4081,9 @@ function initHostNetwork(overrideUrl = null) {
             activeOnlineBuzzer = payload;
             playBuzzerSound();
 
-            // Freeze common question timer (Requirement 1)
-            if (timerInterval) {
-                savedThinkingTime = timeLeft;
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
+            // Freeze common question timer
+            savedThinkingTime = timeLeft;
+            stopTimer();
             isAnswerTimerActive = true;
 
             const timerElem = document.getElementById('timer');
@@ -4161,7 +4193,7 @@ function initHostNetwork(overrideUrl = null) {
 
         hostNetworkClient.on('answer_timeout', () => {
             activeOnlineBuzzer = null;
-            stopOnlineAnswerCountdown();
+            unfreezeQuestionTimer();
             const banner = document.getElementById('online-buzzer-banner');
             const icon = document.getElementById('online-buzzer-icon');
             const avatar = document.getElementById('online-buzzer-avatar');
@@ -4274,7 +4306,27 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('question_closed', () => {
+            stopTimer();
+            stopOnlineAnswerCountdown();
+            stopQuestionAudio();
+            currentTurnTeamIdx = (currentTurnTeamIdx + 1) % (teams.length || 1);
+            saveGameState();
+            updateTurnDisplay();
+            updateTeamsPanel();
+            initBoard();
             closeSystemModal(true);
+        });
+
+        hostNetworkClient.on('question_active', (payload) => {
+            const modal = document.getElementById('question-modal');
+            const isModalActive = modal && modal.classList.contains('active') && modal.style.display !== 'none';
+            if (!isModalActive) {
+                const themeIdx = payload.themeIdx !== undefined ? payload.themeIdx : 0;
+                const questionIdx = payload.questionIdx !== undefined ? payload.questionIdx : 0;
+                const targetRow = document.getElementById(`theme-row-${themeIdx}`);
+                const targetCell = targetRow ? targetRow.querySelectorAll('.question-cost')[questionIdx] : null;
+                openQuestion(themeIdx, questionIdx, targetCell || document.createElement('div'), null, false, payload.question);
+            }
         });
 
         hostNetworkClient.on('room_state', (payload) => {
@@ -4374,18 +4426,18 @@ function renderLobbyPlayers() {
 
     // Update Players Readiness Badge (TASK-05)
     if (playersBadgeEl) {
-        if (activeCount >= 2) {
+        if (activeCount >= 1) {
             playersBadgeEl.className = 'readiness-badge badge-ready';
-            playersBadgeEl.textContent = `Игроков: ${activeCount}/2 (минимум 2)`;
+            playersBadgeEl.textContent = `Игроков: ${activeCount} (минимум 1)`;
         } else {
             playersBadgeEl.className = 'readiness-badge badge-warning';
-            playersBadgeEl.textContent = `Игроков: ${activeCount}/2 (минимум 2)`;
+            playersBadgeEl.textContent = `Игроков: 0 (минимум 1)`;
         }
     }
 
     // Validation for Start Button (requires host, at least 2 players, and selected pack)
     const hasPack = Boolean(window.isPackSelected && gameData && gameData.length > 0);
-    const canStart = hasHost && (activeCount >= 2) && hasPack;
+    const canStart = hasHost && (activeCount >= 1) && hasPack;
     if (startBtn) {
         startBtn.disabled = !canStart;
     }
@@ -4393,12 +4445,12 @@ function renderLobbyPlayers() {
     if (hintEl) {
         if (!hasPack) {
             hintEl.textContent = '⚠️ Для старта игры необходимо выбрать пак вопросов (в блоке «Пак и настройки»)';
-        } else if (!hasHost && activeCount < 2) {
-            hintEl.textContent = '⚠️ Для старта игры требуется подключить ведущего и минимум 2 игрока';
+        } else if (!hasHost && activeCount < 1) {
+            hintEl.textContent = '⚠️ Для старта игры требуется подключить ведущего и минимум 1 игрок';
         } else if (!hasHost) {
             hintEl.textContent = '⚠️ Для старта игры требуется подключить ведущего (отсканируйте QR-код со смартфона или выберите «Вести с этого ПК»)';
-        } else if (activeCount < 2) {
-            hintEl.textContent = `⚠️ Для старта сетевой игры требуется минимум 2 игрока (сейчас: ${activeCount})`;
+        } else if (activeCount < 1) {
+            hintEl.textContent = `⚠️ Для старта сетевой игры требуется минимум 1 игрок (сейчас: ${activeCount})`;
         } else {
             hintEl.textContent = `✅ Готово к старту! Подключено игроков: ${activeCount}. Нажмите «Начать игру»`;
         }
@@ -4483,8 +4535,8 @@ function startOnlineGame() {
         return;
     }
     const activePlayers = hostNetworkClient.getPlayersList().filter(p => p.isConnected && p.role !== 'host');
-    if (activePlayers.length < 2) {
-        showSystemModal("⚠️ Недостаточно игроков", `Для начала сетевой игры требуется минимум 2 подключённых игрока (сейчас: ${activePlayers.length}).`);
+    if (activePlayers.length < 1) {
+        showSystemModal("⚠️ Недостаточно игроков", `Для начала сетевой игры требуется минимум 1 подключённый игрок (сейчас: ${activePlayers.length}).`);
         return;
     }
 

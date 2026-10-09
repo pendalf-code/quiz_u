@@ -297,14 +297,25 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_SELECT_QUESTION: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
-            if (payload.themeIdx === undefined || payload.questionIdx === undefined || !payload.question) {
+            if (payload.themeIdx === undefined || payload.questionIdx === undefined) {
                 return ws.send(createMessage(MSG_TYPES.ERROR, {
                     code: ERROR_CODES.INVALID_PAYLOAD,
                     message: 'Некорректные параметры вопроса'
                 }));
             }
+            let question = payload.question;
+            if (!question && room.currentPack && room.currentPack[room.currentRoundIndex]) {
+                const th = room.currentPack[room.currentRoundIndex].themes && room.currentPack[room.currentRoundIndex].themes[payload.themeIdx];
+                question = th && th.questions && th.questions[payload.questionIdx];
+            }
+            if (!question) {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: 'Вопрос не найден в пакете'
+                }));
+            }
             try {
-                room.selectQuestion(payload.themeIdx, payload.questionIdx, payload.question);
+                room.selectQuestion(payload.themeIdx, payload.questionIdx, question);
             } catch (err) {
                 console.error('Error selecting question:', err);
                 ws.send(createMessage(MSG_TYPES.ERROR, {
@@ -376,6 +387,14 @@ function handleClientMessage(ws, message) {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
             room.closeQuestion();
+            break;
+        }
+
+        case MSG_TYPES.GAME_FINISHED:
+        case 'HOST_FINISH_GAME': {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.finishGame(payload);
             break;
         }
 

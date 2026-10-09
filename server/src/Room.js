@@ -357,6 +357,7 @@ class Room {
     setPack(packData) {
         this.touch();
         this.currentPack = PackParser.normalizeGameData(packData);
+        this.broadcastRoomState();
         return this.currentPack;
     }
 
@@ -431,11 +432,11 @@ class Room {
             };
         }
         const activeCount = this.getActivePlayersCount();
-        if (activeCount < 2) {
+        if (activeCount < 1) {
             return {
                 canStart: false,
                 errorCode: ERROR_CODES.NOT_ENOUGH_PLAYERS,
-                message: 'Для старта игры требуется как минимум 2 игрока'
+                message: 'Для старта игры требуется как минимум 1 игрок'
             };
         }
         return {
@@ -462,8 +463,16 @@ class Room {
         this.touch();
         this.currentThemeIndex = themeIdx;
         this.currentQuestionIndex = questionIdx;
-        this.currentQuestion = questionData;
-        this.currentCost = (questionData && (questionData.cost !== undefined ? questionData.cost : questionData.price)) ? Number(questionData.cost !== undefined ? questionData.cost : questionData.price) : 100;
+        let resolvedQuestion = questionData;
+        if (!resolvedQuestion && this.currentPack && this.currentPack[this.currentRoundIndex]) {
+            const th = this.currentPack[this.currentRoundIndex].themes && this.currentPack[this.currentRoundIndex].themes[themeIdx];
+            resolvedQuestion = th && th.questions && th.questions[questionIdx];
+        }
+        if (this.currentPack && this.currentPack[this.currentRoundIndex] && this.currentPack[this.currentRoundIndex].themes && this.currentPack[this.currentRoundIndex].themes[themeIdx] && this.currentPack[this.currentRoundIndex].themes[themeIdx].questions && this.currentPack[this.currentRoundIndex].themes[themeIdx].questions[questionIdx]) {
+            this.currentPack[this.currentRoundIndex].themes[themeIdx].questions[questionIdx].used = true;
+        }
+        this.currentQuestion = resolvedQuestion;
+        this.currentCost = (resolvedQuestion && (resolvedQuestion.cost !== undefined ? resolvedQuestion.cost : resolvedQuestion.price)) ? Number(resolvedQuestion.cost !== undefined ? resolvedQuestion.cost : resolvedQuestion.price) : 100;
         this.activeBuzzerPlayerId = null;
         this.buzzedPlayers.clear();
         this.allowedBuzzerPlayerIds = null;
@@ -474,7 +483,7 @@ class Room {
         this.biddingPlayerIds = [];
         this.isPaused = false;
 
-        const qType = (questionData && questionData.type) ? questionData.type : 'normal';
+        const qType = (resolvedQuestion && resolvedQuestion.type) ? resolvedQuestion.type : 'normal';
 
         try {
             if (this.stateMachine.state !== 'BOARD') {
@@ -786,13 +795,7 @@ class Room {
             message: 'Время на ответ истекло!'
         });
 
-        // In LAN mode, points are NOT automatically deducted on answer timeout
-        if (timedOutPlayerId && this.options.penaltyEnabled) {
-            const penalty = this.getPenaltyAmount();
-            if (penalty > 0) {
-                this.updatePlayerScore(timedOutPlayerId, -penalty);
-            }
-        }
+        // Points are NOT automatically deducted on answer timeout
 
         // Check if there are other eligible players
         let remainingPlayers = Array.from(this.players.keys()).filter(id => !this.buzzedPlayers.has(id));
@@ -895,6 +898,12 @@ class Room {
     closeQuestion() {
         this.touch();
         this.finishQuestion();
+        this.broadcastToAll(MSG_TYPES.QUESTION_CLOSED, {});
+    }
+
+    finishGame(payload = {}) {
+        this.touch();
+        this.broadcastToAll(MSG_TYPES.GAME_FINISHED, payload);
     }
 
     updatePlayerScore(playerId, delta) {
@@ -945,6 +954,25 @@ class Room {
                 : this.currentQuestion;
         }
 
+        let boardData = null;
+        if (!forPlayer && this.currentPack && this.currentPack[this.currentRoundIndex]) {
+            const currentRound = this.currentPack[this.currentRoundIndex];
+            boardData = {
+                roundIndex: this.currentRoundIndex,
+                roundName: currentRound.roundName || ('Раунд ' + (this.currentRoundIndex + 1)),
+                themes: (currentRound.themes || []).map((th, tIdx) => ({
+                    themeIdx: tIdx,
+                    name: th.name,
+                    questions: (th.questions || []).map((q, qIdx) => ({
+                        questionIdx: qIdx,
+                        cost: (q.cost !== undefined ? q.cost : q.price) || 100,
+                        used: Boolean(q.used),
+                        type: q.type || 'normal'
+                    }))
+                }))
+            };
+        }
+
         const startCheck = this.canStartGame();
         const resolvedHost = this.hostPlayer
             ? this.sanitizeHost(this.hostPlayer)
@@ -964,7 +992,8 @@ class Room {
             activeBuzzerPlayerId: this.activeBuzzerPlayerId,
             currentQuestion: questionData,
             isPaused: this.isPaused,
-            options: this.options
+            options: this.options,
+            board: boardData
         };
     }
 

@@ -1941,3 +1941,129 @@ body.light-theme .role-btn.selected {
     from { transform: translateY(-20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
+/* Host Board Grid Panel (TASK-02 Mobile Selection) */
+.host-board-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.host-board-panel.hidden {
+    display: none !important;
+}
+
+.host-board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+.host-board-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-blue, #60a5fa);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.host-board-round {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    background: rgba(245, 158, 11, 0.15);
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+.host-board-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 52vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 4px;
+}
+
+.host-board-theme {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.host-theme-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.host-theme-costs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.host-cost-btn {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.35));
+    border: 1px solid rgba(96, 165, 250, 0.7);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    min-width: 50px;
+    text-align: center;
+    transition: transform 0.1s ease, background 0.15s ease;
+}
+
+.host-cost-btn:active:not(:disabled) {
+    transform: scale(0.94);
+    background: rgba(59, 130, 246, 0.6);
+}
+
+.host-cost-btn.used, .host-cost-btn:disabled {
+    opacity: 0.3;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    text-decoration: line-through;
+    transform: none;
+}
+
+.score-step-btn.plus-cost {
+    background: rgba(46, 160, 67, 0.25);
+    border-color: var(--accent-green);
+    color: #4ade80;
+}
+
+.score-step-btn.minus-cost {
+    background: rgba(248, 81, 73, 0.25);
+    border-color: var(--accent-red);
+    color: #f87171;
+}
+
+.host-player-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}

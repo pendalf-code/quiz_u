@@ -94,6 +94,9 @@
         hostStateBadge: document.getElementById('host-state-badge'),
         hostThemeBadge: document.getElementById('host-theme-badge'),
         hostCostBadge: document.getElementById('host-cost-badge'),
+        hostBoardPanel: document.getElementById('host-board-panel'),
+        hostBoardGrid: document.getElementById('host-board-grid'),
+        hostBoardRound: document.getElementById('host-board-round'),
         hostQuestionCard: document.getElementById('host-question-card'),
         hostQuestionText: document.getElementById('host-question-text'),
         hostSecretBox: document.getElementById('host-secret-box'),
@@ -138,6 +141,8 @@
     // State
     const state = {
         selectedRole: 'player', // 'player' | 'host' (TASK-03)
+        boardData: null,
+        lastAnsweringPlayer: null,
         selectedAvatar: '🐱',
         currentScreen: 'join',
         selfPlayer: null,
@@ -481,7 +486,7 @@
         // Lobby action button (Start Game) (TASK-05 validation)
         const playersList = (netClient ? netClient.getPlayersList() : []) || [];
         const activePlayers = playersList.filter(p => p.isConnected && p.role !== 'host');
-        const canStart = activePlayers.length >= 2;
+        const canStart = activePlayers.length >= 1;
 
         if (elements.hostLobbyAction) {
             if (currentRoomState === 'LOBBY' || currentRoomState === 'INIT') {
@@ -489,13 +494,31 @@
                 if (elements.btnHostStartGame) {
                     elements.btnHostStartGame.disabled = !canStart;
                     if (!canStart) {
-                        elements.btnHostStartGame.textContent = `🚀 Начать игру (Игроков: ${activePlayers.length}/2)`;
+                        elements.btnHostStartGame.textContent = `🚀 Начать игру (Игроков: ${activePlayers.length}/1)`;
                     } else {
                         elements.btnHostStartGame.textContent = `🚀 Начать игру (${activePlayers.length} игроков)`;
                     }
                 }
             } else {
                 elements.hostLobbyAction.style.display = 'none';
+            }
+        }
+
+        // Toggle Question card vs Board panel
+        const isQuestionActive = Boolean(state.activeQuestion && (state.activeQuestion.q || state.activeQuestion.text));
+        if (elements.hostBoardPanel) {
+            if (!isQuestionActive && (currentRoomState === 'BOARD' || state.boardData)) {
+                elements.hostBoardPanel.classList.remove('hidden');
+                renderHostBoardGrid(state.boardData);
+            } else {
+                elements.hostBoardPanel.classList.add('hidden');
+            }
+        }
+        if (elements.hostQuestionCard) {
+            if (!isQuestionActive && (currentRoomState === 'BOARD' || state.boardData)) {
+                elements.hostQuestionCard.classList.add('hidden');
+            } else {
+                elements.hostQuestionCard.classList.remove('hidden');
             }
         }
 
@@ -506,7 +529,7 @@
             } else if (currentRoomState === 'LOBBY' || currentRoomState === 'INIT') {
                 elements.hostQuestionText.textContent = 'Ожидание игроков. Нажмите «Начать игру», когда все будут готовы.';
             } else {
-                elements.hostQuestionText.textContent = 'Вопрос не выбран. Ожидайте открытия вопроса на табло.';
+                elements.hostQuestionText.textContent = 'Вопрос не выбран. Выберите вопрос из сетки выше.';
             }
         }
 
@@ -529,6 +552,7 @@
 
         // Active Answering Player & Judging Buttons (Requirement 1)
         if (state.activeAnsweringPlayer) {
+            state.lastAnsweringPlayer = state.activeAnsweringPlayer;
             if (elements.hostAnsweringBanner) elements.hostAnsweringBanner.classList.remove('hidden');
             if (elements.hostAnsweringName) elements.hostAnsweringName.textContent = `Отвечает: ${state.activeAnsweringPlayer.playerName || 'Игрок'}`;
             
@@ -573,8 +597,19 @@
             if (elements.hostPlayerSubmittedBox) elements.hostPlayerSubmittedBox.classList.add('hidden');
             if (elements.btnHostJudgeCorrect) elements.btnHostJudgeCorrect.disabled = true;
             if (elements.btnHostJudgeWrong) elements.btnHostJudgeWrong.disabled = true;
-            if (elements.btnHostAddScore) elements.btnHostAddScore.disabled = true;
-            if (elements.btnHostSubtractScore) elements.btnHostSubtractScore.disabled = true;
+            const targetPlayer = state.activeAnsweringPlayer || state.lastAnsweringPlayer;
+            if (elements.btnHostAddScore) {
+                elements.btnHostAddScore.disabled = !targetPlayer;
+                if (elements.btnHostAddScoreText && targetPlayer) {
+                    elements.btnHostAddScoreText.textContent = `+${state.currentCost} (${targetPlayer.playerName || 'игроку'})`;
+                }
+            }
+            if (elements.btnHostSubtractScore) {
+                elements.btnHostSubtractScore.disabled = !targetPlayer;
+                if (elements.btnHostSubtractScoreText && targetPlayer) {
+                    elements.btnHostSubtractScoreText.textContent = `-${state.currentCost} (${targetPlayer.playerName || 'игроку'})`;
+                }
+            }
         }
 
         // Buzzer open button
@@ -596,6 +631,53 @@
         }
     }
 
+    function renderHostBoardGrid(boardData) {
+        if (!elements.hostBoardGrid || !boardData) return;
+        if (elements.hostBoardRound) {
+            elements.hostBoardRound.textContent = boardData.roundName || `Раунд ${(boardData.roundIndex || 0) + 1}`;
+        }
+        elements.hostBoardGrid.innerHTML = '';
+        const themes = boardData.themes || [];
+        if (themes.length === 0) {
+            elements.hostBoardGrid.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:12px;">Ожидание загрузки пакета вопросов...</div>';
+            return;
+        }
+
+        themes.forEach((th) => {
+            const themeDiv = document.createElement('div');
+            themeDiv.className = 'host-board-theme';
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'host-theme-title';
+            titleDiv.textContent = `📁 ${th.name}`;
+            themeDiv.appendChild(titleDiv);
+
+            const costsDiv = document.createElement('div');
+            costsDiv.className = 'host-theme-costs';
+
+            (th.questions || []).forEach((q) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `host-cost-btn ${q.used ? 'used' : ''}`;
+                btn.textContent = q.cost;
+                btn.disabled = Boolean(q.used);
+
+                if (!q.used) {
+                    btn.addEventListener('click', () => {
+                        if (!netClient) return;
+                        haptic('buzz_press');
+                        showToast(`Выбор вопроса: ${th.name} (${q.cost})`, 'info');
+                        netClient.selectQuestion(th.themeIdx, q.questionIdx);
+                    });
+                }
+                costsDiv.appendChild(btn);
+            });
+
+            themeDiv.appendChild(costsDiv);
+            elements.hostBoardGrid.appendChild(themeDiv);
+        });
+    }
+
     function renderHostPlayersList(players) {
         if (!elements.hostPlayersList) return;
         elements.hostPlayersList.innerHTML = '';
@@ -610,6 +692,7 @@
             return;
         }
 
+        const qCost = state.currentCost || 100;
         playerList.forEach((p) => {
             const row = document.createElement('div');
             row.className = 'host-player-row';
@@ -619,11 +702,21 @@
                     <span class="host-player-name">${escapeHtml(p.name)}</span>
                 </div>
                 <div class="host-player-actions">
+                    <button type="button" class="score-step-btn minus-cost" data-id="${p.id}" title="Снять ${qCost}">-${qCost}</button>
                     <button type="button" class="score-step-btn minus" data-id="${p.id}" title="Снять 100">-100</button>
                     <span class="host-player-score">${p.score || 0}</span>
                     <button type="button" class="score-step-btn plus" data-id="${p.id}" title="Добавить 100">+100</button>
+                    <button type="button" class="score-step-btn plus-cost" data-id="${p.id}" title="Начислить ${qCost}">+${qCost}</button>
                 </div>
             `;
+
+            row.querySelector('.minus-cost').addEventListener('click', () => {
+                if (netClient) {
+                    netClient.updateScore(p.id, -qCost);
+                    haptic('buzz_press');
+                    showToast(`-${qCost} очков (${p.name})`, 'info');
+                }
+            });
 
             row.querySelector('.minus').addEventListener('click', () => {
                 if (netClient) {
@@ -636,6 +729,14 @@
                 if (netClient) {
                     netClient.updateScore(p.id, 100);
                     haptic('buzz_press');
+                }
+            });
+
+            row.querySelector('.plus-cost').addEventListener('click', () => {
+                if (netClient) {
+                    netClient.updateScore(p.id, qCost);
+                    haptic('buzz_press');
+                    showToast(`+${qCost} очков (${p.name})`, 'success');
                 }
             });
 
@@ -862,6 +963,10 @@
             if (payload.cost) {
                 state.currentCost = payload.cost;
                 elements.buzzerCostBadge.textContent = `${payload.cost} очков`;
+            }
+
+            if (payload.board) {
+                state.boardData = payload.board;
             }
 
             renderPlayersList(payload.players);
@@ -1121,6 +1226,25 @@
             }
         });
 
+        netClient.on('question_closed', () => {
+            stopAnswerTimer();
+            state.activeQuestion = null;
+            state.activeAnsweringPlayer = null;
+            if (state.selectedRole === 'host') {
+                updateHostScreen('BOARD');
+            } else {
+                showScreen('waiting');
+            }
+        });
+
+        netClient.on('game_finished', (payload) => {
+            haptic('success');
+            showToast('🎉 Игра завершена! Возврат в главное меню...', 'info', 3000);
+            setTimeout(() => {
+                leaveToMainMenu();
+            }, 2000);
+        });
+
         netClient.connect().catch((err) => {
             console.warn('Initial WebSocket connection error:', err.message);
             setConnectionStatus('disconnected');
@@ -1251,19 +1375,21 @@
         // Host Manual Score Add/Subtract (Requirement 1)
         if (elements.btnHostAddScore) {
             elements.btnHostAddScore.addEventListener('click', () => {
-                if (!netClient || !state.activeAnsweringPlayer) return;
-                netClient.updateScore(state.activeAnsweringPlayer.playerId, state.currentCost);
+                const targetP = state.activeAnsweringPlayer || state.lastAnsweringPlayer;
+                if (!netClient || !targetP) return;
+                netClient.updateScore(targetP.playerId, state.currentCost);
                 haptic('buzz_press');
-                showToast(`+${state.currentCost} очков начислено`, 'success');
+                showToast(`+${state.currentCost} очков начислено (${targetP.playerName})`, 'success');
             });
         }
 
         if (elements.btnHostSubtractScore) {
             elements.btnHostSubtractScore.addEventListener('click', () => {
-                if (!netClient || !state.activeAnsweringPlayer) return;
-                netClient.updateScore(state.activeAnsweringPlayer.playerId, -state.currentCost);
+                const targetP = state.activeAnsweringPlayer || state.lastAnsweringPlayer;
+                if (!netClient || !targetP) return;
+                netClient.updateScore(targetP.playerId, -state.currentCost);
                 haptic('buzz_press');
-                showToast(`-${state.currentCost} очков снято`, 'error');
+                showToast(`-${state.currentCost} очков снято (${targetP.playerName})`, 'error');
             });
         }
 
@@ -1314,9 +1440,9 @@
                 if (!netClient) return;
                 const playersList = netClient.getPlayersList() || [];
                 const activePlayers = playersList.filter(p => p.isConnected && p.role !== 'host');
-                if (activePlayers.length < 2) {
+                if (activePlayers.length < 1) {
                     haptic('buzz_lost');
-                    showToast(`⚠️ Требуется минимум 2 игрока (сейчас: ${activePlayers.length})`, 'warning');
+                    showToast(`⚠️ Требуется минимум 1 игрок (сейчас: ${activePlayers.length})`, 'warning');
                     return;
                 }
                 netClient.startGame();

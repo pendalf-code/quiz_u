@@ -104,6 +104,11 @@ test('Server: Real WebSocket Integration Test', async (t) => {
         assert.ok(roomCode);
         assert.equal(roomCode.length, 4);
 
+        // 1b. Attempt to start game with 0 players -> must fail with NOT_ENOUGH_PLAYERS (TASK-05)
+        hostWs.send(createMessage(MSG_TYPES.HOST_START_GAME));
+        const errTooFew = await waitForMessage(hostWs, MSG_TYPES.ERROR);
+        assert.equal(errTooFew.payload.code, ERROR_CODES.NOT_ENOUGH_PLAYERS);
+
         // 2. Connect Player 1 WS
         const p1Ws = new WebSocket(wsUrl);
         await new Promise((res) => p1Ws.on('open', res));
@@ -112,11 +117,6 @@ test('Server: Real WebSocket Integration Test', async (t) => {
         const p1StateMsg = await waitForMessage(p1Ws, MSG_TYPES.ROOM_STATE);
         assert.equal(p1StateMsg.payload.roomCode, roomCode);
         assert.equal(p1StateMsg.payload.self.name, 'Кот Матроскин');
-
-        // 2b. Attempt to start game with only 1 player -> must fail with NOT_ENOUGH_PLAYERS (TASK-05)
-        hostWs.send(createMessage(MSG_TYPES.HOST_START_GAME));
-        const errTooFew = await waitForMessage(hostWs, MSG_TYPES.ERROR);
-        assert.equal(errTooFew.payload.code, ERROR_CODES.NOT_ENOUGH_PLAYERS);
 
         // 3. Connect Player 2 WS
         const p2Ws = new WebSocket(wsUrl);

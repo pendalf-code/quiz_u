@@ -346,6 +346,10 @@ class NetworkClient {
                 this.emit('question_closed', payload);
                 break;
 
+            case MSG.GAME_FINISHED:
+                this.emit('game_finished', payload);
+                break;
+
             case MSG.ERROR:
                 this.emit('server_error', payload);
                 break;
@@ -460,6 +464,10 @@ class NetworkClient {
 
     closeQuestion() {
         return this.send(MSG.HOST_CLOSE_QUESTION, {});
+    }
+
+    finishGame(data = {}) {
+        return this.send(MSG.GAME_FINISHED, data);
     }
 
     updateScore(playerId, delta) {

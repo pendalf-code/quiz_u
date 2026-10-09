@@ -184,7 +184,7 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         assert.equal(playerQuestionMsg.payload.question.a, undefined, 'Player must NOT see secret answer');
     });
 
-    await t.test('TASK-05: Start Game Validation (Host requirement and minimum 2 players)', () => {
+    await t.test('TASK-05: Start Game Validation (Host requirement and minimum 1 player)', () => {
         // A. Room requiring mobile host (isHostOnPC: false) without host
         const noHostRoom = new Room('NOHS', mockHostWs, { isHostOnPC: false, requireMobileHost: true });
         const p1Ws = { messages: [], readyState: 1, send(d) {} };
@@ -205,22 +205,21 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         const startWithHost = noHostRoom.startGame();
         assert.equal(startWithHost.success, true);
 
-        // B. Room with host but fewer than 2 players
+        // B. Room with host but fewer than 1 player
         const underpopulatedRoom = new Room('FEWP', mockHostWs, { isHostOnPC: true });
         assert.equal(underpopulatedRoom.getActivePlayersCount(), 0);
         const startZero = underpopulatedRoom.startGame();
         assert.equal(startZero.success, false);
         assert.equal(startZero.errorCode, 'NOT_ENOUGH_PLAYERS');
-        assert.ok(startZero.message.includes('минимум 2 игрока'));
+        assert.ok(startZero.message.includes('минимум 1 игрок'));
 
-        // 1 player is still not enough
+        // 1 player satisfies condition
         underpopulatedRoom.addPlayer('Один Игрок', '🦊', p1Ws);
         assert.equal(underpopulatedRoom.getActivePlayersCount(), 1);
         const startOne = underpopulatedRoom.startGame();
-        assert.equal(startOne.success, false);
-        assert.equal(startOne.errorCode, 'NOT_ENOUGH_PLAYERS');
+        assert.equal(startOne.success, true);
 
-        // 2 players satisfy condition
+        // 2 players also satisfy condition
         underpopulatedRoom.addPlayer('Второй Игрок', '🐼', p2Ws);
         assert.equal(underpopulatedRoom.getActivePlayersCount(), 2);
         const startTwo = underpopulatedRoom.startGame();
