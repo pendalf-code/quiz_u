@@ -116,6 +116,18 @@
         hostLobbyAction: document.getElementById('host-lobby-action'),
         hostPlayersList: document.getElementById('host-players-list'),
         hostPlayersCount: document.getElementById('host-players-count'),
+        hostAnsweringScore: document.getElementById('host-answering-score'),
+        hostAnsweringSecretAnswer: document.getElementById('host-answering-secret-answer'),
+        hostPlayerSubmittedBox: document.getElementById('host-player-submitted-box'),
+        hostPlayerSubmittedVal: document.getElementById('host-player-submitted-val'),
+        btnHostAddScore: document.getElementById('btn-host-add-score'),
+        btnHostAddScoreText: document.getElementById('btn-host-add-score-text'),
+        btnHostSubtractScore: document.getElementById('btn-host-subtract-score'),
+        btnHostSubtractScoreText: document.getElementById('btn-host-subtract-score-text'),
+        hostAuctionPanel: document.getElementById('host-auction-panel'),
+        hostAuctionCount: document.getElementById('host-auction-count'),
+        hostAuctionSecretAnswer: document.getElementById('host-auction-secret-answer'),
+        hostAuctionList: document.getElementById('host-auction-list'),
 
         // Toast
         toast: document.getElementById('mobile-toast'),
@@ -142,7 +154,10 @@
         activeQuestion: null,
         activeAnsweringPlayer: null,
         isPaused: false,
-        roomState: 'LOBBY'
+        roomState: 'LOBBY',
+        auctionBiddingPlayers: [],
+        auctionBets: {},
+        auctionSubmittedAnswers: {}
     };
 
     // Network Client Instance
@@ -512,10 +527,29 @@
             }
         }
 
-        // Active Answering Player & Judging Buttons
+        // Active Answering Player & Judging Buttons (Requirement 1)
         if (state.activeAnsweringPlayer) {
             if (elements.hostAnsweringBanner) elements.hostAnsweringBanner.classList.remove('hidden');
             if (elements.hostAnsweringName) elements.hostAnsweringName.textContent = `Отвечает: ${state.activeAnsweringPlayer.playerName || 'Игрок'}`;
+            
+            const answeringP = (netClient ? netClient.getPlayersList() : []).find(p => p.id === state.activeAnsweringPlayer.playerId);
+            if (elements.hostAnsweringScore) {
+                elements.hostAnsweringScore.textContent = `${(answeringP && answeringP.score != null) ? answeringP.score : 0} очков`;
+            }
+
+            if (elements.hostAnsweringSecretAnswer) {
+                elements.hostAnsweringSecretAnswer.textContent = (state.activeQuestion && (state.activeQuestion.a || state.activeQuestion.answer)) || '—';
+            }
+
+            if (elements.hostPlayerSubmittedBox && elements.hostPlayerSubmittedVal) {
+                if (meta.answerText) {
+                    elements.hostPlayerSubmittedVal.textContent = meta.answerText;
+                    elements.hostPlayerSubmittedBox.classList.remove('hidden');
+                } else {
+                    elements.hostPlayerSubmittedBox.classList.add('hidden');
+                }
+            }
+
             if (elements.hostAnsweringSubtext) {
                 elements.hostAnsweringSubtext.textContent = meta.answerText
                     ? `Ответ игрока: «${meta.answerText}»`
@@ -524,11 +558,23 @@
             if (elements.btnHostJudgeCorrect) elements.btnHostJudgeCorrect.disabled = false;
             if (elements.btnHostJudgeWrong) elements.btnHostJudgeWrong.disabled = false;
             if (elements.btnHostJudgeCorrectText) elements.btnHostJudgeCorrectText.textContent = `Зачесть (+${state.currentCost})`;
-            if (elements.btnHostJudgeWrongText) elements.btnHostJudgeWrongText.textContent = `Отклонить (-${state.currentCost})`;
+            if (elements.btnHostJudgeWrongText) elements.btnHostJudgeWrongText.textContent = 'Отклонить (без вычета)';
+
+            if (elements.btnHostAddScore) {
+                elements.btnHostAddScore.disabled = false;
+                if (elements.btnHostAddScoreText) elements.btnHostAddScoreText.textContent = `+${state.currentCost} игроку`;
+            }
+            if (elements.btnHostSubtractScore) {
+                elements.btnHostSubtractScore.disabled = false;
+                if (elements.btnHostSubtractScoreText) elements.btnHostSubtractScoreText.textContent = `-${state.currentCost} игроку`;
+            }
         } else {
             if (elements.hostAnsweringBanner) elements.hostAnsweringBanner.classList.add('hidden');
+            if (elements.hostPlayerSubmittedBox) elements.hostPlayerSubmittedBox.classList.add('hidden');
             if (elements.btnHostJudgeCorrect) elements.btnHostJudgeCorrect.disabled = true;
             if (elements.btnHostJudgeWrong) elements.btnHostJudgeWrong.disabled = true;
+            if (elements.btnHostAddScore) elements.btnHostAddScore.disabled = true;
+            if (elements.btnHostSubtractScore) elements.btnHostSubtractScore.disabled = true;
         }
 
         // Buzzer open button
@@ -595,6 +641,62 @@
 
             elements.hostPlayersList.appendChild(row);
         });
+    }
+
+    function renderHostAuctionList() {
+        if (!elements.hostAuctionList) return;
+        elements.hostAuctionList.innerHTML = '';
+        const players = (netClient ? netClient.getPlayersList() : []) || [];
+        const biddingIds = state.auctionBiddingPlayers || [];
+        const bets = state.auctionBets || {};
+        const answers = state.auctionSubmittedAnswers || {};
+
+        let answeredCount = 0;
+        biddingIds.forEach(pid => {
+            if (answers[pid]) answeredCount++;
+            const p = players.find(x => x.id === pid) || { id: pid, name: 'Команда', avatar: '⭐' };
+            const bet = bets[pid] || state.currentCost;
+            const ans = answers[pid];
+
+            const card = document.createElement('div');
+            card.className = `host-auction-card${ans ? ' answered' : ''}`;
+            card.id = `host-auction-card-${pid}`;
+            card.innerHTML = `
+                <div class="host-auction-card-head">
+                    <span class="host-auction-card-team">${p.avatar || '⭐'} ${escapeHtml(p.name)}</span>
+                    <span class="host-auction-card-bet">Ставка: ${bet} очков</span>
+                </div>
+                <div class="host-auction-card-ans" id="host-auction-ans-${pid}">
+                    ${ans ? `✍️ ${escapeHtml(ans)}` : '⏳ Ожидание ввода ответа...'}
+                </div>
+                <div class="host-auction-card-actions">
+                    <button type="button" class="host-auction-btn-plus" data-id="${pid}" data-bet="${bet}">+${bet} очков</button>
+                    <button type="button" class="host-auction-btn-minus" data-id="${pid}" data-bet="${bet}">-${bet} очков</button>
+                </div>
+            `;
+
+            card.querySelector('.host-auction-btn-plus').addEventListener('click', () => {
+                if (netClient) {
+                    netClient.updateScore(pid, bet);
+                    haptic('buzz_press');
+                    showToast(`+${bet} очков для ${p.name}`, 'success');
+                }
+            });
+
+            card.querySelector('.host-auction-btn-minus').addEventListener('click', () => {
+                if (netClient) {
+                    netClient.updateScore(pid, -bet);
+                    haptic('buzz_press');
+                    showToast(`-${bet} очков для ${p.name}`, 'error');
+                }
+            });
+
+            elements.hostAuctionList.appendChild(card);
+        });
+
+        if (elements.hostAuctionCount) {
+            elements.hostAuctionCount.textContent = `${answeredCount} / ${biddingIds.length} ответов`;
+        }
     }
 
     // =========================================================================
@@ -817,6 +919,12 @@
             state.isEligibleForBuzzer = true;
             state.activeQuestion = payload.question || null;
             state.activeAnsweringPlayer = null;
+            state.auctionBiddingPlayers = [];
+            state.auctionBets = {};
+            state.auctionSubmittedAnswers = {};
+
+            if (elements.hostAuctionPanel) elements.hostAuctionPanel.classList.add('hidden');
+            if (elements.buzzerBtn) elements.buzzerBtn.style.display = '';
 
             if (state.selectedRole === 'host') {
                 showScreen('host');
@@ -841,17 +949,74 @@
                 return;
             }
 
-            // Check if player is allowed to buzz
-            if (payload.allowedPlayerIds && state.selfPlayer) {
+            // Check if player is allowed to buzz (Requirement 2: Cat in Bag, Requirement 4: Auction for Leader)
+            if (payload.allowedPlayerIds && Array.isArray(payload.allowedPlayerIds) && state.selfPlayer) {
                 state.isEligibleForBuzzer = payload.allowedPlayerIds.includes(state.selfPlayer.id);
+            } else {
+                state.isEligibleForBuzzer = true;
             }
 
             if (state.isEligibleForBuzzer) {
+                if (elements.buzzerBtn) elements.buzzerBtn.style.display = '';
                 setBuzzerState('ready');
+                showScreen('buzzer');
             } else {
-                setBuzzerState('locked-out');
+                // Team is not allowed: button must NOT be present!
+                if (elements.buzzerBtn) elements.buzzerBtn.style.display = 'none';
+                if (elements.waitingTitle) {
+                    elements.waitingTitle.textContent = (state.activeQuestion && state.activeQuestion.type === 'cat')
+                        ? '🐱 Кот в мешке'
+                        : '🔨 Аукцион за лидера';
+                }
+                if (elements.waitingDesc) {
+                    elements.waitingDesc.textContent = (state.activeQuestion && state.activeQuestion.type === 'cat')
+                        ? 'Вопрос передан другой команде. Ожидайте ответа...'
+                        : 'Отвечает команда лидера аукциона. Ожидайте ответа...';
+                }
+                showScreen('waiting');
             }
-            showScreen('buzzer');
+        });
+
+        // Requirement 3: General auction answering
+        netClient.on('auction_answer_start', (payload) => {
+            stopAnswerTimer();
+            state.auctionBiddingPlayers = payload.biddingPlayerIds || [];
+            state.auctionBets = payload.bets || {};
+            state.auctionSubmittedAnswers = {};
+            if (payload.cost) state.currentCost = payload.cost;
+            if (payload.question) state.activeQuestion = payload.question;
+
+            if (state.selectedRole === 'host') {
+                showScreen('host');
+                if (elements.hostAuctionPanel) elements.hostAuctionPanel.classList.remove('hidden');
+                if (elements.hostAuctionSecretAnswer) {
+                    elements.hostAuctionSecretAnswer.textContent = (state.activeQuestion && (state.activeQuestion.a || state.activeQuestion.answer)) || '—';
+                }
+                renderHostAuctionList();
+                updateHostScreen('ANSWERING');
+                return;
+            }
+
+            const isBidding = state.selfPlayer && state.auctionBiddingPlayers.includes(state.selfPlayer.id);
+            if (isBidding) {
+                // Bidding team must type answer instead of buzzer!
+                const myBet = (state.auctionBets && state.auctionBets[state.selfPlayer.id]) || state.currentCost;
+                if (elements.answerCostHint) {
+                    elements.answerCostHint.textContent = `🔥 ОБЩИЙ АУКЦИОН | Ваша ставка: ${myBet} очков`;
+                }
+                if (elements.answerInput) {
+                    elements.answerInput.value = '';
+                    elements.answerInput.focus();
+                }
+                showScreen('answer');
+                startAnswerTimer(payload.answerTime || 15);
+                haptic('buzz_press');
+            } else {
+                // Passed team does not answer
+                if (elements.waitingTitle) elements.waitingTitle.textContent = '🔥 Общий аукцион';
+                if (elements.waitingDesc) elements.waitingDesc.textContent = 'Вы спасовали на аукционе. Ожидание ответов соперников...';
+                showScreen('waiting');
+            }
         });
 
         netClient.on('buzz_locked', (payload) => {
@@ -880,8 +1045,16 @@
 
         netClient.on('answer_submitted', (payload) => {
             if (state.selectedRole === 'host') {
-                updateHostScreen('ANSWERING', { answerText: payload.answerText });
-                haptic('buzz_press');
+                if (payload.isAuction) {
+                    if (!state.auctionSubmittedAnswers) state.auctionSubmittedAnswers = {};
+                    state.auctionSubmittedAnswers[payload.playerId] = payload.answerText;
+                    renderHostAuctionList();
+                    haptic('buzz_press');
+                    showToast(`Команда ${payload.playerName || ''} ответила на аукционе!`, 'info');
+                } else {
+                    updateHostScreen('ANSWERING', { answerText: payload.answerText });
+                    haptic('buzz_press');
+                }
             }
         });
 
@@ -1071,7 +1244,26 @@
                 elements.btnHostJudgeCorrect.disabled = true;
                 elements.btnHostJudgeWrong.disabled = true;
                 haptic('error');
-                showToast(`Ответ отклонён (-${state.currentCost})`, 'error');
+                showToast('Ответ отклонён (без вычета)', 'info');
+            });
+        }
+
+        // Host Manual Score Add/Subtract (Requirement 1)
+        if (elements.btnHostAddScore) {
+            elements.btnHostAddScore.addEventListener('click', () => {
+                if (!netClient || !state.activeAnsweringPlayer) return;
+                netClient.updateScore(state.activeAnsweringPlayer.playerId, state.currentCost);
+                haptic('buzz_press');
+                showToast(`+${state.currentCost} очков начислено`, 'success');
+            });
+        }
+
+        if (elements.btnHostSubtractScore) {
+            elements.btnHostSubtractScore.addEventListener('click', () => {
+                if (!netClient || !state.activeAnsweringPlayer) return;
+                netClient.updateScore(state.activeAnsweringPlayer.playerId, -state.currentCost);
+                haptic('buzz_press');
+                showToast(`-${state.currentCost} очков снято`, 'error');
             });
         }
 

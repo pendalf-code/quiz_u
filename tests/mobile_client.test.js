@@ -117,6 +117,13 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
         assert.ok(html.includes('id="btn-host-close-question"'), '#btn-host-close-question must exist');
         assert.ok(html.includes('id="btn-host-start-game"'), '#btn-host-start-game must exist');
         assert.ok(html.includes('id="host-players-list"'), '#host-players-list must exist');
+        // Manual score adjustment and auction/cat controls
+        assert.ok(html.includes('id="host-answering-details"'), '#host-answering-details must exist');
+        assert.ok(html.includes('id="host-answering-secret-answer"'), '#host-answering-secret-answer must exist');
+        assert.ok(html.includes('id="btn-host-add-score"'), '#btn-host-add-score must exist');
+        assert.ok(html.includes('id="btn-host-subtract-score"'), '#btn-host-subtract-score must exist');
+        assert.ok(html.includes('id="host-auction-panel"'), '#host-auction-panel must exist');
+        assert.ok(html.includes('id="host-auction-list"'), '#host-auction-list must exist');
 
         const css = fs.readFileSync(cssPath, 'utf8');
         assert.ok(css.includes('#screen-host'), '#screen-host styles must exist in mobile.css');
@@ -124,6 +131,8 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
         assert.ok(css.includes('.btn-judge-accept'), '.btn-judge-accept styles must exist in mobile.css');
         assert.ok(css.includes('.btn-judge-reject'), '.btn-judge-reject styles must exist in mobile.css');
         assert.ok(css.includes('.score-step-btn'), '.score-step-btn styles must exist in mobile.css');
+        assert.ok(css.includes('.host-answering-details'), '.host-answering-details styles must exist in mobile.css');
+        assert.ok(css.includes('.host-auction-panel'), '.host-auction-panel styles must exist in mobile.css');
 
         const js = fs.readFileSync(jsPath, 'utf8');
         assert.ok(js.includes('updateHostScreen('), 'updateHostScreen method must exist in mobile.js');
@@ -143,6 +152,10 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
         assert.equal(typeof client.judgeAnswer, 'function', 'judgeAnswer method must exist');
         assert.equal(typeof client.activateBuzzer, 'function', 'activateBuzzer method must exist');
         assert.equal(typeof client.startGame, 'function', 'startGame method must exist');
+        assert.equal(typeof client.startAuctionAnswer, 'function', 'startAuctionAnswer method must exist');
+        assert.equal(typeof client.setAuctionBets, 'function', 'setAuctionBets method must exist');
+        assert.equal(typeof client.setCatTarget, 'function', 'setCatTarget method must exist');
+        assert.equal(typeof client.setAuctionLeader, 'function', 'setAuctionLeader method must exist');
     });
 
     test('TASK-03: Role selection UI elements and styles exist in mobile files', () => {

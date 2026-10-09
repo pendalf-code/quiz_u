@@ -318,7 +318,35 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_ACTIVATE_BUZZER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
-            room.activateBuzzer();
+            room.activateBuzzer(payload.allowedPlayerIds);
+            break;
+        }
+
+        case MSG_TYPES.HOST_START_AUCTION_ANSWER: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.startAuctionAnswer(payload.biddingPlayerIds);
+            break;
+        }
+
+        case MSG_TYPES.HOST_SET_AUCTION_BETS: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.setAuctionBets(payload.bets);
+            break;
+        }
+
+        case MSG_TYPES.HOST_SET_CAT_TARGET: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.setCatTarget(payload.targetPlayerId);
+            break;
+        }
+
+        case MSG_TYPES.HOST_SET_AUCTION_LEADER: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.setAuctionLeader(payload.leaderPlayerId, payload.maxBet);
             break;
         }
 
@@ -416,7 +444,7 @@ function handleClientMessage(ws, message) {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.playerId) return;
             const amount = Number(payload.amount);
-            if (isNaN(amount) || amount <= 0) {
+            if (isNaN(amount) || amount < 0) {
                 return ws.send(createMessage(MSG_TYPES.ERROR, {
                     code: ERROR_CODES.INVALID_PAYLOAD,
                     message: 'Некорректная сумма ставки'

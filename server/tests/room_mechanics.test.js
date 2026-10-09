@@ -391,4 +391,83 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         assert.equal(pauseMsg.payload.reason, 'disconnect');
         assert.equal(pauseMsg.payload.disconnectedPlayerName, 'Плеер 1');
     });
+
+    await t.test('LAN Mode Mechanics: No Auto Deductions, Cat Target, Auction Leader & Open Auction', () => {
+        const lanWs = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
+        const p1Ws = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
+        const p2Ws = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
+
+        // 1. LAN Mode: No auto deductions when penaltyEnabled is false
+        const lanRoom = new Room('LAN1', lanWs, { penaltyEnabled: false, readingTime: 0, answerTime: 5 });
+        const p1 = lanRoom.addPlayer('Команда 1', '🦊', p1Ws).player;
+        const p2 = lanRoom.addPlayer('Команда 2', '🐼', p2Ws).player;
+        lanRoom.startGame();
+
+        lanRoom.selectQuestion(0, 0, { q: 'Вопрос 1', a: 'Ответ 1', price: 300, type: 'normal' });
+        lanRoom.activateBuzzer();
+
+        // Player 1 buzzes and answers incorrectly
+        lanRoom.handleBuzz(p1.id);
+        const wrongJudge = lanRoom.judgeAnswer(false);
+        assert.equal(wrongJudge.success, true);
+        assert.equal(p1.score, 0, 'In LAN mode, points must NOT be automatically deducted on wrong answer');
+
+        // Host manually adjusts score using +300 / -300
+        lanRoom.updatePlayerScore(p1.id, 300);
+        assert.equal(p1.score, 300, 'Host can manually add score');
+        lanRoom.updatePlayerScore(p1.id, -300);
+        assert.equal(p1.score, 0, 'Host can manually subtract score');
+
+        // Player 2 buzzes and times out
+        lanRoom.handleBuzz(p2.id);
+        lanRoom.handleAnswerTimeout();
+        assert.equal(p2.score, 0, 'In LAN mode, points must NOT be automatically deducted on timeout');
+
+        // 2. Cat in Bag: buzzer only for recipient team
+        lanRoom.selectQuestion(0, 1, { q: 'Кот в мешке', a: 'Секрет', price: 400, type: 'cat' });
+        lanRoom.setCatTarget(p2.id);
+        lanRoom.activateBuzzer();
+
+        // Player 1 (not recipient) tries to buzz -> rejected
+        const p1CatBuzz = lanRoom.handleBuzz(p1.id);
+        assert.equal(p1CatBuzz.success, false, 'Other players must NOT be allowed to buzz on Cat in Bag');
+
+        // Player 2 (recipient) can buzz
+        const p2CatBuzz = lanRoom.handleBuzz(p2.id);
+        assert.equal(p2CatBuzz.success, true, 'Recipient team can buzz on Cat in Bag');
+        lanRoom.finishQuestion();
+
+        // 3. Auction for Leader: only leader team gets buzzer
+        lanRoom.selectQuestion(0, 2, { q: 'Аукцион за лидера', a: 'Победа', price: 500, type: 'auction_leader' });
+        lanRoom.setAuctionLeader(p1.id, 700);
+        lanRoom.activateBuzzer();
+
+        // Player 2 tries to buzz -> rejected
+        const p2LeaderBuzz = lanRoom.handleBuzz(p2.id);
+        assert.equal(p2LeaderBuzz.success, false, 'Non-leader teams must NOT have buzzer');
+
+        // Player 1 (leader) can buzz
+        const p1LeaderBuzz = lanRoom.handleBuzz(p1.id);
+        assert.equal(p1LeaderBuzz.success, true, 'Leader team can buzz');
+        assert.equal(lanRoom.currentCost, 700);
+        lanRoom.finishQuestion();
+
+        // 4. Open Auction: bidding teams type answers instead of buzzer
+        lanRoom.selectQuestion(0, 3, { q: 'Общий аукцион', a: 'Золото', price: 200, type: 'auction' });
+        lanRoom.setAuctionBets({ [p1.id]: 300, [p2.id]: 400 });
+        lanRoom.startAuctionAnswer([p1.id, p2.id]);
+
+        assert.equal(lanRoom.stateMachine.state, 'AUCTION_ANSWERING');
+
+        // Bidding players submit text answers
+        const ans1 = lanRoom.handleAnswerSubmit(p1.id, 'Мой ответ');
+        assert.equal(ans1.success, true);
+        assert.equal(ans1.isAuction, true);
+
+        const lastHostMsg = lanWs.messages[lanWs.messages.length - 1];
+        assert.equal(lastHostMsg.type, 'ANSWER_SUBMITTED');
+        assert.equal(lastHostMsg.payload.answerText, 'Мой ответ');
+        assert.equal(lastHostMsg.payload.bet, 300);
+        assert.equal(lastHostMsg.payload.isAuction, true);
+    });
 });

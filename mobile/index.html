@@ -155,7 +155,7 @@
                     <div class="waiting-pulse-orb">
                         <div class="pulse-ring ring-1"></div>
                         <div class="pulse-ring ring-2"></div>
-                        <div class="waiting-icon">⏳</div>
+                        <div class="waiting-icon">⌛</div>
                     </div>
 
                     <h2 class="screen-title" id="waiting-title">Внимание на экран!</h2>
@@ -199,11 +199,11 @@
                 </div>
             </section>
 
-            <!-- ЭКРАН 4: Ввод ответа игроком (если нажал первым) -->
+            <!-- ЭКРАН 4: Ввод ответа игроком (если нажал первым или общий аукцион) -->
             <section class="screen" id="screen-answer">
                 <div class="answer-card">
                     <div class="answer-header">
-                        <div class="badge-success">ВЫ ОТВЕЧАЕТЕ!</div>
+                        <div class="badge-success" id="answer-header-badge">ВЫ ОТВЕЧАЕТЕ!</div>
                         <div class="answer-timer-ring-container">
                             <svg class="mobile-ring-svg" viewBox="0 0 100 100">
                                 <circle class="mobile-ring-bg" cx="50" cy="50" r="42"></circle>
@@ -221,7 +221,7 @@
 
                     <form class="answer-form" id="answer-form">
                         <div class="form-group">
-                            <label for="answer-input">Введите ваш ответ (или назовите голосом):</label>
+                            <label for="answer-input" id="answer-input-label">Введите ваш ответ (или назовите голосом):</label>
                             <input 
                                 type="text" 
                                 id="answer-input" 
@@ -238,7 +238,7 @@
                         </button>
                     </form>
 
-                    <div class="voice-hint">
+                    <div class="voice-hint" id="answer-voice-hint">
                         💡 Вы можете просто озвучить ответ ведущему вслух — ведущий сам подтвердит его правильность.
                     </div>
                 </div>
@@ -341,13 +341,41 @@
                             <div class="secret-comment-text hidden" id="host-secret-comment"></div>
                         </div>
 
-                        <!-- Индикатор активного отвечающего игрока -->
+                        <!-- Индикатор активного отвечающего игрока (Requirement 1) -->
                         <div class="host-answering-banner hidden" id="host-answering-banner">
                             <div class="answering-pulse">🔔</div>
                             <div class="answering-info">
-                                <div class="answering-name" id="host-answering-name">Отвечает: Игрок</div>
+                                <div class="answering-title-row">
+                                    <div class="answering-name" id="host-answering-name">Отвечает: Игрок</div>
+                                    <span class="answering-score-badge" id="host-answering-score">0 очков</span>
+                                </div>
                                 <div class="answering-subtext" id="host-answering-subtext">Слушайте ответ вслух или ждите ввода...</div>
+                                <div class="host-answering-details" id="host-answering-details">
+                                    <div class="host-answering-correct-box">
+                                        <div class="secret-label">💡 Ответ на текущий вопрос:</div>
+                                        <div class="secret-answer-text highlight" id="host-answering-secret-answer">—</div>
+                                    </div>
+                                    <div class="host-player-submitted-box hidden" id="host-player-submitted-box">
+                                        <div class="submitted-label">✍️ Ответ игрока (текст):</div>
+                                        <div class="submitted-text" id="host-player-submitted-val">—</div>
+                                    </div>
+                                </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Панель ответов команд на общем аукционе (Requirement 3) -->
+                    <div class="host-auction-panel hidden" id="host-auction-panel">
+                        <div class="host-auction-header">
+                            <span class="host-auction-title">🔥 Ответы команд на общем аукционе</span>
+                            <span class="host-auction-count" id="host-auction-count">0 ответов</span>
+                        </div>
+                        <div class="host-auction-secret-card">
+                            <div class="secret-label">💡 Правильный ответ:</div>
+                            <div class="secret-answer-text highlight" id="host-auction-secret-answer">—</div>
+                        </div>
+                        <div class="host-auction-list" id="host-auction-list">
+                            <!-- Список команд со ставками и ответами -->
                         </div>
                     </div>
 
@@ -355,7 +383,7 @@
                     <div class="host-controls-panel">
                         <div class="host-controls-title">🎮 Управление игрой</div>
 
-                        <!-- Группа 1: Быстрое судейство ответа -->
+                        <!-- Группа 1: Быстрое судейство ответа и добавление/убавление очков игроку -->
                         <div class="host-btn-row judging-row">
                             <button type="button" class="btn btn-judge-accept" id="btn-host-judge-correct" disabled>
                                 <span class="btn-icon">✅</span>
@@ -363,7 +391,17 @@
                             </button>
                             <button type="button" class="btn btn-judge-reject" id="btn-host-judge-wrong" disabled>
                                 <span class="btn-icon">❌</span>
-                                <span class="btn-text" id="btn-host-judge-wrong-text">Отклонить (-100)</span>
+                                <span class="btn-text" id="btn-host-judge-wrong-text">Отклонить (без вычета)</span>
+                            </button>
+                        </div>
+                        <div class="host-btn-row score-adjust-row">
+                            <button type="button" class="btn btn-host-score-add" id="btn-host-add-score" disabled>
+                                <span class="btn-icon">➕</span>
+                                <span class="btn-text" id="btn-host-add-score-text">+100 игроку</span>
+                            </button>
+                            <button type="button" class="btn btn-host-score-sub" id="btn-host-subtract-score" disabled>
+                                <span class="btn-icon">➖</span>
+                                <span class="btn-text" id="btn-host-subtract-score-text">-100 игроку</span>
                             </button>
                         </div>
 
@@ -415,25 +453,25 @@
 
         <!-- Всплывающее уведомление (Toast) -->
         <!-- Модалка подтверждения выхода в меню -->
-    <div class="mobile-modal-overlay hidden" id="modal-exit-confirm">
-        <div class="mobile-modal-card">
-            <div class="modal-icon">🚪</div>
-            <h3 class="modal-title">Выйти в меню?</h3>
-            <p class="modal-desc">Вы покинете текущую комнату и вернётесь на стартовый экран ввода кода.</p>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" id="btn-cancel-exit">Отмена</button>
-                <button type="button" class="btn btn-danger" id="btn-confirm-exit">Выйти</button>
+        <div class="mobile-modal-overlay hidden" id="modal-exit-confirm">
+            <div class="mobile-modal-card">
+                <div class="modal-icon">🚪</div>
+                <h3 class="modal-title">Выйти в меню?</h3>
+                <p class="modal-desc">Вы покинете текущую комнату и вернётесь на стартовый экран ввода кода.</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-exit">Отмена</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-exit">Выйти</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Баннер авто-паузы при дисконнекте -->
-    <div class="mobile-pause-banner hidden" id="mobile-pause-banner">
-        <div class="pause-pulse">⏸️</div>
-        <div class="pause-text" id="mobile-pause-text">Игра на паузе</div>
-    </div>
+        <!-- Баннер авто-паузы при дисконнекте -->
+        <div class="mobile-pause-banner hidden" id="mobile-pause-banner">
+            <div class="pause-pulse">⏸️</div>
+            <div class="pause-text" id="mobile-pause-text">Игра на паузе</div>
+        </div>
 
-    <div class="mobile-toast hidden" id="mobile-toast">
+        <div class="mobile-toast hidden" id="mobile-toast">
             <span class="toast-icon" id="toast-icon">ℹ️</span>
             <span class="toast-message" id="toast-message">Уведомление</span>
         </div>

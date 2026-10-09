@@ -225,4 +225,29 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         assert.ok(mobileJs.includes('mobile-answer-ring-progress'), 'Mobile JS animates circular ring synchronously');
     });
 
+    test('LAN game menu mobile responsiveness and readability for phones', () => {
+        const cssContent = fs.readFileSync(path.join(rootDir, 'css', 'style.css'), 'utf8');
+
+        // Verify mobile media queries exist for lobby
+        assert.ok(cssContent.includes('@media (max-width: 768px)'), 'Mobile 768px media query must exist');
+        assert.ok(cssContent.includes('@media (max-width: 540px)'), 'Mobile 540px media query must exist');
+        assert.ok(cssContent.includes('@media (max-width: 380px)'), 'Narrow mobile 380px media query must exist');
+        assert.ok(cssContent.includes('@media (max-height: 520px) and (orientation: landscape)'), 'Landscape mobile media query must exist');
+
+        // Header adaptations
+        assert.ok(cssContent.includes('grid-template-areas') && cssContent.includes('"back . status"'), 'Header two-row grid on mobile exists');
+
+        // Connect card adaptations: room code, QR, join link, and server row
+        assert.ok(cssContent.includes('clamp(34px, 8.5vw, 44px)'), 'Room code clamp font size exists');
+        assert.ok(cssContent.includes('.lobby-join-link') && cssContent.includes('border-radius: 12px'), 'Lobby join link touch card styling exists');
+        assert.ok(cssContent.includes('.lobby-server-row') && cssContent.includes('flex-direction: column'), 'Server row vertical stack for mobile exists');
+
+        // Players card: readiness panel & local host toggle
+        assert.ok(cssContent.includes('.lobby-readiness-panel') && cssContent.includes('flex-direction: column'), 'Readiness panel vertical flow on mobile exists');
+        assert.ok(cssContent.includes('.btn-toggle-local-host') && cssContent.includes('width: 100%'), 'Local host button full width on mobile exists');
+
+        // Settings modal on phones
+        assert.ok(cssContent.includes('.lobby-settings-modal-card') && cssContent.includes('width: 95vw !important'), 'Settings modal responsive width exists');
+    });
+
 });

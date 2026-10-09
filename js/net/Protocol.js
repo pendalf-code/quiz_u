@@ -19,6 +19,10 @@ const MSG_TYPES = {
     HOST_NEXT_ROUND: 'HOST_NEXT_ROUND',
     HOST_SET_LOCAL_HOST: 'HOST_SET_LOCAL_HOST',
     HOST_UPDATE_ROOM_SETTINGS: 'HOST_UPDATE_ROOM_SETTINGS',
+    HOST_SET_CAT_TARGET: 'HOST_SET_CAT_TARGET',
+    HOST_SET_AUCTION_LEADER: 'HOST_SET_AUCTION_LEADER',
+    HOST_SET_AUCTION_BETS: 'HOST_SET_AUCTION_BETS',
+    HOST_START_AUCTION_ANSWER: 'HOST_START_AUCTION_ANSWER',
 
     // Player -> Server
     PLAYER_JOIN: 'PLAYER_JOIN',
@@ -39,6 +43,7 @@ const MSG_TYPES = {
     BUZZ_RESET: 'BUZZ_RESET',
     ANSWER_SUBMITTED: 'ANSWER_SUBMITTED',
     AUCTION_BET_MADE: 'AUCTION_BET_MADE',
+    AUCTION_ANSWER_START: 'AUCTION_ANSWER_START',
     CAT_TRANSFERRED: 'CAT_TRANSFERRED',
     ANSWER_TIMEOUT: 'ANSWER_TIMEOUT',
     ROUND_CHANGED: 'ROUND_CHANGED',
@@ -99,16 +104,12 @@ const ProtocolObject = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ProtocolObject;
 }
-
 if (typeof window !== 'undefined') {
     window.QuizProtocol = ProtocolObject;
     window.Protocol = ProtocolObject;
     window.MSG_TYPES = MSG_TYPES;
     window.ERROR_CODES = ERROR_CODES;
-    window.createMessage = createMessage;
-    window.parseMessage = parseMessage;
 }
-
 if (typeof globalThis !== 'undefined') {
     globalThis.QuizProtocol = ProtocolObject;
     globalThis.Protocol = ProtocolObject;

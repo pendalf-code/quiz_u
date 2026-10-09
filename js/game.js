@@ -2472,6 +2472,13 @@ function confirmAllAuctionBets() {
         if (!gameStats[winnerIdx]) gameStats[winnerIdx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
         gameStats[winnerIdx].auctions++;
 
+        if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+            const leaderTeam = teams[winnerIdx];
+            if (leaderTeam && leaderTeam.id) {
+                hostNetworkClient.setAuctionLeader(leaderTeam.id, maxBet);
+            }
+        }
+
         const listContainer = document.getElementById('teams-modal-list');
         if (listContainer) listContainer.innerHTML = '';
         const badge = document.getElementById('modal-special-badge');
@@ -2484,6 +2491,16 @@ function confirmAllAuctionBets() {
                 gameStats[idx].auctions++;
             }
         });
+
+        if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+            const mappedBets = {};
+            teams.forEach((t, idx) => {
+                if (t.id && auctionBets[idx] && !auctionBets[idx].isPassed && auctionBets[idx].val > 0) {
+                    mappedBets[t.id] = auctionBets[idx].val;
+                }
+            });
+            hostNetworkClient.setAuctionBets(mappedBets);
+        }
 
         const listContainer = document.getElementById('teams-modal-list');
         if (listContainer) listContainer.innerHTML = '';
@@ -2503,6 +2520,13 @@ function selectTeamForCatInBag(teamIdx) {
     activeTeamIdxForQuestion = teamIdx;
     if (!gameStats[teamIdx]) gameStats[teamIdx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
     gameStats[teamIdx].cats++;
+
+    if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+        const targetTeam = teams[teamIdx];
+        if (targetTeam && targetTeam.id) {
+            hostNetworkClient.setCatTarget(targetTeam.id);
+        }
+    }
 
     document.getElementById('timer-hint').textContent = `🎯 Отвечает команда: "${teams[teamIdx].name}"`;
     document.getElementById('timer-hint').style.color = "#ff9f43";
@@ -2639,7 +2663,20 @@ function startTimer() {
                 }
                 playStartThinkingSound();
                 if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
-                    hostNetworkClient.activateBuzzer();
+                    const currentQ = currentActiveQuestion || (gameData[currentRoundIndex]?.themes?.[currentThemeIdx]?.questions?.[currentQuestionIdx]);
+                    if (currentQ && currentQ.type === 'cat' && teams[activeTeamIdxForQuestion]) {
+                        hostNetworkClient.activateBuzzer([teams[activeTeamIdxForQuestion].id]);
+                    } else if (currentQ && currentQ.type === 'auction_leader' && teams[activeTeamIdxForQuestion]) {
+                        hostNetworkClient.activateBuzzer([teams[activeTeamIdxForQuestion].id]);
+                    } else if (currentQ && currentQ.type === 'auction') {
+                        const biddingIds = Object.keys(auctionBets)
+                            .filter(idx => !auctionBets[idx].isPassed && auctionBets[idx].val > 0)
+                            .map(idx => teams[idx]?.id)
+                            .filter(Boolean);
+                        hostNetworkClient.startAuctionAnswer(biddingIds);
+                    } else {
+                        hostNetworkClient.activateBuzzer();
+                    }
                     const banner = document.getElementById('online-buzzer-banner');
                     if (banner) {
                         const text = document.getElementById('online-buzzer-text');
@@ -3508,7 +3545,7 @@ let currentLobbySettings = {
     readingTime: parseInt(localStorage.getItem('cfg_reading_time'), 10) >= 0 ? parseInt(localStorage.getItem('cfg_reading_time'), 10) : 7,
     thinkingTime: parseInt(localStorage.getItem('cfg_thinking_time'), 10) >= 5 ? parseInt(localStorage.getItem('cfg_thinking_time'), 10) : 30,
     answerTime: parseInt(localStorage.getItem('cfg_answer_time'), 10) >= 1 ? parseInt(localStorage.getItem('cfg_answer_time'), 10) : 5,
-    penaltyEnabled: localStorage.getItem('cfg_penalty_enabled') !== 'false',
+    penaltyEnabled: localStorage.getItem('cfg_penalty_enabled') === 'true',
     penaltyMode: localStorage.getItem('cfg_penalty_mode') || 'nominal',
     penaltyFixedAmount: parseInt(localStorage.getItem('cfg_penalty_fixed_amount'), 10) || 100
 };
@@ -4104,6 +4141,24 @@ function initHostNetwork(overrideUrl = null) {
             }
         });
 
+        hostNetworkClient.on('cat_transferred', (payload) => {
+            const targetIdx = teams.findIndex(t => t.id === payload.targetPlayerId || t.name === payload.targetPlayerName);
+            if (targetIdx !== -1) {
+                selectTeamForCatInBag(targetIdx);
+            }
+        });
+
+        hostNetworkClient.on('auction_bet_made', (payload) => {
+            const teamIdx = teams.findIndex(t => t.id === payload.playerId);
+            if (teamIdx !== -1) {
+                if (payload.amount === 0) {
+                    toggleAuctionPass(teamIdx);
+                } else {
+                    setAuctionFieldValue(teamIdx, payload.amount);
+                }
+            }
+        });
+
         hostNetworkClient.on('answer_timeout', () => {
             activeOnlineBuzzer = null;
             stopOnlineAnswerCountdown();
@@ -4130,8 +4185,11 @@ function initHostNetwork(overrideUrl = null) {
             if (payload.playerId && (!activeOnlineBuzzer || !activeOnlineBuzzer.judgedLocally)) {
                 const teamIdx = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
                 if (teamIdx !== -1) {
-                    const delta = payload.isCorrect ? payload.cost : -payload.cost;
-                    changeTeamScore(teamIdx, delta);
+                    const penalty = (currentLobbySettings && currentLobbySettings.penaltyEnabled) ? (payload.cost || currentCost) : 0;
+                    const delta = payload.isCorrect ? (payload.cost || currentCost) : -penalty;
+                    if (delta !== 0) {
+                        changeTeamScore(teamIdx, delta);
+                    }
                 }
             }
             if (payload.isCorrect) {
@@ -4451,9 +4509,11 @@ function judgeOnlineAnswer(isCorrect) {
         activeOnlineBuzzer.judgedLocally = true;
         const teamIdx = teams.findIndex(t => t.id === activeOnlineBuzzer.playerId || t.name === activeOnlineBuzzer.playerName);
         if (teamIdx !== -1) {
-            const penalty = getPenaltyDeduction(currentCost);
+            const penalty = (currentLobbySettings && currentLobbySettings.penaltyEnabled) ? getPenaltyDeduction(currentCost) : 0;
             const delta = isCorrect ? currentCost : -penalty;
-            changeTeamScore(teamIdx, delta);
+            if (delta !== 0) {
+                changeTeamScore(teamIdx, delta);
+            }
         }
     }
 

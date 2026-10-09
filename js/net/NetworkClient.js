@@ -29,6 +29,10 @@ const DEFAULT_MSG_TYPES = {
     HOST_NEXT_ROUND: 'HOST_NEXT_ROUND',
     HOST_SET_LOCAL_HOST: 'HOST_SET_LOCAL_HOST',
     HOST_UPDATE_ROOM_SETTINGS: 'HOST_UPDATE_ROOM_SETTINGS',
+    HOST_SET_CAT_TARGET: 'HOST_SET_CAT_TARGET',
+    HOST_SET_AUCTION_LEADER: 'HOST_SET_AUCTION_LEADER',
+    HOST_SET_AUCTION_BETS: 'HOST_SET_AUCTION_BETS',
+    HOST_START_AUCTION_ANSWER: 'HOST_START_AUCTION_ANSWER',
     PLAYER_JOIN: 'PLAYER_JOIN',
     PLAYER_BUZZ: 'PLAYER_BUZZ',
     PLAYER_SUBMIT_ANSWER: 'PLAYER_SUBMIT_ANSWER',
@@ -45,6 +49,7 @@ const DEFAULT_MSG_TYPES = {
     BUZZ_RESET: 'BUZZ_RESET',
     ANSWER_SUBMITTED: 'ANSWER_SUBMITTED',
     AUCTION_BET_MADE: 'AUCTION_BET_MADE',
+    AUCTION_ANSWER_START: 'AUCTION_ANSWER_START',
     CAT_TRANSFERRED: 'CAT_TRANSFERRED',
     ANSWER_TIMEOUT: 'ANSWER_TIMEOUT',
     ROUND_CHANGED: 'ROUND_CHANGED',
@@ -298,6 +303,10 @@ class NetworkClient {
                 this.emit('auction_bet_made', payload);
                 break;
 
+            case MSG.AUCTION_ANSWER_START:
+                this.emit('auction_answer_start', payload);
+                break;
+
             case MSG.CAT_TRANSFERRED:
                 this.emit('cat_transferred', payload);
                 break;
@@ -417,8 +426,24 @@ class NetworkClient {
         });
     }
 
-    activateBuzzer() {
-        return this.send(MSG.HOST_ACTIVATE_BUZZER, {});
+    activateBuzzer(allowedPlayerIds = null) {
+        return this.send(MSG.HOST_ACTIVATE_BUZZER, { allowedPlayerIds });
+    }
+
+    startAuctionAnswer(biddingPlayerIds = null) {
+        return this.send(MSG.HOST_START_AUCTION_ANSWER, { biddingPlayerIds });
+    }
+
+    setAuctionBets(bets) {
+        return this.send(MSG.HOST_SET_AUCTION_BETS, { bets });
+    }
+
+    setCatTarget(targetPlayerId) {
+        return this.send(MSG.HOST_SET_CAT_TARGET, { targetPlayerId });
+    }
+
+    setAuctionLeader(leaderPlayerId, maxBet) {
+        return this.send(MSG.HOST_SET_AUCTION_LEADER, { leaderPlayerId, maxBet });
     }
 
     judgeAnswer(isCorrect) {
