@@ -250,4 +250,55 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         assert.ok(cssContent.includes('.lobby-settings-modal-card') && cssContent.includes('width: 95vw !important'), 'Settings modal responsive width exists');
     });
 
+    test('Host PC Disable & Disconnect Functionality: can enable and disable local host on PC cleanly', () => {
+        assert.ok(htmlContent.includes('id="btn-kick-host"'), 'Button to kick/disconnect host must exist');
+        const cssContent = fs.readFileSync(path.join(rootDir, 'css', 'style.css'), 'utf8');
+        assert.ok(cssContent.includes('.btn-kick-host'), '.btn-kick-host CSS must exist');
+
+        const NetworkClient = require('../js/net/NetworkClient.js');
+        const client = new NetworkClient({ url: 'ws://127.0.0.1:8080', isHost: true });
+
+        // 1. Enable local host on PC
+        client.setLocalHost(true);
+        assert.equal(client.isHostOnPC, true);
+        assert.equal(client.hasHost, true);
+        assert.ok(client.getHost(), 'Host object must exist');
+        assert.equal(client.getHost().id, 'host_pc');
+
+        // 2. Simulate server sending state with host_pc
+        client._syncPlayersFromState({
+            hasHost: true,
+            isHostOnPC: true,
+            host: { id: 'host_pc', name: 'Ведущий (ПК)', role: 'host', isConnected: true },
+            players: []
+        });
+        assert.equal(client.hasHost, true);
+        assert.equal(client.getHost().id, 'host_pc');
+
+        // 3. Disable local host on PC
+        client.setLocalHost(false);
+        assert.equal(client.isHostOnPC, false);
+        assert.equal(client.hasHost, false);
+        assert.equal(client.getHost(), null, 'Host must be null when disabled');
+
+        // 4. Simulate server responding with host: null
+        client._syncPlayersFromState({
+            hasHost: false,
+            isHostOnPC: false,
+            host: null,
+            players: []
+        });
+        assert.equal(client.hasHost, false);
+        assert.equal(client.getHost(), null);
+
+        // 5. Test kickPlayer method
+        assert.equal(typeof client.kickPlayer, 'function');
+        client.setLocalHost(true);
+        assert.equal(client.isHostOnPC, true);
+        client.kickPlayer('host_pc');
+        assert.equal(client.isHostOnPC, false);
+        assert.equal(client.hasHost, false);
+        assert.equal(client.getHost(), null);
+    });
+
 });

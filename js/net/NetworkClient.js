@@ -41,6 +41,7 @@ const DEFAULT_MSG_TYPES = {
     ROOM_CREATED: 'ROOM_CREATED',
     PLAYER_JOINED: 'PLAYER_JOINED',
     PLAYER_LEFT: 'PLAYER_LEFT',
+    PLAYER_KICKED: 'PLAYER_KICKED',
     ROOM_STATE: 'ROOM_STATE',
     ROOM_SETTINGS_UPDATED: 'ROOM_SETTINGS_UPDATED',
     QUESTION_ACTIVE: 'QUESTION_ACTIVE',
@@ -258,6 +259,20 @@ class NetworkClient {
                 this.emit('player_left', payload);
                 break;
 
+            case MSG.PLAYER_KICKED:
+                if (payload && payload.playerId) {
+                    const existing = this.connectedPlayers.get(payload.playerId);
+                    if (existing) {
+                        existing.isConnected = false;
+                    }
+                    if (this.connectedHost && this.connectedHost.id === payload.playerId) {
+                        this.connectedHost.isConnected = false;
+                        this.hasHost = Boolean(this.isHostOnPC);
+                    }
+                }
+                this.emit('player_kicked', payload);
+                break;
+
             case MSG.ROOM_SETTINGS_UPDATED:
                 if (this.lastState && payload && payload.options) {
                     this.lastState.options = payload.options;
@@ -370,17 +385,33 @@ class NetworkClient {
 
     _syncPlayersFromState(state) {
         if (!state) return;
-        if (state.hasHost !== undefined) this.hasHost = Boolean(state.hasHost);
         if (state.isHostOnPC !== undefined) this.isHostOnPC = Boolean(state.isHostOnPC);
+        if (state.hasHost !== undefined) this.hasHost = Boolean(state.hasHost);
         if (state.canStartGame !== undefined) this.canStartGame = Boolean(state.canStartGame);
 
         if (state.host) {
             this.connectedHost = state.host;
-            this.connectedPlayers.set(state.host.id, state.host);
-            this.hasHost = true;
+            if (state.host.isConnected && (state.host.id !== 'host_pc' || this.isHostOnPC)) {
+                this.connectedPlayers.set(state.host.id, state.host);
+                this.hasHost = true;
+            } else {
+                this.connectedPlayers.delete(state.host.id);
+                if (state.host.id === 'host_pc') {
+                    this.connectedHost = null;
+                }
+                this.hasHost = Boolean(this.isHostOnPC);
+            }
         } else if (state.host === null) {
             this.connectedHost = null;
+            this.connectedPlayers.delete('host_pc');
             if (!this.isHostOnPC) this.hasHost = false;
+        }
+
+        if (!this.isHostOnPC) {
+            this.connectedPlayers.delete('host_pc');
+            if (this.connectedHost && this.connectedHost.id === 'host_pc') {
+                this.connectedHost = null;
+            }
         }
 
         if (Array.isArray(state.players)) {
@@ -422,8 +453,34 @@ class NetworkClient {
 
     setLocalHost(isHostOnPC) {
         this.isHostOnPC = Boolean(isHostOnPC);
-        if (this.isHostOnPC) this.hasHost = true;
+        if (this.isHostOnPC) {
+            this.hasHost = true;
+            const pcHost = { id: 'host_pc', name: 'Ведущий (ПК)', role: 'host', isConnected: true };
+            this.connectedHost = pcHost;
+            this.connectedPlayers.set('host_pc', pcHost);
+        } else {
+            this.connectedPlayers.delete('host_pc');
+            if (this.connectedHost && this.connectedHost.id === 'host_pc') {
+                this.connectedHost = null;
+            }
+            const activeMobileHost = Array.from(this.connectedPlayers.values()).find(p => p.role === 'host' && p.isConnected && p.id !== 'host_pc');
+            this.hasHost = Boolean(activeMobileHost || (this.connectedHost && this.connectedHost.isConnected && this.connectedHost.id !== 'host_pc'));
+        }
         return this.send(MSG.HOST_SET_LOCAL_HOST, { isHostOnPC: Boolean(isHostOnPC) });
+    }
+
+    kickPlayer(playerId) {
+        if (!playerId) return false;
+        if (playerId === 'host_pc') {
+            return this.setLocalHost(false);
+        }
+        if (this.connectedHost && this.connectedHost.id === playerId) {
+            this.connectedHost.isConnected = false;
+            this.connectedPlayers.delete(playerId);
+            this.hasHost = Boolean(this.isHostOnPC);
+        }
+        this.connectedPlayers.delete(playerId);
+        return this.send(MSG.HOST_KICK_PLAYER, { playerId });
     }
 
     startGame() {
@@ -538,8 +595,12 @@ class NetworkClient {
     }
 
     getHost() {
-        if (this.connectedHost && this.connectedHost.isConnected) return this.connectedHost;
-        const roleHost = Array.from(this.connectedPlayers.values()).find(p => p.role === 'host' && p.isConnected);
+        if (this.connectedHost && this.connectedHost.isConnected) {
+            if (this.connectedHost.id !== 'host_pc' || this.isHostOnPC) {
+                return this.connectedHost;
+            }
+        }
+        const roleHost = Array.from(this.connectedPlayers.values()).find(p => p.role === 'host' && p.isConnected && (p.id !== 'host_pc' || this.isHostOnPC));
         if (roleHost) return roleHost;
         if (this.isHostOnPC) return { id: 'host_pc', name: 'Ведущий (ПК)', role: 'host', isConnected: true };
         return null;

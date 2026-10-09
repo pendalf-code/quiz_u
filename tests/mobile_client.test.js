@@ -403,4 +403,68 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
         player1Ws.close();
         player2Ws.close();
     });
+    test('QR Code auto-fills room code and updates room badge on mobile', () => {
+        const js = fs.readFileSync(jsPath, 'utf8');
+        assert.ok(js.includes('getRoomCodeFromUrl'), 'mobile.js must define getRoomCodeFromUrl');
+        assert.ok(js.includes("urlParams.get('room')"), 'mobile.js must extract room param');
+        assert.ok(js.includes('elements.roomCodeInput.value = urlRoom'), 'mobile.js must automatically set roomCodeInput');
+        assert.ok(js.includes('updateRoomBadge(urlRoom)'), 'mobile.js must update room badge on URL room code');
+        assert.ok(js.includes("addEventListener('pageshow'"), 'mobile.js must handle pageshow for back-forward cache');
+    });
+
+    test('Kicking mobile host from desktop notifies mobile host and kicks them to main menu', async () => {
+        const hostWs = new WebSocket(sharedWsUrl);
+        const hostMessages = [];
+        hostWs.on('message', (d) => hostMessages.push(JSON.parse(d.toString())));
+        await new Promise(r => hostWs.on('open', r));
+
+        hostWs.send(createMessage(MSG_TYPES.HOST_CREATE_ROOM, {}));
+        const waitForMsg = (list, type) => new Promise(resolve => {
+            const check = () => {
+                const found = list.find(m => m.type === type);
+                if (found) resolve(found);
+                else setTimeout(check, 10);
+            };
+            check();
+        });
+
+        const created = await waitForMsg(hostMessages, MSG_TYPES.ROOM_CREATED);
+        const roomCode = created.payload.roomCode;
+
+        const mobileWs = new WebSocket(sharedWsUrl);
+        const mobileMessages = [];
+        mobileWs.on('message', (d) => mobileMessages.push(JSON.parse(d.toString())));
+        await new Promise(r => mobileWs.on('open', r));
+
+        mobileWs.send(createMessage(MSG_TYPES.PLAYER_JOIN, {
+            roomCode,
+            name: 'MobileHostUser',
+            avatar: '🎙️',
+            role: 'host'
+        }));
+
+        const joined = await waitForMsg(hostMessages, MSG_TYPES.PLAYER_JOINED);
+        const mobileHostId = joined.payload.player.id;
+        assert.equal(joined.payload.role, 'host');
+
+        hostWs.send(createMessage(MSG_TYPES.HOST_KICK_PLAYER, {
+            playerId: mobileHostId
+        }));
+
+        const kickMsg = await waitForMsg(mobileMessages, MSG_TYPES.PLAYER_KICKED);
+        assert.equal(kickMsg.payload.playerId, mobileHostId);
+        assert.equal(kickMsg.payload.role, 'host');
+
+        const leftMsg = await waitForMsg(mobileMessages, MSG_TYPES.PLAYER_LEFT);
+        assert.equal(leftMsg.payload.playerId, mobileHostId);
+        assert.equal(leftMsg.payload.kicked, true);
+
+        await new Promise(r => {
+            if (mobileWs.readyState === WebSocket.CLOSED) return r();
+            mobileWs.on('close', r);
+            setTimeout(r, 200);
+        });
+
+        hostWs.close();
+    });
 });

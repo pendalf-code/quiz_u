@@ -270,12 +270,48 @@ class Room {
     removePlayer(target) {
         this.touch();
         if (this.hostPlayer && (this.hostPlayer.ws === target || this.hostPlayer.id === target)) {
+            const hostWs = this.hostPlayer.ws;
+            const hostId = this.hostPlayer.id;
+            const hostName = this.hostPlayer.name;
+            const wasKicked = (this.hostPlayer.id === target);
+
             this.hostPlayer.isConnected = false;
             this.hostPlayer.ws = null;
+            if (wasKicked) {
+                this.hostPlayer.sessionToken = null;
+            }
+
+            if (hostWs && hostWs.readyState === 1) {
+                const kickPayload = {
+                    playerId: hostId,
+                    playerName: hostName,
+                    role: 'host',
+                    kicked: wasKicked,
+                    reason: wasKicked ? 'kicked_by_host' : 'disconnect'
+                };
+                try {
+                    hostWs.send(createMessage(MSG_TYPES.PLAYER_LEFT, kickPayload));
+                    if (wasKicked) {
+                        hostWs.send(createMessage(MSG_TYPES.PLAYER_KICKED, {
+                            playerId: hostId,
+                            role: 'host',
+                            reason: 'kicked_by_host',
+                            message: 'Ведущий был отключен'
+                        }));
+                    }
+                } catch (_) {}
+                if (wasKicked) {
+                    setTimeout(() => {
+                        try { hostWs.close(1000, 'Kicked'); } catch (_) {}
+                    }, 50);
+                }
+            }
+
             this.broadcastToAll(MSG_TYPES.PLAYER_LEFT, {
-                playerId: this.hostPlayer.id,
-                playerName: this.hostPlayer.name,
-                role: 'host'
+                playerId: hostId,
+                playerName: hostName,
+                role: 'host',
+                kicked: wasKicked
             });
 
             const isGameRunning = (this.stateMachine.state !== 'INIT' && this.stateMachine.state !== 'LOBBY');
@@ -284,7 +320,7 @@ class Room {
                 this.broadcastToAll(MSG_TYPES.GAME_PAUSED, {
                     isPaused: true,
                     reason: 'disconnect',
-                    disconnectedPlayerName: this.hostPlayer.name
+                    disconnectedPlayerName: hostName
                 });
             }
 
@@ -294,14 +330,47 @@ class Room {
 
         for (const [id, player] of this.players.entries()) {
             if (player.ws === target || id === target) {
+                const playerWs = player.ws;
+                const wasKicked = (id === target);
+
                 player.isConnected = false;
                 player.ws = null;
+                if (wasKicked) {
+                    player.sessionToken = null;
+                }
                 this.buzzedPlayers.delete(id);
+
+                if (playerWs && playerWs.readyState === 1) {
+                    const kickPayload = {
+                        playerId: id,
+                        playerName: player.name,
+                        role: 'player',
+                        kicked: wasKicked,
+                        reason: wasKicked ? 'kicked_by_host' : 'disconnect'
+                    };
+                    try {
+                        playerWs.send(createMessage(MSG_TYPES.PLAYER_LEFT, kickPayload));
+                        if (wasKicked) {
+                            playerWs.send(createMessage(MSG_TYPES.PLAYER_KICKED, {
+                                playerId: id,
+                                role: 'player',
+                                reason: 'kicked_by_host',
+                                message: 'Вы были отключены от комнаты'
+                            }));
+                        }
+                    } catch (_) {}
+                    if (wasKicked) {
+                        setTimeout(() => {
+                            try { playerWs.close(1000, 'Kicked'); } catch (_) {}
+                        }, 50);
+                    }
+                }
 
                 this.broadcastToAll(MSG_TYPES.PLAYER_LEFT, {
                     playerId: id,
                     playerName: player.name,
-                    role: 'player'
+                    role: 'player',
+                    kicked: wasKicked
                 });
 
                 const isGameRunning = (this.stateMachine.state !== 'INIT' && this.stateMachine.state !== 'LOBBY');
@@ -1169,9 +1238,9 @@ class Room {
         }
 
         const startCheck = this.canStartGame();
-        const resolvedHost = this.hostPlayer
+        const resolvedHost = (this.hostPlayer && this.hostPlayer.isConnected)
             ? this.sanitizeHost(this.hostPlayer)
-            : (this.isHostOnPC ? { id: 'host_pc', name: 'Ведущий (ПК)', role: 'host', isConnected: true } : null);
+            : (this.isHostOnPC ? { id: 'host_pc', name: 'Ведущий (ПК)', role: 'host', isConnected: true } : (this.hostPlayer ? this.sanitizeHost(this.hostPlayer) : null));
 
         let currentThemeName = this.currentThemeName || '';
         if (!currentThemeName && this.currentThemeIndex !== null && this.currentPack && this.currentPack[this.currentRoundIndex]?.themes?.[this.currentThemeIndex]) {

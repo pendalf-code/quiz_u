@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const Room = require('../src/Room');
+const { ERROR_CODES, MSG_TYPES } = require('../src/protocol');
 
 test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
     let mockHostWs;
@@ -241,6 +242,14 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         assert.equal(toggleRoom.isHostOnPC, true);
         const toggleStart = toggleRoom.startGame();
         assert.equal(toggleStart.success, true);
+
+        // Disabling Local Host on PC
+        toggleRoom.setHostOnPC(false);
+        assert.equal(toggleRoom.hasHost(), false);
+        assert.equal(toggleRoom.isHostOnPC, false);
+        const disabledCheck = toggleRoom.canStartGame();
+        assert.equal(disabledCheck.canStart, false);
+        assert.equal(disabledCheck.errorCode, ERROR_CODES.HOST_REQUIRED);
     });
 
     await t.test('TASK-01: Game and Timer Settings (Reading, Thinking, Answer Times & Penalty Modes)', () => {

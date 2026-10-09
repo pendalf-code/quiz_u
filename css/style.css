@@ -5345,11 +5345,38 @@ body.light-theme .katex {
 }
 
 .btn-toggle-local-host.is-active {
-    background: rgba(108, 92, 231, 0.35);
-    border-color: var(--gold-accent);
+    background: rgba(214, 48, 49, 0.22);
+    border-color: #ff7675;
     color: #ffffff;
     font-weight: 800;
-    box-shadow: 0 0 10px rgba(253, 216, 53, 0.3);
+    box-shadow: 0 0 10px rgba(214, 48, 49, 0.25);
+}
+
+.btn-toggle-local-host.is-active:hover {
+    background: #d63031;
+    border-color: #d63031;
+    color: #ffffff;
+}
+
+.btn-kick-host {
+    background: rgba(214, 48, 49, 0.2);
+    border: 1px solid #d63031;
+    color: #ff7675;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    margin-left: 6px;
+}
+
+.btn-kick-host:hover {
+    background: #d63031;
+    color: #ffffff;
 }
 
 /* Hub Game & Timer Settings */

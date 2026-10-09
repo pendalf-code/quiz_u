@@ -113,9 +113,17 @@ const server = http.createServer((req, res) => {
         return serveStaticFile(path.join(rootDir, 'index.html'), res);
     }
 
-    // Handle /mobile route -> serve mobile web app
-    if (cleanPath === '/mobile' || cleanPath === '/mobile/') {
+    // Handle /mobile route -> redirect to trailing slash or serve mobile web app
+    if (cleanPath === '/mobile') {
+        const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+        res.writeHead(301, { 'Location': `/mobile/${query}` });
+        return res.end();
+    }
+    if (cleanPath === '/mobile/') {
         return serveStaticFile(path.join(mobileDir, 'index.html'), res);
+    }
+    if (cleanPath === '/mobile.js' || cleanPath === '/mobile.css' || cleanPath === '/manifest.json') {
+        return serveStaticFile(path.join(mobileDir, cleanPath.slice(1)), res);
     }
 
     if (cleanPath.startsWith('/mobile/')) {
@@ -283,6 +291,15 @@ function handleClientMessage(ws, message) {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
             room.setHostOnPC(Boolean(payload.isHostOnPC));
+            break;
+        }
+
+        case MSG_TYPES.HOST_KICK_PLAYER: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            if (payload && payload.playerId) {
+                room.removePlayer(payload.playerId);
+            }
             break;
         }
 

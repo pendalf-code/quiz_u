@@ -1347,12 +1347,28 @@
             }
         });
 
-        netClient.on('player_left', () => {
+        netClient.on('player_left', (payload) => {
+            if (payload) {
+                const isMe = state.selfPlayer && payload.playerId === state.selfPlayer.id;
+                const isHostKicked = (payload.role === 'host' || (state.selfPlayer && payload.playerId === state.selfPlayer.id)) && state.selectedRole === 'host';
+                if (isMe || (payload.kicked && isHostKicked)) {
+                    leaveToMainMenu(payload.kicked ? 'Ведущий был отключен' : 'Вы покинули комнату', 'warning');
+                    return;
+                }
+            }
             const players = netClient.getPlayersList();
             renderPlayersList(players);
             if (state.selectedRole === 'host') {
                 renderHostPlayersList(players);
                 updateHostScreen(state.roomState);
+            }
+        });
+
+        netClient.on('player_kicked', (payload) => {
+            const isMe = !payload || !payload.playerId || (state.selfPlayer && payload.playerId === state.selfPlayer.id);
+            const isHostKicked = payload && (payload.role === 'host' || payload.playerId === 'host_pc') && state.selectedRole === 'host';
+            if (isMe || isHostKicked) {
+                leaveToMainMenu(payload && payload.message ? payload.message : 'Ведущий был отключен от игры', 'warning');
             }
         });
 
@@ -1437,7 +1453,7 @@
     // =========================================================================
     // Leave to Main Menu
     // =========================================================================
-    function leaveToMainMenu() {
+    function leaveToMainMenu(customMessage = null, toastType = 'info') {
         if (elements.modalExitConfirm) {
             elements.modalExitConfirm.classList.add('hidden');
         }
@@ -1470,8 +1486,19 @@
 
         if (elements.mobilePauseBanner) elements.mobilePauseBanner.classList.add('hidden');
 
+        // When host is kicked or leaves, reset selected role to player
+        if (state.selectedRole === 'host') {
+            selectRole('player');
+        }
+
+        // Keep room code in input field if present in URL
+        const urlRoom = getRoomCodeFromUrl();
+        if (urlRoom && elements.roomCodeInput) {
+            elements.roomCodeInput.value = urlRoom;
+        }
+
         showScreen('join');
-        showToast('Вы вышли в главное меню', 'info');
+        showToast(customMessage || 'Вы вышли в главное меню', toastType);
 
         // Reconnect network client so user can enter new room immediately
         initNetworkClient();
@@ -1871,16 +1898,47 @@
     // =========================================================================
     // Initialization & Pre-fill from URL
     // =========================================================================
+    function getRoomCodeFromUrl() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            let code = urlParams.get('room') || 
+                       urlParams.get('roomCode') || 
+                       urlParams.get('code') || 
+                       urlParams.get('r') ||
+                       urlParams.get('ROOM') || 
+                       urlParams.get('CODE');
+            if (code) return code.toUpperCase().trim();
+
+            if (window.location.hash) {
+                const hash = window.location.hash;
+                const qIdx = hash.indexOf('?');
+                const hashQuery = qIdx !== -1 ? hash.slice(qIdx + 1) : hash.replace(/^[#/]+/, '');
+                const hashParams = new URLSearchParams(hashQuery);
+                code = hashParams.get('room') || 
+                       hashParams.get('roomCode') || 
+                       hashParams.get('code') || 
+                       hashParams.get('r') ||
+                       hashParams.get('ROOM') || 
+                       hashParams.get('CODE');
+                if (code) return code.toUpperCase().trim();
+
+                const cleanHash = hash.replace(/^[#/]+/, '').trim().toUpperCase();
+                if (/^[A-Z0-9]{4}$/.test(cleanHash)) {
+                    return cleanHash;
+                }
+            }
+        } catch (e) {
+            console.warn('Error reading room code from URL:', e);
+        }
+        return null;
+    }
+
     function init() {
         initTheme();
         setupEventHandlers();
 
-        // Check URL Query Parameters for room code (?room=ABCD)
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlRoom = urlParams.get('room');
-        if (urlRoom) {
-            elements.roomCodeInput.value = urlRoom.toUpperCase().trim();
-        }
+        // Check URL for room code (?room=ABCD or #room=ABCD)
+        const urlRoom = getRoomCodeFromUrl();
 
         // Restore saved player preferences
         const savedRoom = localStorage.getItem(STORAGE_KEYS.ROOM);
@@ -1904,22 +1962,56 @@
             elements.playerNameInput.value = savedName;
         }
 
-        if (savedRoom && !urlRoom) {
-            elements.roomCodeInput.value = savedRoom;
+        if (urlRoom) {
+            // Automatically pre-fill and set room code from scanned QR code
+            if (elements.roomCodeInput) elements.roomCodeInput.value = urlRoom;
+            state.roomCode = urlRoom;
+            updateRoomBadge(urlRoom);
+            localStorage.setItem(STORAGE_KEYS.ROOM, urlRoom);
+
+            // If scanned QR code is for a different room, clear old token
+            if (savedRoom && savedRoom !== urlRoom) {
+                state.sessionToken = null;
+                localStorage.removeItem(STORAGE_KEYS.TOKEN);
+            }
+        } else if (savedRoom) {
+            if (elements.roomCodeInput) elements.roomCodeInput.value = savedRoom;
         }
 
-        // Show reconnect banner if existing session data is found
-        if (savedToken && savedRoom && savedName) {
+        // Show reconnect banner only if saved session matches the active room
+        const isSameRoom = !urlRoom || (savedRoom === urlRoom);
+        if (isSameRoom && savedToken && savedRoom && savedName) {
             state.sessionToken = savedToken;
             elements.reconnectAvatar.textContent = savedAvatar || (savedRole === 'host' ? '🎙️' : '🐱');
             elements.reconnectName.textContent = savedName + (savedRole === 'host' ? ' (Ведущий)' : '');
             elements.reconnectRoom.textContent = `Комната: ${savedRoom}`;
             elements.reconnectBanner.classList.remove('hidden');
+        } else {
+            elements.reconnectBanner.classList.add('hidden');
         }
 
         // Auto-connect to WebSocket server
         initNetworkClient();
     }
+
+    // Refresh pre-filled room code on pageshow (e.g. Safari back-forward cache) & hashchange
+    window.addEventListener('pageshow', () => {
+        const urlRoom = getRoomCodeFromUrl();
+        if (urlRoom && elements.roomCodeInput) {
+            elements.roomCodeInput.value = urlRoom;
+            state.roomCode = urlRoom;
+            updateRoomBadge(urlRoom);
+        }
+    });
+
+    window.addEventListener('hashchange', () => {
+        const urlRoom = getRoomCodeFromUrl();
+        if (urlRoom && elements.roomCodeInput) {
+            elements.roomCodeInput.value = urlRoom;
+            state.roomCode = urlRoom;
+            updateRoomBadge(urlRoom);
+        }
+    });
 
     // Start on DOM ready
     if (document.readyState === 'loading') {

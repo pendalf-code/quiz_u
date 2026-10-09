@@ -3913,6 +3913,7 @@ function leaveOnlineLobby() {
         }
         hostNetworkClient = null;
     }
+    isLocalHostEnabled = false;
     isOnlineGame = false;
     currentOnlineRoomCode = '';
     activeOnlineBuzzer = null;
@@ -4422,6 +4423,9 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('room_state', (payload) => {
+            if (payload && payload.isHostOnPC !== undefined) {
+                isLocalHostEnabled = Boolean(payload.isHostOnPC);
+            }
             if (payload && payload.options) {
                 syncLobbySettings(payload.options);
             }
@@ -4515,6 +4519,24 @@ function toggleLocalHost() {
     renderLobbyPlayers();
 }
 
+function kickHost() {
+    if (isLocalHostEnabled) {
+        toggleLocalHost();
+        return;
+    }
+    if (hostNetworkClient) {
+        const host = hostNetworkClient.getHost();
+        if (host && host.id && host.id !== 'host_pc') {
+            hostNetworkClient.kickPlayer(host.id);
+        }
+    }
+}
+
+function kickPlayer(playerId) {
+    if (!hostNetworkClient || !playerId) return;
+    hostNetworkClient.kickPlayer(playerId);
+}
+
 function renderLobbyPlayers() {
     const listEl = document.getElementById('lobby-players-list');
     const countEl = document.getElementById('lobby-players-count');
@@ -4527,31 +4549,40 @@ function renderLobbyPlayers() {
     const players = hostNetworkClient ? hostNetworkClient.getPlayersList() : [];
     const activeCount = hostNetworkClient ? hostNetworkClient.getActivePlayersCount() : 0;
     const host = hostNetworkClient ? hostNetworkClient.getHost() : null;
-    const hasHost = Boolean((host && host.isConnected) || isLocalHostEnabled || (hostNetworkClient && hostNetworkClient.hasHost));
+    const hasActiveMobileHost = Boolean(host && host.isConnected && host.id !== 'host_pc');
+    const hasHost = Boolean(hasActiveMobileHost || isLocalHostEnabled || (hostNetworkClient && hostNetworkClient.isHostOnPC));
 
     if (countEl) countEl.textContent = `${activeCount} / 8`;
 
     // Update Host Readiness Badge (TASK-05)
+    const kickHostBtn = document.getElementById('btn-kick-host');
     if (hostBadgeEl) {
         if (hasHost) {
             hostBadgeEl.className = 'readiness-badge badge-ready';
-            if (host && host.name && host.id !== 'host_pc') {
+            if (hasActiveMobileHost) {
                 hostBadgeEl.textContent = `✅ Подключен (${host.name})`;
             } else if (isLocalHostEnabled) {
                 hostBadgeEl.textContent = '✅ Подключен (Этот ПК)';
             } else {
                 hostBadgeEl.textContent = '✅ Подключен';
             }
+            if (kickHostBtn) {
+                kickHostBtn.style.display = 'inline-flex';
+            }
         } else {
             hostBadgeEl.className = 'readiness-badge badge-warning';
             hostBadgeEl.textContent = '⚠️ Требуется ведущий';
+            if (kickHostBtn) {
+                kickHostBtn.style.display = 'none';
+            }
         }
     }
 
     // Update Local Host Button state
     if (localHostBtn) {
         localHostBtn.classList.toggle('is-active', isLocalHostEnabled);
-        localHostBtn.textContent = isLocalHostEnabled ? '✅ Ведущий на этом ПК (активен)' : '💻 Вести игру с этого ПК';
+        localHostBtn.textContent = isLocalHostEnabled ? '❌ Отключить ведущего с ПК' : '💻 Вести игру с этого ПК';
+        localHostBtn.title = isLocalHostEnabled ? 'Отключить ведущего на этом ПК' : 'Вести игру с этого ПК';
     }
 
     // Update Players Readiness Badge (TASK-05)
@@ -4624,6 +4655,7 @@ function renderLobbyPlayers() {
                         <span class="lobby-player-ping" title="Пинг в локальной сети">📶 ${pingVal} ms</span>
                     </div>
                 </div>
+                <button class="btn-kick-player" onclick="kickPlayer('${p.id}')" title="Отключить игрока" type="button">✕</button>
             `;
         listEl.appendChild(chip);
     });
@@ -4659,7 +4691,7 @@ function startOnlineGame() {
         return;
     }
     const host = hostNetworkClient.getHost();
-    const hasHost = Boolean((host && host.isConnected) || isLocalHostEnabled || (hostNetworkClient && hostNetworkClient.hasHost));
+    const hasHost = Boolean((host && host.isConnected && (host.id !== 'host_pc' || isLocalHostEnabled)) || (isLocalHostEnabled && hostNetworkClient && hostNetworkClient.isHostOnPC));
     if (!hasHost) {
         showSystemModal("⚠️ Требуется ведущий", "Для начала сетевой игры требуется подключить ведущего со смартфона (роль «Ведущий») или включить «Вести игру с этого ПК».");
         return;
@@ -4750,6 +4782,8 @@ if (typeof window !== 'undefined') {
     window.reconnectHostLobby = reconnectHostLobby;
     window.startOnlineGame = startOnlineGame;
     window.toggleLocalHost = toggleLocalHost;
+    window.kickHost = kickHost;
+    window.kickPlayer = kickPlayer;
     window.copyRoomCode = copyRoomCode;
     window.judgeOnlineAnswer = judgeOnlineAnswer;
     window.openLobbySettingsModal = openLobbySettingsModal;
