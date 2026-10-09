@@ -462,6 +462,14 @@ class NetworkClient {
         return this.send(MSG.HOST_JUDGE_ANSWER, { isCorrect: Boolean(isCorrect), withPenalty: Boolean(withPenalty) });
     }
 
+    nextRound() {
+        return this.send(MSG.HOST_NEXT_ROUND, {});
+    }
+
+    showStats() {
+        return this.send(MSG.HOST_SHOW_STATS, {});
+    }
+
     skipRound() {
         return this.send(MSG.HOST_SKIP_ROUND, {});
     }

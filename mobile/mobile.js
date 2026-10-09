@@ -128,6 +128,22 @@
         hostAuctionSecretAnswer: document.getElementById('host-auction-secret-answer'),
         hostAuctionList: document.getElementById('host-auction-list'),
 
+        // Host Screen Missing Controls & Panels
+        hostLobbyAction: document.getElementById('host-lobby-action'),
+        btnHostStartGame: document.getElementById('btn-host-start-game'),
+        hostAnsweringScore: document.getElementById('host-answering-score'),
+        hostAnsweringSecretAnswer: document.getElementById('host-answering-secret-answer'),
+        hostPlayerSubmittedBox: document.getElementById('host-player-submitted-box'),
+        hostPlayerSubmittedVal: document.getElementById('host-player-submitted-val'),
+        hostPlayersList: document.getElementById('host-players-list'),
+        hostPlayersCount: document.getElementById('host-players-count'),
+        btnHostShowAnswer: document.getElementById('btn-host-show-answer'),
+        btnHostCloseQuestion: document.getElementById('btn-host-close-question'),
+        hostRoundEndAction: document.getElementById('host-round-end-action'),
+        btnHostNextRound: document.getElementById('btn-host-next-round'),
+        hostGameOverAction: document.getElementById('host-game-over-action'),
+        btnHostShowStats: document.getElementById('btn-host-show-stats'),
+
         // Toast
         toast: document.getElementById('mobile-toast'),
         toastIcon: document.getElementById('toast-icon'),
@@ -336,6 +352,7 @@
         state.buzzerState = newState;
         const btn = elements.buzzerBtn;
         btn.className = 'giant-buzzer-btn';
+        btn.style.display = '';
 
         switch (newState) {
             case 'locked':
@@ -436,6 +453,12 @@
             if (currentStep <= 0) {
                 clearInterval(state.answerTimerInterval);
                 state.answerTimerInterval = null;
+                if (state.selectedRole !== 'host') {
+                    if (elements.buzzerBtn) elements.buzzerBtn.style.display = 'none';
+                    if (elements.waitingTitle) elements.waitingTitle.textContent = '⏰ Время вышло!';
+                    if (elements.waitingDesc) elements.waitingDesc.textContent = 'Время на ответ истекло';
+                    showScreen('waiting');
+                }
             }
         }, stepMs);
     }
@@ -488,7 +511,25 @@
         if (elements.hostLobbyAction) {
             if (currentRoomState === 'LOBBY' || currentRoomState === 'INIT') {
                 elements.hostLobbyAction.style.display = 'block';
-                if (elements.btnHostStartGame) {
+                if (elements.btnHostNextRound) {
+            elements.btnHostNextRound.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.nextRound();
+                haptic('success');
+                showToast('?? ??????? ? ?????????? ??????...', 'info');
+            });
+        }
+
+        if (elements.btnHostShowStats) {
+            elements.btnHostShowStats.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.showStats();
+                haptic('success');
+                showToast('?? ????? ?????????? ?? ??...', 'info');
+            });
+        }
+
+        if (elements.btnHostStartGame) {
                     elements.btnHostStartGame.disabled = !canStart;
                     if (!canStart) {
                         elements.btnHostStartGame.textContent = `🚀 Начать игру (Игроков: ${activePlayers.length}/1)`;
@@ -655,7 +696,7 @@
         if (!elements.hostPlayersList) return;
         elements.hostPlayersList.innerHTML = '';
 
-        const playerList = (players || []).filter(p => p.role !== 'host');
+        const playerList = (players || (netClient ? netClient.getPlayersList() : []) || []).filter(p => p.role !== 'host');
         if (elements.hostPlayersCount) {
             elements.hostPlayersCount.textContent = `${playerList.length} игроков`;
         }
@@ -667,6 +708,7 @@
 
         const initialN = state.hostCustomN || state.currentCost || 100;
         playerList.forEach((p) => {
+            const qCost = state.currentCost || 100;
             const row = document.createElement('div');
             row.className = 'host-player-row';
             row.innerHTML = `
@@ -686,7 +728,6 @@
                 </div>
             `;
 
-            const qCost = state.currentCost || 100;
             const btnMinusCost = row.querySelector('.minus-cost');
             if (btnMinusCost) {
                 btnMinusCost.addEventListener('click', () => {
@@ -1069,7 +1110,9 @@
                 if (elements.waitingDesc) {
                     elements.waitingDesc.textContent = (state.activeQuestion && state.activeQuestion.type === 'cat')
                         ? 'Вопрос передан другой команде. Ожидайте ответа...'
-                        : 'Отвечает команда лидера аукциона. Ожидайте ответа...';
+                        : (state.activeQuestion && state.activeQuestion.type === 'auction_leader')
+                            ? 'Отвечает команда лидера аукциона. Ожидайте ответа...'
+                            : 'Вы уже отвечали на этот вопрос. Ожидайте других игроков...';
                 }
                 showScreen('waiting');
             }
@@ -1180,9 +1223,68 @@
                 return;
             }
 
-            showToast('Время на ответ вышло!', 'error');
-            setBuzzerState('locked');
-            showScreen('buzzer');
+            showToast('⏰ Время вышло!', 'error');
+            if (elements.buzzerBtn) elements.buzzerBtn.style.display = 'none';
+            if (elements.waitingTitle) elements.waitingTitle.textContent = '⏰ Время вышло!';
+            if (elements.waitingDesc) elements.waitingDesc.textContent = 'Время на ответ истекло';
+            showScreen('waiting');
+        });
+
+        netClient.on('judge_result', (payload) => {
+            stopAnswerTimer();
+
+            if (state.selectedRole === 'host') {
+                state.activeAnsweringPlayer = null;
+                if (payload.reopened) {
+                    updateHostScreen('BUZZ_ACTIVE');
+                    showToast(`Неверно (${payload.playerName}). Баззер открыт для остальных!`, 'warning');
+                } else {
+                    updateHostScreen('BOARD');
+                    showToast(payload.isCorrect ? `Верно! (+${payload.cost})` : 'Неверно! Попытки исчерпаны.', payload.isCorrect ? 'success' : 'error');
+                }
+                return;
+            }
+
+            const isMe = state.selfPlayer && payload.playerId === state.selfPlayer.id;
+
+            if (isMe) {
+                if (payload.isCorrect) {
+                    haptic('success');
+                    showToast(`🎉 Верно! +${payload.cost} очков!`, 'success');
+                    showScreen('waiting');
+                } else {
+                    haptic('error');
+                    state.isEligibleForBuzzer = false;
+                    if (elements.buzzerBtn) elements.buzzerBtn.style.display = 'none';
+                    if (elements.waitingTitle) elements.waitingTitle.textContent = '❌ Неверный ответ';
+                    if (elements.waitingDesc) {
+                        elements.waitingDesc.textContent = payload.reopened
+                            ? 'Вы уже отвечали. Ожидайте других игроков...'
+                            : 'Вопрос завершён. Ожидайте ведущего...';
+                    }
+                    showToast('❌ Ответ не зачтён', 'error');
+                    showScreen('waiting');
+                }
+            } else {
+                if (payload.isCorrect) {
+                    showToast(`Игрок ${payload.playerName} ответил верно!`, 'info');
+                    showScreen('waiting');
+                } else {
+                    if (payload.reopened) {
+                        showToast(`Неверно (${payload.playerName})! Баззер снова активен!`, 'warning');
+                        if (state.isEligibleForBuzzer) {
+                            if (elements.buzzerBtn) elements.buzzerBtn.style.display = '';
+                            setBuzzerState('ready');
+                            showScreen('buzzer');
+                        } else {
+                            showScreen('waiting');
+                        }
+                    } else {
+                        showToast(`Неверно (${payload.playerName}). Попытки исчерпаны.`, 'info');
+                        showScreen('waiting');
+                    }
+                }
+            }
         });
 
         netClient.on('game_paused', (payload) => {
@@ -1252,6 +1354,22 @@
                 renderHostPlayersList(players);
                 updateHostScreen(state.roomState);
             }
+        });
+
+        netClient.on('round_changed', (payload) => {
+            stopAnswerTimer();
+            state.activeQuestion = null;
+            state.activeAnsweringPlayer = null;
+            showToast(`🏁 ${payload.roundName || ('Раунд ' + ((payload.roundIndex || 0) + 1))}`, 'info', 3000);
+            if (state.selectedRole === 'host') {
+                updateHostScreen('BOARD');
+            } else {
+                showScreen('waiting');
+            }
+        });
+
+        netClient.on('show_stats', () => {
+            showToast('?? ?????????? ???????????? ?? ????? ??????!', 'info', 3000);
         });
 
         netClient.on('question_closed', () => {
@@ -1335,6 +1453,13 @@
         state.activeQuestion = null;
         state.activeAnsweringPlayer = null;
         state.isPaused = false;
+        state.boardData = null;
+        state.hostCustomN = 100;
+        state.auctionBiddingPlayers = [];
+        state.auctionBets = {};
+        state.auctionSubmittedAnswers = {};
+        if (elements.hostPlayersList) elements.hostPlayersList.innerHTML = '';
+        if (elements.hostBoardGrid) elements.hostBoardGrid.innerHTML = '';
         localStorage.removeItem(STORAGE_KEYS.TOKEN);
         localStorage.removeItem(STORAGE_KEYS.ROOM);
 
@@ -1374,6 +1499,14 @@
 
         if (elements.btnConfirmExit) {
             elements.btnConfirmExit.addEventListener('click', () => {
+                if (state.selectedRole === 'host' && netClient && netClient.isConnected) {
+                    try {
+                        netClient.finishGame({
+                            reason: 'early_exit',
+                            message: 'Ведущий покинул игру'
+                        });
+                    } catch (e) {}
+                }
                 leaveToMainMenu();
             });
         }

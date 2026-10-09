@@ -1617,6 +1617,7 @@ function testHardReset() {
 function testInitQuickGame() {
     isTestMode = false;
     teams = [{name: "Команда Альфа", score: 500}, {name: "Команда Бета", score: 300}];
+    isGameStarted = true;
     finalizeGameStartWithFirstTurn(0);
 }
 
@@ -1890,6 +1891,23 @@ function executeQuitToMainMenu() {
     stopFireworks();
     hideGameLayout();
     clearTeamInputs();
+    if (isOnlineGame && hostNetworkClient) {
+        try {
+            hostNetworkClient.finishGame({
+                reason: 'early_exit',
+                message: 'Игра досрочно завершена ведущим'
+            });
+        } catch (e) {
+        }
+        try {
+            hostNetworkClient.disconnect();
+        } catch (e) {
+        }
+        hostNetworkClient = null;
+    }
+    isOnlineGame = false;
+    currentOnlineRoomCode = '';
+    activeOnlineBuzzer = null;
     const mainBox = document.getElementById('main-app-box');
     if (mainBox) mainBox.style.display = 'flex';
     showSubScreen('sub-menu-main');
@@ -2347,17 +2365,17 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
             listContainer.appendChild(btn);
         } else {
             teams.forEach((team, idx) => {
-            if (idx === currentTurnTeamIdx) return;
-            const btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.style.width = '100%';
-            btn.style.maxWidth = '450px';
-            btn.style.margin = '0';
-            btn.style.background = 'var(--purple-medium)';
-            btn.style.color = 'white';
-            btn.textContent = `🎯 Отдать вопрос команде: "${team.name}"`;
-            btn.onclick = () => selectTeamForCatInBag(idx);
-            listContainer.appendChild(btn);
+                if (idx === currentTurnTeamIdx) return;
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.style.width = '100%';
+                btn.style.maxWidth = '450px';
+                btn.style.margin = '0';
+                btn.style.background = 'var(--purple-medium)';
+                btn.style.color = 'white';
+                btn.textContent = `🎯 Отдать вопрос команде: "${team.name}"`;
+                btn.onclick = () => selectTeamForCatInBag(idx);
+                listContainer.appendChild(btn);
             });
         }
         if (btnArea) btnArea.innerHTML = '';
@@ -3179,7 +3197,7 @@ function showWinnerCelebration() {
 
     if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
         hostNetworkClient.finishGame({
-            winners: winners.map(w => ({ name: w.name, score: w.score }))
+            winners: winners.map(w => ({name: w.name, score: w.score}))
         });
     }
 
@@ -3587,6 +3605,7 @@ function generateStarrySky() {
 // Online Multiplayer (Jackbox Mode) Logic
 // --------------------------------------------------------------------------
 let isOnlineGame = false;
+let isGameStarted = false;
 let hostNetworkClient = null;
 let currentOnlineRoomCode = '';
 let isLocalHostEnabled = false;
@@ -3881,7 +3900,17 @@ function openOnlineLobby() {
 
 function leaveOnlineLobby() {
     if (hostNetworkClient) {
-        hostNetworkClient.disconnect();
+        try {
+            hostNetworkClient.finishGame({
+                reason: 'lobby_closed',
+                message: 'Лобби закрыто ведущим'
+            });
+        } catch (e) {
+        }
+        try {
+            hostNetworkClient.disconnect();
+        } catch (e) {
+        }
         hostNetworkClient = null;
     }
     isOnlineGame = false;
@@ -4130,7 +4159,7 @@ function initHostNetwork(overrideUrl = null) {
                 playerIndex = list.findIndex(p => p.id === payload.playerId);
             }
             if (playerIndex === -1) {
-                playerIndex = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
+                playerIndex = (teams && Array.isArray(teams)) ? teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName) : -1;
             }
             const playerDisplayNum = playerIndex >= 0 ? (playerIndex + 1) : 1;
 
@@ -4146,7 +4175,7 @@ function initHostNetwork(overrideUrl = null) {
                 if (playerNumElem) playerNumElem.textContent = `Отвечает игрок #${playerDisplayNum}`;
                 if (avatarElem) avatarElem.textContent = payload.avatar || '👤';
                 if (nameElem) nameElem.textContent = payload.playerName || 'Игрок';
-                const matchingTeam = teams.find(t => t.id === payload.playerId || t.name === payload.playerName);
+                const matchingTeam = (teams && Array.isArray(teams)) ? teams.find(t => t.id === payload.playerId || t.name === payload.playerName) : null;
                 if (subElem) subElem.textContent = matchingTeam ? `${matchingTeam.score} очков` : `Игрок #${playerDisplayNum}`;
             }
 
@@ -4178,9 +4207,30 @@ function initHostNetwork(overrideUrl = null) {
             startOnlineAnswerCountdown(payload.answerTime || configAnswerTime);
         });
 
-        hostNetworkClient.on('buzzer_ready', () => {
+        hostNetworkClient.on('buzzer_ready', (payload) => {
             activeOnlineBuzzer = null;
             stopOnlineAnswerCountdown();
+            const answeringModal = document.getElementById('answering-player-modal');
+            if (answeringModal) answeringModal.classList.add('hidden');
+
+            const timerElem = document.getElementById('timer');
+            const hintElem = document.getElementById('timer-hint');
+            if (isAnswerTimerActive || (timerElem && timerElem.classList.contains('frozen'))) {
+                isAnswerTimerActive = false;
+                if (timerElem) {
+                    timerElem.className = 'timer thinking';
+                    timerElem.textContent = savedThinkingTime;
+                }
+                if (hintElem) {
+                    hintElem.textContent = '🔥 Время пошло! Обсуждение';
+                    hintElem.style.color = '#ff7675';
+                }
+                if (savedThinkingTime > 0) {
+                    timeLeft = savedThinkingTime;
+                    startTimer();
+                }
+            }
+
             const banner = document.getElementById('online-buzzer-banner');
             const icon = document.getElementById('online-buzzer-icon');
             const avatar = document.getElementById('online-buzzer-avatar');
@@ -4296,8 +4346,8 @@ function initHostNetwork(overrideUrl = null) {
                     const answeringModal = document.getElementById('answering-player-modal');
                     if (answeringModal) answeringModal.classList.add('hidden');
                     if (timerElem) {
-                        timerElem.classList.remove('paused');
-                        timerElem.classList.remove('frozen');
+                        timerElem.className = 'timer thinking';
+                        timerElem.textContent = savedThinkingTime;
                     }
                     if (hintElem) {
                         hintElem.textContent = '🔥 Время пошло! Обсуждение';
@@ -4400,6 +4450,21 @@ function initHostNetwork(overrideUrl = null) {
             }
         });
 
+        hostNetworkClient.on('round_changed', (payload) => {
+            currentRoundIndex = (payload && payload.roundIndex !== undefined) ? payload.roundIndex : (currentRoundIndex + 1);
+            currentTurnTeamIdx = 0;
+            updateTurnDisplay();
+            updateTeamsPanel();
+            initBoard();
+            closeSystemModal(false);
+            saveGameState();
+        });
+
+        hostNetworkClient.on('show_stats', () => {
+            hideGameLayout();
+            showWinnerCelebration();
+        });
+
         hostNetworkClient.on('round_skipped', () => {
             executeSkipRound();
         });
@@ -4493,10 +4558,10 @@ function renderLobbyPlayers() {
     if (playersBadgeEl) {
         if (activeCount >= 1) {
             playersBadgeEl.className = 'readiness-badge badge-ready';
-            playersBadgeEl.textContent = `Игроков: ${activeCount} (минимум 1)`;
+            playersBadgeEl.textContent = `Игроков: ${activeCount}`;
         } else {
             playersBadgeEl.className = 'readiness-badge badge-warning';
-            playersBadgeEl.textContent = `Игроков: 0 (минимум 1)`;
+            playersBadgeEl.textContent = `Игроков: 0`;
         }
     }
 
@@ -4511,11 +4576,11 @@ function renderLobbyPlayers() {
         if (!hasPack) {
             hintEl.textContent = '⚠️ Для старта игры необходимо выбрать пак вопросов (в блоке «Пак и настройки»)';
         } else if (!hasHost && activeCount < 1) {
-            hintEl.textContent = '⚠️ Для старта игры требуется подключить ведущего и минимум 1 игрок';
+            hintEl.textContent = '⚠️ Для старта игры требуется подключить ведущего и минимум 1 игрока';
         } else if (!hasHost) {
             hintEl.textContent = '⚠️ Для старта игры требуется подключить ведущего (отсканируйте QR-код со смартфона или выберите «Вести с этого ПК»)';
         } else if (activeCount < 1) {
-            hintEl.textContent = `⚠️ Для старта сетевой игры требуется минимум 1 игрок (сейчас: ${activeCount})`;
+            hintEl.textContent = `⚠️ Для старта игры требуется минимум 1 игрок (сейчас: ${activeCount})`;
         } else {
             hintEl.textContent = `✅ Готово к старту! Подключено игроков: ${activeCount}. Нажмите «Начать игру»`;
         }

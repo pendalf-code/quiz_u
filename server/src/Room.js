@@ -55,6 +55,7 @@ class Room {
         this.biddingPlayerIds = [];
 
         this.answerTimer = null;
+        this.thinkingTimer = null;
         this.readingTimer = null;
         this.readingTimerStartedAt = 0;
         this.readingTimerDuration = 0;
@@ -543,6 +544,10 @@ class Room {
 
         // Start reading timer
         if (this.readingTimer) clearTimeout(this.readingTimer);
+        if (this.thinkingTimer) clearTimeout(this.thinkingTimer);
+        this.thinkingTimer = null;
+        this.remainingThinkingTime = (this.options.thinkingTime !== undefined) ? this.options.thinkingTime : 30;
+        this.thinkingTimerStartedAt = null;
         const rTime = (this.options.readingTime !== undefined) ? this.options.readingTime : 7;
         this.readingTimerDuration = rTime;
         this.remainingReadingTime = rTime;
@@ -602,9 +607,26 @@ class Room {
             this.allowedBuzzerPlayerIds = Array.from(this.players.keys()).filter(id => !this.buzzedPlayers.has(id));
         }
 
+        if (this.thinkingTimer) {
+            clearTimeout(this.thinkingTimer);
+            this.thinkingTimer = null;
+            if (this.thinkingTimerStartedAt) {
+                const elapsed = (Date.now() - this.thinkingTimerStartedAt) / 1000;
+                this.remainingThinkingTime = Math.max(0, (this.remainingThinkingTime || this.options.thinkingTime || 30) - elapsed);
+            }
+        }
+        const tTime = Math.max(1, (this.remainingThinkingTime !== undefined) ? Math.round(this.remainingThinkingTime) : ((this.options.thinkingTime !== undefined) ? this.options.thinkingTime : 30));
+        this.thinkingTimerStartedAt = Date.now();
+        if (tTime > 0) {
+            this.thinkingTimer = setTimeout(() => {
+                this.handleThinkingTimeout();
+            }, tTime * 1000);
+            if (this.thinkingTimer.unref) this.thinkingTimer.unref();
+        }
+
         this.broadcastToAll(MSG_TYPES.BUZZER_READY, {
             cost: this.currentCost,
-            thinkingTime: this.options.thinkingTime,
+            thinkingTime: tTime,
             allowedPlayerIds: this.allowedBuzzerPlayerIds
         });
     }
@@ -700,7 +722,7 @@ class Room {
             return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Кнопка ответа сейчас не активна' };
         }
 
-        if (this.allowedBuzzerPlayerIds && this.allowedBuzzerPlayerIds.length > 0 && !this.allowedBuzzerPlayerIds.includes(playerId)) {
+        if (this.allowedBuzzerPlayerIds && (this.allowedBuzzerPlayerIds.length === 0 || !this.allowedBuzzerPlayerIds.includes(playerId))) {
             return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Этот вопрос предназначен для другой команды' };
         }
 
@@ -714,6 +736,10 @@ class Room {
         }
 
         // Lock first buzzer winner
+        if (this.thinkingTimer) {
+            clearTimeout(this.thinkingTimer);
+            this.thinkingTimer = null;
+        }
         this.buzzedPlayers.add(playerId);
         this.activeBuzzerPlayerId = playerId;
         this.stateMachine.registerBuzz(playerId);
@@ -814,6 +840,47 @@ class Room {
         });
     }
 
+        handleThinkingTimeout() {
+        this.touch();
+        if (this.thinkingTimer) {
+            clearTimeout(this.thinkingTimer);
+            this.thinkingTimer = null;
+        }
+        this.remainingThinkingTime = 0;
+        if (this.stateMachine.state === 'BUZZ_ACTIVE' || this.stateMachine.state === 'QUESTION_READING') {
+            this.activeBuzzerPlayerId = null;
+            this.allowedBuzzerPlayerIds = [];
+            this.stateMachine.state = 'QUESTION_CLOSED';
+            this.broadcastToAll(MSG_TYPES.ANSWER_TIMEOUT, {
+                message: 'Время на вопрос истекло!'
+            });
+        }
+    }
+
+    nextRound() {
+        this.touch();
+        if (this.thinkingTimer) clearTimeout(this.thinkingTimer);
+        this.thinkingTimer = null;
+
+        if (this.currentPack && this.currentRoundIndex + 1 < this.currentPack.length) {
+            this.currentRoundIndex++;
+            this.stateMachine.currentRound = this.currentRoundIndex;
+            try {
+                this.stateMachine.showBoard(this.currentRoundIndex, this.currentPack.length);
+            } catch {
+                this.stateMachine.state = 'BOARD';
+            }
+            this.broadcastToAll(MSG_TYPES.ROUND_CHANGED, {
+                roundIndex: this.currentRoundIndex,
+                roundName: this.currentPack[this.currentRoundIndex]?.roundName || ('????? ' + (this.currentRoundIndex + 1))
+            });
+            this.broadcastRoomState();
+        } else {
+            this.stateMachine.state = 'GAME_OVER';
+            this.broadcastRoomState();
+        }
+    }
+
     handleAnswerTimeout() {
         this.touch();
         if (this.answerTimer) {
@@ -844,7 +911,7 @@ class Room {
         }
     }
 
-    judgeAnswer(isCorrect, withPenalty = false) {
+    judgeAnswer(isCorrect, withPenalty = undefined) {
         this.touch();
         if (this.answerTimer) {
             clearTimeout(this.answerTimer);
@@ -871,7 +938,8 @@ class Room {
             this.finishQuestion();
             return { success: true, correct: true, playerId: answeringPlayerId };
         } else {
-            const penalty = withPenalty ? (this.getPenaltyAmount() || this.currentCost) : 0;
+            const shouldPenalize = withPenalty !== undefined ? Boolean(withPenalty) : (this.options.penaltyEnabled !== false);
+            const penalty = shouldPenalize ? (this.getPenaltyAmount() || this.currentCost) : 0;
             if (penalty > 0) {
                 this.updatePlayerScore(answeringPlayerId, -penalty);
             }
@@ -1001,7 +1069,17 @@ class Room {
 
     finishGame(payload = {}) {
         this.touch();
+        if (this.stateMachine && typeof this.stateMachine.finishGame === 'function') {
+            try {
+                this.stateMachine.finishGame();
+            } catch (e) {
+                this.stateMachine.state = 'GAME_OVER';
+            }
+        } else if (this.stateMachine) {
+            this.stateMachine.state = 'GAME_OVER';
+        }
         this.broadcastToAll(MSG_TYPES.GAME_FINISHED, payload);
+        this.broadcastRoomState();
     }
 
     updatePlayerScore(playerId, delta) {
@@ -1024,8 +1102,10 @@ class Room {
         this.touch();
         if (this.answerTimer) clearTimeout(this.answerTimer);
         if (this.readingTimer) clearTimeout(this.readingTimer);
+        if (this.thinkingTimer) clearTimeout(this.thinkingTimer);
         this.answerTimer = null;
         this.readingTimer = null;
+        this.thinkingTimer = null;
         this.remainingReadingTime = 0;
         this.remainingAnswerTime = 0;
         this.currentThemeName = '';
@@ -1038,10 +1118,24 @@ class Room {
         this.biddingPlayerIds = [];
         this.currentQuestion = null;
 
-        try {
-            this.stateMachine.showBoard();
-        } catch {
-            this.stateMachine.state = 'BOARD';
+        let allUsed = false;
+        if (this.currentPack && this.currentPack[this.currentRoundIndex]) {
+            const currentRound = this.currentPack[this.currentRoundIndex];
+            allUsed = (currentRound.themes || []).every(th => (th.questions || []).every(q => q.used));
+        }
+
+        if (allUsed) {
+            if (this.currentRoundIndex + 1 >= (this.currentPack ? this.currentPack.length : 1)) {
+                this.stateMachine.state = 'GAME_OVER';
+            } else {
+                this.stateMachine.state = 'ROUND_END';
+            }
+        } else {
+            try {
+                this.stateMachine.showBoard();
+            } catch {
+                this.stateMachine.state = 'BOARD';
+            }
         }
 
         this.broadcastRoomState();

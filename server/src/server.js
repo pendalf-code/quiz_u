@@ -411,6 +411,28 @@ function handleClientMessage(ws, message) {
             break;
         }
 
+        case MSG_TYPES.HOST_NEXT_ROUND: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.nextRound();
+            break;
+        }
+
+        case MSG_TYPES.HOST_SHOW_STATS:
+        case 'HOST_SHOW_STATS': {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.broadcastToAll(MSG_TYPES.SHOW_STATS, {});
+            break;
+        }
+
+        case MSG_TYPES.ANSWER_TIMEOUT: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.handleThinkingTimeout();
+            break;
+        }
+
         case MSG_TYPES.GAME_FINISHED:
         case 'HOST_FINISH_GAME': {
             const room = roomManager.getRoom(ws.roomCode);
@@ -469,7 +491,13 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.PLAYER_BUZZ: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.playerId) return;
-            room.handleBuzz(ws.playerId);
+            const res = room.handleBuzz(ws.playerId);
+            if (res && !res.success && res.error) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: res.error,
+                    message: res.message
+                }));
+            }
             break;
         }
 
@@ -525,7 +553,12 @@ function handleClientDisconnect(ws) {
             room.removePlayer(ws);
             if (room.hostWs === ws) {
                 room.hostWs = null;
-                room.broadcastRoomState();
+                const isGameRunning = (room.stateMachine && room.stateMachine.state !== 'INIT' && room.stateMachine.state !== 'LOBBY');
+                if (isGameRunning) {
+                    room.finishGame({ reason: 'host_disconnected', message: 'Ведущий отключился' });
+                } else {
+                    room.broadcastRoomState();
+                }
             }
         }
     }
