@@ -38,6 +38,7 @@ const DEFAULT_MSG_TYPES = {
     PLAYER_SUBMIT_ANSWER: 'PLAYER_SUBMIT_ANSWER',
     PLAYER_AUCTION_BET: 'PLAYER_AUCTION_BET',
     PLAYER_CAT_TRANSFER: 'PLAYER_CAT_TRANSFER',
+    PLAYER_PASS: 'PLAYER_PASS',
     ROOM_CREATED: 'ROOM_CREATED',
     PLAYER_JOINED: 'PLAYER_JOINED',
     PLAYER_LEFT: 'PLAYER_LEFT',
@@ -52,6 +53,8 @@ const DEFAULT_MSG_TYPES = {
     AUCTION_BET_MADE: 'AUCTION_BET_MADE',
     AUCTION_ANSWER_START: 'AUCTION_ANSWER_START',
     CAT_TRANSFERRED: 'CAT_TRANSFERRED',
+    AUCTION_LEADER_SET: 'AUCTION_LEADER_SET',
+    PLAYER_PASSED: 'PLAYER_PASSED',
     ANSWER_TIMEOUT: 'ANSWER_TIMEOUT',
     ROUND_CHANGED: 'ROUND_CHANGED',
     GAME_FINISHED: 'GAME_FINISHED',
@@ -60,6 +63,7 @@ const DEFAULT_MSG_TYPES = {
     GAME_PAUSED: 'GAME_PAUSED',
     SHOW_ANSWER: 'SHOW_ANSWER',
     QUESTION_CLOSED: 'QUESTION_CLOSED',
+    SHOW_STATS: 'SHOW_STATS',
     ERROR: 'ERROR'
 };
 
@@ -326,6 +330,14 @@ class NetworkClient {
                 this.emit('cat_transferred', payload);
                 break;
 
+            case MSG.AUCTION_LEADER_SET:
+                this.emit('auction_leader_set', payload);
+                break;
+
+            case MSG.PLAYER_PASSED:
+                this.emit('player_passed', payload);
+                break;
+
             case MSG.ANSWER_TIMEOUT:
                 this.emit('answer_timeout', payload);
                 break;
@@ -363,6 +375,18 @@ class NetworkClient {
 
             case MSG.ROUND_SKIPPED:
                 this.emit('round_skipped', payload);
+                break;
+
+            case MSG.ROUND_CHANGED:
+                this.emit('round_changed', payload);
+                break;
+
+            case MSG.BUZZ_RESET:
+                this.emit('buzz_reset', payload);
+                break;
+
+            case MSG.SHOW_STATS:
+                this.emit('show_stats', payload);
                 break;
 
             case MSG.TURN_PASSED:
@@ -527,6 +551,10 @@ class NetworkClient {
         return this.send(MSG.HOST_SHOW_STATS, {});
     }
 
+    resetToLobby() {
+        return this.send(MSG.HOST_RESET_TO_LOBBY, {});
+    }
+
     skipRound() {
         return this.send(MSG.HOST_SKIP_ROUND, {});
     }
@@ -562,6 +590,10 @@ class NetworkClient {
     /**
      * Player Actions
      */
+    passQuestion() {
+        return this.send(MSG.PLAYER_PASS, {});
+    }
+
     joinRoom(roomCode, name, avatar, sessionToken, role = 'player') {
         this.roomCode = (roomCode || '').toUpperCase().trim();
         this.role = role || 'player';
