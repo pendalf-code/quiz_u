@@ -3,12 +3,11 @@
 > **Назначение документа:** Официальный регламент проведения конструктивного код-ревью в проекте Quiz U («Город Ю»), культура и этика взаимодействия разработчиков, классификация замечаний, инженерные чек-листы по компонентам системы и пошаговый план комплексного ревью всего проекта.
 >
 > 🔗 **Связанные документы:**
-> * [DEV_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DEV_GUIDE.md) — инженерные правила для разработчиков, архитектурные инварианты и Git Workflow.
-> * [PLAN.md](file:///C:/Users/user/IdeaProjects/quiz_u/PLAN.md) — общая архитектура, стек и концепция Jackbox-мультиплеера.
-> * [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md) — глобальные релизные этапы и трекер прогресса.
-> * [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) — оперативный трекер задач, фичей и багов.
-> * [DESIGN_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DESIGN_GUIDE.md) — дизайн, маркетинг и подготовка ассетов для Steam Direct.
-> * [.aiassistant/rules/code style rules.md](file:///C:/Users/user/IdeaProjects/quiz_u/.aiassistant/rules/code%20style%20rules.md) — стандарты кода и правила кодовой базы.
+> * [DEV_GUIDE.md](DEV_GUIDE.md) — инженерные правила для разработчиков, архитектурные инварианты и Git Workflow.
+> * [ROADMAP.md](ROADMAP.md) — глобальные релизные этапы и трекер прогресса.
+> * [TASKS.md](TASKS.md) — оперативный трекер задач, фичей и багов.
+> * [DESIGN_GUIDE.md](DESIGN_GUIDE.md) — дизайн, маркетинг и подготовка ассетов для Steam Direct.
+> * [.aiassistant/rules/code style rules.md](../.aiassistant/rules/code%20style%20rules.md) — стандарты кода и правила кодовой базы.
 
 ---
 
@@ -105,15 +104,15 @@ flowchart LR
    - До запроса ревью автор выполняет `git diff` и лично просматривает каждую изменённую строку.
    - Запускает оба набора тестов (`npm test` в корне и `cd server && npm test`).
 2. **Оформление описания (Pre-Push Summary):**
-   - Подготавливает сводку согласно разделу 1.2 [DEV_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DEV_GUIDE.md): список фичей, затронутые файлы, статус тестов, обновление трекеров.
+   - Подготавливает сводку согласно разделу 1.2 [DEV_GUIDE.md](DEV_GUIDE.md): список фичей, затронутые файлы, статус тестов, обновление трекеров.
 3. **Обновление проектных трекеров:**
-   - Переводит статусы задач в [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) и [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md).
+   - Переводит статусы задач в [TASKS.md](TASKS.md) и [ROADMAP.md](ROADMAP.md).
 4. **Конструктивное реагирование:**
    - Отвечает на комментарии ревьюера, благодарит за найденные дефекты, при несогласии приводит аргументы на основе архитектурных требований.
 
 ### 4.2. Роль ревьюера (Reviewer)
 1. **Погружение в задачу:**
-   - Изучает связанную задачу в [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) или [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md).
+   - Изучает связанную задачу в [TASKS.md](TASKS.md) или [ROADMAP.md](ROADMAP.md).
 2. **Локальная верификация:**
    - При необходимости выкачивает ветку и запускает тесты локально.
 3. **Инспекция по слоям:**
@@ -133,7 +132,7 @@ flowchart LR
 - [x] Переходы состояний в `GameStateMachine.js` детерминированы, недопустимые переходы возвращают ошибку или `false`.
 - [x] Начисление очков в `ScoreManager.js` корректно обрабатывает ставки аукциона и отрицательный счёт.
 - [x] `PackParser.js` валидирует структуру раундов, тем и вопросов без генерации исключений.
-- [x] Написаны модульные тесты в [tests/](file:///C:/Users/user/IdeaProjects/quiz_u/tests/) на каждую новую ветку бизнес-логики.
+- [x] Написаны модульные тесты в [tests/](../tests/) на каждую новую ветку бизнес-логики.
 
 ### 5.2. Чек-лист: Интерфейс хоста и стили (`index.html`, `js/game.js`, `css/`)
 - [x] Новая разметка и компоненты корректно выглядят в Dark и Light темах.
@@ -183,10 +182,10 @@ graph TD
 ### Фаза 1: Аудит ядра и бизнес-логики (`js/core/`)
 * **Цель:** Обеспечить 100% изоляцию чистой логики от UI и браузерного окружения.
 * **Объекты проверки:**
-  - [js/core/GameStateMachine.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/core/GameStateMachine.js)
-  - [js/core/ScoreManager.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/core/ScoreManager.js)
-  - [js/core/PackParser.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/core/PackParser.js)
-  - [js/core/CdnManager.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/core/CdnManager.js)
+  - [js/core/GameStateMachine.js](../js/core/GameStateMachine.js)
+  - [js/core/ScoreManager.js](../js/core/ScoreManager.js)
+  - [js/core/PackParser.js](../js/core/PackParser.js)
+  - [js/core/CdnManager.js](../js/core/CdnManager.js)
 * **Контрольные точки аудита:**
   1. Отсутствие прямых вызовов `document`, `window`, `localStorage` внутри модулей ядра.
   2. Детерминированность переходов FSM (LOBBY -> BOARD -> QUESTION -> BUZZ -> ANSWER -> ROUND_END).
@@ -196,11 +195,11 @@ graph TD
 ### Фаза 2: Хост-приложение и визуальный слой (`index.html`, `js/game.js`, `css/`)
 * **Цель:** Проверить стабильность интерфейса хоста, плавность анимаций и безупречность стилей.
 * **Объекты проверки:**
-  - [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html)
-  - [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js)
-  - [js/catalog.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/catalog.js)
-  - [css/style.css](file:///C:/Users/user/IdeaProjects/quiz_u/css/style.css)
-  - [css/catalog.css](file:///C:/Users/user/IdeaProjects/quiz_u/css/catalog.css)
+  - [index.html](../index.html)
+  - [js/game.js](../js/game.js)
+  - [js/catalog.js](../js/catalog.js)
+  - [css/style.css](../css/style.css)
+  - [css/catalog.css](../css/catalog.css)
 * **Контрольные точки аудита:**
   1. Отсутствие битых символов кодировки `\uFFFD` в HTML и CSS файлах.
   2. Корректность работы стартового выбора режима («Локальная игра» / «Сетевая комната»).
@@ -211,12 +210,12 @@ graph TD
 ### Фаза 3: Авторитарный сервер и сетевой транспорт (`server/`, `js/net/`)
 * **Цель:** Проверить надёжность WebSocket-соединений, арбитраж баззера и безопасность.
 * **Объекты проверки:**
-  - [server/src/server.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/server.js)
-  - [server/src/Room.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/Room.js)
-  - [server/src/RoomManager.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/RoomManager.js)
-  - [server/src/protocol.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/protocol.js)
-  - [js/net/NetworkClient.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/net/NetworkClient.js)
-  - [js/net/Protocol.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/net/Protocol.js)
+  - [server/src/server.js](../server/src/server.js)
+  - [server/src/Room.js](../server/src/Room.js)
+  - [server/src/RoomManager.js](../server/src/RoomManager.js)
+  - [server/src/protocol.js](../server/src/protocol.js)
+  - [js/net/NetworkClient.js](../js/net/NetworkClient.js)
+  - [js/net/Protocol.js](../js/net/Protocol.js)
 * **Контрольные точки аудита:**
   1. Синхронность констант между `server/src/protocol.js` и `js/net/Protocol.js`.
   2. Защита от утечки ответов: игрокам не уходят поля `question.a` и `question.a_img`.
@@ -227,10 +226,10 @@ graph TD
 ### Фаза 4: Мобильный PWA-клиент игрока и ведущего (`mobile/`)
 * **Цель:** Валидация удобства управления со смартфона, скорости отклика и стабильности.
 * **Объекты проверки:**
-  - [mobile/index.html](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/index.html)
-  - [mobile/mobile.css](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/mobile.css)
-  - [mobile/mobile.js](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/mobile.js)
-  - [mobile/manifest.json](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/manifest.json)
+  - [mobile/index.html](../mobile/index.html)
+  - [mobile/mobile.css](../mobile/mobile.css)
+  - [mobile/mobile.js](../mobile/mobile.js)
+  - [mobile/manifest.json](../mobile/manifest.json)
 * **Контрольные точки аудита:**
   1. Наличие и работоспособность всех 6 экранов игрока + экрана пульта ведущего (`#screen-host`).
   2. Мгновенная отправка сигнала баззера при таче без задержки 300мс.
@@ -240,11 +239,11 @@ graph TD
 ### Фаза 5: Десктоп-сборка и платформа Steam (`src-tauri/`)
 * **Цель:** Проверить работоспособность нативного бинарника для ПК и Steam Deck.
 * **Объекты проверки:**
-  - [src-tauri/tauri.conf.json](file:///C:/Users/user/IdeaProjects/quiz_u/src-tauri/tauri.conf.json)
-  - [src-tauri/Cargo.toml](file:///C:/Users/user/IdeaProjects/quiz_u/src-tauri/Cargo.toml)
-  - [src-tauri/src/main.rs](file:///C:/Users/user/IdeaProjects/quiz_u/src-tauri/src/main.rs)
-  - [js/desktop/SteamIntegration.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/desktop/SteamIntegration.js)
-  - [js/desktop/GamepadManager.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/desktop/GamepadManager.js)
+  - [src-tauri/tauri.conf.json](../src-tauri/tauri.conf.json)
+  - [src-tauri/Cargo.toml](../src-tauri/Cargo.toml)
+  - [src-tauri/src/main.rs](../src-tauri/src/main.rs)
+  - [js/desktop/SteamIntegration.js](../js/desktop/SteamIntegration.js)
+  - [js/desktop/GamepadManager.js](../js/desktop/GamepadManager.js)
 * **Контрольные точки аудита:**
   1. Разрешение 1280x800 по умолчанию в конфиге Tauri для идеальной посадки на Steam Deck.
   2. Переключение в полноэкранный режим по `F11`.
@@ -255,9 +254,9 @@ graph TD
 * **Цель:** Проверить целостность и валидность базы вопросов (400+ паков).
 * **Объекты проверки:**
   - Каталог `паки вопросов/`
-  - [js/packs_data.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/packs_data.js)
-  - [js/packs_catalog.json](file:///C:/Users/user/IdeaProjects/quiz_u/js/packs_catalog.json)
-  - [scripts/optimize_media.js](file:///C:/Users/user/IdeaProjects/quiz_u/scripts/optimize_media.js)
+  - [js/packs_data.js](../js/packs_data.js)
+  - [js/packs_catalog.json](../js/packs_catalog.json)
+  - [scripts/optimize_media.js](../scripts/optimize_media.js)
 * **Контрольные точки аудита:**
   1. Все JSON-файлы пакетов синтаксически валидны и сохранены в кодировке UTF-8.
   2. В паках отсутствуют захардкоженные `type` (динамическое назначение в раундах).
@@ -267,9 +266,9 @@ graph TD
 ### Фаза 7: Автоматизированное тестирование и стресс-тесты
 * **Цель:** Обеспечить воспроизводимость и надёжность всех проверок.
 * **Объекты проверки:**
-  - [tests/](file:///C:/Users/user/IdeaProjects/quiz_u/tests/) (клиентские тесты)
-  - [server/tests/](file:///C:/Users/user/IdeaProjects/quiz_u/server/tests/) (серверные тесты)
-  - [server/load_test/simulate_load.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/load_test/simulate_load.js)
+  - [tests/](../tests/) (клиентские тесты)
+  - [server/tests/](../server/tests/) (серверные тесты)
+  - [server/load_test/simulate_load.js](../server/load_test/simulate_load.js)
 * **Контрольные точки аудита:**
   1. 100% успешное прохождение всех клиентских тестов (`npm test`).
   2. 100% успешное прохождение серверных тестов (`cd server && npm test`).
@@ -278,15 +277,14 @@ graph TD
 ### Фаза 8: Документация и синхронизация регламентов
 * **Цель:** Поддерживать документацию в актуальном и непротиворечивом состоянии.
 * **Объекты проверки:**
-  - [README.md](file:///C:/Users/user/IdeaProjects/quiz_u/README.md)
-  - [DEV_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DEV_GUIDE.md)
-  - [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md)
-  - [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md)
-  - [PLAN.md](file:///C:/Users/user/IdeaProjects/quiz_u/PLAN.md)
-  - [DESIGN_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DESIGN_GUIDE.md)
-  - [REVIEW_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/REVIEW_GUIDE.md)
+  - [README.md](README.md)
+  - [DEV_GUIDE.md](DEV_GUIDE.md)
+  - [ROADMAP.md](ROADMAP.md)
+  - [TASKS.md](TASKS.md)
+  - [DESIGN_GUIDE.md](DESIGN_GUIDE.md)
+  - [REVIEW_GUIDE.md](REVIEW_GUIDE.md)
 * **Контрольные точки аудита:**
-  1. Все внутренние ссылки оформлены кликабельными ссылками со схемой `file:///` и прямыми слэшами.
+  1. Все внутренние ссылки в `docs/` относительные (`[TASKS.md](TASKS.md)`, `[game.js](../js/game.js)`) и не ведут на удалённые файлы.
   2. Счётчики тестов и статусы этапов в `ROADMAP.md` и `TASKS.md` согласованы с реальностью.
   3. Инструкции по запуску в `README.md` проверены на актуальность.
 

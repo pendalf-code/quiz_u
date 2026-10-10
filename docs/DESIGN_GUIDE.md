@@ -4,9 +4,8 @@
 > Содержит регламент открытия и оформления страницы в **Steam**, технические требования ко всем графическим ассетам, стратегию сбора вишлистов (Wishlists) и пошаговый контент-план продвижения в социальных сетях.
 >
 > 📁 **Связанные документы:**
-> * [PLAN.md](file:///C:/Users/user/IdeaProjects/quiz_u/PLAN.md) — общая архитектура игры.
-> * [DEV_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DEV_GUIDE.md) — правила разработки и саммари.
-> * [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md) — трекер этапов разработки.
+> * [DEV_GUIDE.md](DEV_GUIDE.md) — правила разработки и саммари.
+> * [ROADMAP.md](ROADMAP.md) — трекер этапов разработки.
 
 ---
 

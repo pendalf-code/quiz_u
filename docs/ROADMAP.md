@@ -1,17 +1,16 @@
 # 🗺️ Поэтапный план разработки и трекер прогресса (ROADMAP)
 
-> **Статус проекта:** `Этап 6: Выполнено | feature/online-multiplayer: TASK-01..29, BUG-01..28 (226 тестов, 100% pass)`
+> **Статус проекта:** `Этап 6: Выполнено | feature/online-multiplayer: TASK-01..29, BUG-01..49 (264 клиентских + 52 серверных тестов, 100% pass)`
 > **Инструкции:** Перед началом и по завершении каждого шага обновляйте чекбоксы и логи прогресса в этом файле
-> согласно [DEV_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DEV_GUIDE.md).
+> согласно [DEV_GUIDE.md](DEV_GUIDE.md).
 >
 > 📁 **Связанные документы:**
-> * [PLAN.md](file:///C:/Users/user/IdeaProjects/quiz_u/PLAN.md) — архитектура и стек мультиплеера.
-> * [DEV_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DEV_GUIDE.md) — инженерные правила для AI и саммари перед
+> * [DEV_GUIDE.md](DEV_GUIDE.md) — инженерные правила для AI и саммари перед
     пушем.
-> * [REVIEW_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/REVIEW_GUIDE.md) — регламент конструктивного ревью и
+> * [REVIEW_GUIDE.md](REVIEW_GUIDE.md) — регламент конструктивного ревью и
     план ревью проекта.
-> * [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) — трекер задач, фичей и багов.
-> * [DESIGN_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DESIGN_GUIDE.md) — Steam Direct, ассеты, вишлисты и
+> * [TASKS.md](TASKS.md) — трекер задач, фичей и багов.
+> * [DESIGN_GUIDE.md](DESIGN_GUIDE.md) — Steam Direct, ассеты, вишлисты и
     маркетинг в соцсетях.
 
 ---
@@ -26,13 +25,13 @@
 |      **Этап 4**       | Мобильный веб-пульт (`mobile/` PWA, Buzzer, ввод ответов, виброотклик)                                                  |  `Выполнено`   |   100%   |
 |      **Этап 5**       | Десктоп-сборка для Steam (Tauri, Gamepad API, Steam Deck)                                                               |  `Выполнено`   |   100%   |
 |      **Этап 6**       | Мобильная сборка (Capacitor), CDN для медиа и релиз                                                                     |  `Выполнено`   |   100%   |
-| **Steam & Маркетинг** | Страница в Steam, ассеты, вишлисты и SMM ([DESIGN_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DESIGN_GUIDE.md)) | `Запланирован` |    0%    |
+| **Steam & Маркетинг** | Страница в Steam, ассеты, вишлисты и SMM ([DESIGN_GUIDE.md](DESIGN_GUIDE.md)) | `Запланирован` |    0%    |
 
 ---
 
 ## 📍 Этап 1: Изоляция ядра (Core Engine) и юнит-тесты
 
-**Цель:** Выделить из монолитного [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js) чистую
+**Цель:** Выделить из монолитного [js/game.js](../js/game.js) чистую
 бизнес-логику (стейт-машину викторины, подсчет очков, управление раундами) в независимые ES-модули без привязки к DOM,
 пригодные для переиспользования на сервере и в автотестах.
 
@@ -49,12 +48,12 @@
     - [x] Создать `js/core/PackParser.js`:
         - Нормализация и валидация структуры пака (перенос логики `normalizeGameData`).
 - [x] **1.2. Написание юнит-тестов:**
-    - [x] Добавить в [tests/](file:///C:/Users/user/IdeaProjects/quiz_u/tests/) тесты на `GameStateMachine`:
+    - [x] Добавить в [tests/](../tests/) тесты на `GameStateMachine`:
         - Корректная смена фаз игры;
         - Защита от недопустимых переходов (например, ответ после истечения таймера).
     - [x] Добавить тесты на `ScoreManager`:
         - Корректное добавление/вычитание очков с учетом аукциона.
-- [x] **1.3. Обратная интеграция в [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js):**
+- [x] **1.3. Обратная интеграция в [js/game.js](../js/game.js):**
     - [x] Подключить новые модули ядра в `index.html` и `game.js`.
     - [x] Убедиться, что локальная оффлайн-игра работает стабильно.
     - [x] Прогнать команду `npm test` и зафиксировать успешное прохождение.
@@ -82,23 +81,23 @@ npm test
     - [x] Настроена раздача статических файлов по HTTP (с защитой от Path Traversal), эндпоинты `/health` и
       `/api/stats`.
 - [x] **2.2. Реализация
-  `RoomManager.js` ([server/src/RoomManager.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/RoomManager.js)):**
+  `RoomManager.js` ([server/src/RoomManager.js](../server/src/RoomManager.js)):**
     - [x] Генерация 4-значных алфавитно-цифровых кодов (`ABCDEFGHJKMNPQRSTUVWXYZ` без путаемых символов).
     - [x] Пул комнат (`Map`), создание по запросу хоста, регистронезависимый поиск.
     - [x] Автоматическая очистка неактивных комнат (таймаут 15 мин, фоновый таймер с `.unref()`).
-- [x] **2.3. Реализация `Room.js` ([server/src/Room.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/Room.js)) и
-  `protocol.js` ([server/src/protocol.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/protocol.js)):**
+- [x] **2.3. Реализация `Room.js` ([server/src/Room.js](../server/src/Room.js)) и
+  `protocol.js` ([server/src/protocol.js](../server/src/protocol.js)):**
     - [x] Подключение хоста и регистрация игроков (ник, ID, аватар, лимит комнат, токены сессий).
     - [x] Авторитарный арбитраж Buzzer: фиксация первого нажавшего, отклонение повторных нажатий, таймер ответа.
     - [x] Античит: отправка игрокам данных вопроса строго без полей ответа (`question.a` и `question.a_img`).
     - [x] Heartbeat (Ping/Pong) и graceful shutdown при `SIGINT`/`SIGTERM`.
-- [x] **2.4. Тестирование сервера ([server/tests/](file:///C:/Users/user/IdeaProjects/quiz_u/server/tests/)):**
+- [x] **2.4. Тестирование сервера ([server/tests/](../server/tests/)):**
     - [x] Модульные тесты RoomManager
-      ([server/tests/room_manager.test.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/tests/room_manager.test.js)).
+      ([server/tests/room_manager.test.js](../server/tests/room_manager.test.js)).
     - [x] Тесты механик комнаты и античита
-      ([server/tests/room_mechanics.test.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/tests/room_mechanics.test.js)).
+      ([server/tests/room_mechanics.test.js](../server/tests/room_mechanics.test.js)).
     - [x] Сквозной интеграционный тест реального WebSocket-сервера
-      ([server/tests/server_integration.test.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/tests/server_integration.test.js)).
+      ([server/tests/server_integration.test.js](../server/tests/server_integration.test.js)).
 
 ### 🧪 Верификация этапа 2:
 
@@ -113,8 +112,8 @@ cd server && npm test
 
 ## 📍 Этап 3: Host-клиент (Сетевое лобби и QR-код)
 
-**Цель:** Добавить в основной ПК-интерфейс [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html)
-и [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js) возможность переключения между «Локальной игрой» и
+**Цель:** Добавить в основной ПК-интерфейс [index.html](../index.html)
+и [js/game.js](../js/game.js) возможность переключения между «Локальной игрой» и
 «Сетевой комнатой», отображение экрана ожидания игроков с кодом комнаты и QR-кодом.
 
 ### 📝 Задачи и подзадачи:
@@ -220,7 +219,7 @@ E2E `server/tests/server_e2e.test.js`.
 
 ---
 
-## 📍 Этап «Steam Direct, Ассеты и Маркетинг» ([DESIGN_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DESIGN_GUIDE.md))
+## 📍 Этап «Steam Direct, Ассеты и Маркетинг» ([DESIGN_GUIDE.md](DESIGN_GUIDE.md))
 
 **Цель:** Регистрация в Steamworks, отрисовка всех форматов капсул, скриншотов, запуск страницы «Скоро выйдет» (Coming
 Soon) и ведение соцсетей для сбора вишлистов.

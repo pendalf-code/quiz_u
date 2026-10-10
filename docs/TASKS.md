@@ -4,13 +4,12 @@
 > багов с отслеживанием прогресса их реализации.
 >
 > 🔗 **Связанные документы:**
-> * [DEV_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/DEV_GUIDE.md) — инженерные правила, стандарты кодовой базы
+> * [DEV_GUIDE.md](DEV_GUIDE.md) — инженерные правила, стандарты кодовой базы
     и правила перед коммитом.
-> * [REVIEW_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/REVIEW_GUIDE.md) — регламент конструктивного ревью и
+> * [REVIEW_GUIDE.md](REVIEW_GUIDE.md) — регламент конструктивного ревью и
     план ревью проекта.
-> * [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md) — глобальные релизные этапы проекта.
-> * [PLAN.md](file:///C:/Users/user/IdeaProjects/quiz_u/PLAN.md) — концепция и архитектура мультиплеера.
-> * [README.md](file:///C:/Users/user/IdeaProjects/quiz_u/README.md) — запуск и руководство пользователя.
+> * [ROADMAP.md](ROADMAP.md) — глобальные релизные этапы проекта.
+> * [README.md](README.md) — запуск и руководство пользователя.
 
 > [!IMPORTANT]
 > ### 🌿 Главное правило ветвления Git:
@@ -80,8 +79,8 @@
    git merge task-04-host-screen --no-ff
    ```
 
-5. **Обновление статуса в [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md)
-   и [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md).**
+5. **Обновление статуса в [TASKS.md](TASKS.md)
+   и [ROADMAP.md](ROADMAP.md).**
 
 ---
 
@@ -95,7 +94,7 @@
 * **Приоритет:** 🔥 Высокий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js), [server/src/Room.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/Room.js), [server/src/protocol.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/protocol.js), [server/src/server.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/server.js), [js/net/NetworkClient.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/net/NetworkClient.js), [js/net/Protocol.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/net/Protocol.js)
+  файлы:** [index.html](../index.html), [js/game.js](../js/game.js), [server/src/Room.js](../server/src/Room.js), [server/src/protocol.js](../server/src/protocol.js), [server/src/server.js](../server/src/server.js), [js/net/NetworkClient.js](../js/net/NetworkClient.js), [js/net/Protocol.js](../js/net/Protocol.js)
 * **Описание:**
   В хабе (лобби ожидания игроков перед стартом LAN-партии) добавлено модальное окно и плашка детальной конфигурации игры
   перед запуском: таймеры чтения, обдумывания, персонального ответа и штрафы за неверный ответ.
@@ -116,7 +115,7 @@
 * **Приоритет:** 🔥 Высокий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html), [css/style.css](file:///C:/Users/user/IdeaProjects/quiz_u/css/style.css), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js), [mobile/mobile.js](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/mobile.js), [server/src/Room.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/Room.js)
+  файлы:** [index.html](../index.html), [css/style.css](../css/style.css), [js/game.js](../js/game.js), [mobile/mobile.js](../mobile/mobile.js), [server/src/Room.js](../server/src/Room.js)
 * **Описание:**
   Когда один из игроков нажимает кнопку ответа (Buzzer):
     1. Общий таймер вопроса на главном экране должен замораживаться/останавливаться.
@@ -139,7 +138,7 @@
 * **Приоритет:** ⚡ Высокий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [tests/lan_e2e_container.test.js](file:///C:/Users/user/IdeaProjects/quiz_u/tests/lan_e2e_container.test.js), [tests/lan_multiplayer_3plus.test.js](file:///C:/Users/user/IdeaProjects/quiz_u/tests/lan_multiplayer_3plus.test.js), [server/src/Room.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/Room.js)
+  файлы:** [tests/lan_e2e_container.test.js](../tests/lan_e2e_container.test.js), [tests/lan_multiplayer_3plus.test.js](../tests/lan_multiplayer_3plus.test.js), [server/src/Room.js](../server/src/Room.js)
 * **Описание:**
   Разработан комплексный изолированный тестовый комплекс Testcontainers-style для мультиплеера с 3 и более игроками:
     1. Тестирование полного жизненного цикла партии с ведущим и 3–4 игроками со смартфонами.
@@ -161,7 +160,7 @@
 * **Приоритет:** ⚡ Высокий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js), [css/style.css](file:///C:/Users/user/IdeaProjects/quiz_u/css/style.css), [mobile/mobile.js](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/mobile.js)
+  файлы:** [js/game.js](../js/game.js), [css/style.css](../css/style.css), [mobile/mobile.js](../mobile/mobile.js)
 * **Описание:**
   Полностью удален голубой визуальный индикатор заморозки со снежинкой (`.timer.frozen`).
   Внедрен единый интуитивный желтый индикатор времени ответа игрока (`.timer.answering`) как в локальной игре (при
@@ -179,7 +178,7 @@
 * **Приоритет:** ⚡ Высокий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [server/src/Room.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/Room.js), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js), [mobile/mobile.js](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/mobile.js)
+  файлы:** [server/src/Room.js](../server/src/Room.js), [js/game.js](../js/game.js), [mobile/mobile.js](../mobile/mobile.js)
 * **Описание:**
   При неверном ответе игрока (нажатие ведущим «Отклонить с вычетом» или «Отклонить без вычета») общий таймер на
   размышление возобновляется у всех остальных игроков, кроме уже отвечавшего, с сохраненного остатка времени без сброса.
@@ -196,7 +195,7 @@
 * **Приоритет:** 💡 Средний
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [docs/README.md](file:///C:/Users/user/IdeaProjects/quiz_u/docs/README.md), [docs/TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/docs/TASKS.md), [docs/ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/docs/ROADMAP.md), [docs/DEV_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/docs/DEV_GUIDE.md), [docs/REVIEW_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/docs/REVIEW_GUIDE.md)
+  файлы:** [docs/README.md](README.md), [docs/TASKS.md](TASKS.md), [docs/ROADMAP.md](ROADMAP.md), [docs/DEV_GUIDE.md](DEV_GUIDE.md), [docs/REVIEW_GUIDE.md](REVIEW_GUIDE.md)
 * **Описание:**
   Удалены дублирующиеся файлы документации из корня репозитория. Вся актуальная документация централизованно размещена в
   папке `/docs/`. Обновлены внутренние ссылки и интеграционные тесты целостности документации.
@@ -213,7 +212,7 @@
 * **Приоритет:** 🔥 Высокий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [mobile/index.html](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/index.html), [mobile/mobile.js](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/mobile.js), [server/src/Room.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/Room.js), [server/src/protocol.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/protocol.js)
+  файлы:** [mobile/index.html](../mobile/index.html), [mobile/mobile.js](../mobile/mobile.js), [server/src/Room.js](../server/src/Room.js), [server/src/protocol.js](../server/src/protocol.js)
 * **Описание:**
   На экране входа со смартфона (`mobile/`) добавить обязательный переключатель/селектор роли: «Игрок» или «Ведущий».
 * **Критерии приёмки:**
@@ -231,7 +230,7 @@
 * **Приоритет:** 🔥 Высокий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [mobile/index.html](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/index.html), [mobile/mobile.css](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/mobile.css), [mobile/mobile.js](file:///C:/Users/user/IdeaProjects/quiz_u/mobile/mobile.js), [server/src/Room.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/Room.js), [server/src/protocol.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/protocol.js), [js/net/Protocol.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/net/Protocol.js), [js/net/NetworkClient.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/net/NetworkClient.js), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js)
+  файлы:** [mobile/index.html](../mobile/index.html), [mobile/mobile.css](../mobile/mobile.css), [mobile/mobile.js](../mobile/mobile.js), [server/src/Room.js](../server/src/Room.js), [server/src/protocol.js](../server/src/protocol.js), [js/net/Protocol.js](../js/net/Protocol.js), [js/net/NetworkClient.js](../js/net/NetworkClient.js), [js/game.js](../js/game.js)
 * **Описание:**
   Для пользователя, вошедшего со смартфона с ролью «Ведущий», отображать специальный полнофункциональный пульт
   управления:
@@ -267,7 +266,7 @@
 * **Приоритет:** ⚡ Средний
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js), [server/src/Room.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/Room.js), [server/src/RoomManager.js](file:///C:/Users/user/IdeaProjects/quiz_u/server/src/RoomManager.js)
+  файлы:** [js/game.js](../js/game.js), [server/src/Room.js](../server/src/Room.js), [server/src/RoomManager.js](../server/src/RoomManager.js)
 * **Описание:**
   Игру в сетевом режиме запрещено запускать, пока не выполнены обязательные условия:
     1. В комнате присутствует ведущий (на хосте или с мобильного).
@@ -289,7 +288,7 @@
 * **Приоритет:** 💡 Низкий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js)
+  файлы:** [index.html](../index.html), [js/game.js](../js/game.js)
 * **Описание:**
   Убрать подпись «один экран» из карточки оффлайн-режима в главном меню, оставив лаконичное название «Локальная игра».
 * **Критерии приёмки:**
@@ -303,7 +302,7 @@
 * **Приоритет:** 💡 Низкий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js)
+  файлы:** [index.html](../index.html), [js/game.js](../js/game.js)
 * **Описание:**
   Заменить текущий текст «Создай онлайн-комнату...» на точное и понятное обозначение «LAN игра».
 * **Критерии приёмки:**
@@ -318,7 +317,7 @@
 * **Приоритет:** 💡 Низкий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html), [css/style.css](file:///C:/Users/user/IdeaProjects/quiz_u/css/style.css)
+  файлы:** [index.html](../index.html), [css/style.css](../css/style.css)
 * **Описание:**
   Добавить третью кнопку режима «Сетевая игра» (для будущей глобальной онлайн-игры через интернет-сервера).
 * **Критерии приёмки:**
@@ -334,7 +333,7 @@
 * **Приоритет:** ⚡ Средний
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js)
+  файлы:** [index.html](../index.html), [js/game.js](../js/game.js)
 * **Описание:**
   Исключить кнопку настроек игры из основного экрана главного меню. Настройки должны открываться непосредственно перед
   стартом выбранного режима (в хабе/лобби подготовки).
@@ -350,7 +349,7 @@
 * **Приоритет:** 💡 Низкий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js)
+  файлы:** [index.html](../index.html), [js/game.js](../js/game.js)
 * **Описание:**
   Убрать кнопку и блок «Для тестирования» из пользовательского интерфейса главного меню.
 * **Критерии приёмки:**
@@ -365,7 +364,7 @@
 * **Приоритет:** ⚡ Средний
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js), [js/catalog.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/catalog.js)
+  файлы:** [index.html](../index.html), [js/game.js](../js/game.js), [js/catalog.js](../js/catalog.js)
 * **Описание:**
   Кнопку «Подготовить вопросы» (каталог паков и редактор) убрать из главного меню. Выбор и загрузка пакета вопросов
   должны происходить непосредственно при подготовке к запуску игры.
@@ -383,7 +382,7 @@
 * **Приоритет:** 🔥 Высокий
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html), [css/style.css](file:///C:/Users/user/IdeaProjects/quiz_u/css/style.css), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js)
+  файлы:** [index.html](../index.html), [css/style.css](../css/style.css), [js/game.js](../js/game.js)
 * **Описание:**
   Капитально переработать визуальное оформление экрана ожидания LAN-игры:
     1. **Кнопка «Начать игру»**: вынести в отдельное акцентное место (например, нижняя фиксированная экшн-панель или
@@ -408,7 +407,7 @@
 * **Приоритет:** ⚡ Средний
 * **Статус:** `[x] Выполнено`
 * **Целевые
-  файлы:** [index.html](file:///C:/Users/user/IdeaProjects/quiz_u/index.html), [css/style.css](file:///C:/Users/user/IdeaProjects/quiz_u/css/style.css), [js/game.js](file:///C:/Users/user/IdeaProjects/quiz_u/js/game.js)
+  файлы:** [index.html](../index.html), [css/style.css](../css/style.css), [js/game.js](../js/game.js)
 * **Описание:**
   По клику на «Правила игры» открывать стильное модальное окно с табами (вкладками) под каждый доступный режим:
     - 🏠 **«Локальная игра»** — правила игры за одним общим экраном (управление клавишами, подсчет очков).
@@ -464,9 +463,9 @@
       git merge task-<name> --no-ff
       ```
 4. **Обновление статуса:**
-    - Измените статус задачи в таблице [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) с `[ ]` на `[x]`,
+    - Измените статус задачи в таблице [TASKS.md](TASKS.md) с `[ ]` на `[x]`,
       обновите счётчики в сводном прогрессе и
-      синхронизируйте [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md).
+      синхронизируйте [ROADMAP.md](ROADMAP.md).
 
 ---
 
@@ -481,9 +480,6 @@
 | **BUG-12** | В модальном окне «Правила игры» слипались информационные блоки из-за `display: block` в активных табах, присутствовали дублирующие кнопки внизу каждого таба | `css/style.css`, `index.html`, `js/game.js` | `[x] Устранено` |
 
 ## 🐛 Исправленные баги и новые возможности пульта ведущего (2026-10-09)
-
-> *Подробный технический отчёт см.
-в [docs/HOST_MOBILE_FIXES.md](file:///C:/Users/user/IdeaProjects/quiz_u/docs/HOST_MOBILE_FIXES.md).*
 
 | ID          | Описание                                                                    | Шаги воспроизведения / Причина                              | Приоритет  |     Статус      | Решение / Фикс                                                                                                                                                                                                        |
 |:------------|:----------------------------------------------------------------------------|:------------------------------------------------------------|:----------:|:---------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -520,3 +516,39 @@
 | **TASK-27** | Единый желтый индикатор времени ответа (`.timer.answering`) и полное удаление голубой заморозки / снежинки (`.timer.frozen`)            | Нажать пробел в локальной игре или баззер в LAN                                | ⚡ Высокий | `[x] Выполнено` | Заморозка со снежинкой удалена, единая анимация желтого пульсирующего круга на ТВ и смартфонах для локального и сетевого режимов                                           |
 | **TASK-28** | Корректный возврат общего таймера размышления при неверном ответе для всех игроков, кроме уже отвечавшего                               | Ведущий нажимает «Отклонить с вычетом» или «Отклонить без вычета»              | ⚡ Высокий | `[x] Выполнено` | Возобновление остатка времени размышления, блокировка баззера для ошибившегося игрока, синхронный перезапуск таймера у остальных                                           |
 | **TASK-29** | Консолидация всей проектной документации в `/docs/` и удаление дубликатов из корня проекта                                              | Проверить корень репозитория и папку `docs/`                                   | 💡 Средний | `[x] Выполнено` | Все `.md` файлы актуализированы и сохранены исключительно в `/docs/`, корневые дубликаты удалены, обновлены пути в тестах и шаблонах                                       |
+
+## 🐛 Исправленные баги LAN-игры (2026-10-10)
+
+| ID          | Описание                                                                                                     | Файлы                                  | Статус          |
+|:------------|:-------------------------------------------------------------------------------------------------------------|:---------------------------------------|:---------------:|
+| **BUG-29**  | Очки начислялись дважды+: ПК-хост менял счёт локально, слал `HOST_UPDATE_SCORE` и ещё раз применял `judge_result` | `js/game.js`                           | `[x] Устранено` |
+| **BUG-30**  | Авто-пауза при отключении не замораживала таймеры; ручное снятие паузы запускало дубли таймеров               | `server/src/Room.js`                   | `[x] Устранено` |
+| **BUG-31**  | После возврата отключившегося игрока игра оставалась на паузе, хотя баннер обещал «ожидание переподключения»   | `server/src/Room.js`                   | `[x] Устранено` |
+| **BUG-32**  | Кик игрока ведущим ставил игру на паузу                                                                       | `server/src/Room.js`                   | `[x] Устранено` |
+| **BUG-33**  | Баззер переоткрывался для отключённых игроков — вопрос «зависал» до конца таймера                             | `server/src/Room.js`                   | `[x] Устранено` |
+| **BUG-34**  | Пропуск последнего раунда не завершал игру                                                                    | `server/src/Room.js`                   | `[x] Устранено` |
+| **BUG-35**  | Штраф на аукционе считался от номинала, а не от ставки; фиксированный штраф 0 списывал номинал                | `server/src/Room.js`                   | `[x] Устранено` |
+| **BUG-36**  | На смартфоне игрока любой `room_state` открывал баззер (даже уже ответившим, при паузе); залипали тексты «❌ Неверный ответ» / «⏰ Время вышло!» | `mobile/mobile.js`, `server/src/Room.js` | `[x] Устранено` |
+| **BUG-37**  | По окончании игры все игроки выбрасывались в меню — «Вернуться в лобби» создавал пустую комнату               | `mobile/mobile.js`                     | `[x] Устранено` |
+| **BUG-38**  | ПК-экран в LAN бесконечно перезапускал игру: `isGameStarted` не становился `true`, каждый `room_state: BOARD` вызывал `startOnlineGame()` → `startGame` → новый `room_state` (шторм сообщений, сброс табло и статистики) | `js/game.js`                           | `[x] Устранено` |
+| **BUG-39**  | Дублирующий `HOST_ACTIVATE_BUZZER` от ПК-экрана (его таймер чтения) мог сбросить уже идущую гонку баззера (`ANSWERING` → `BUZZ_ACTIVE`) | `server/src/server.js`                 | `[x] Устранено` |
+| **BUG-40**  | Кнопка «Прибавить всем очки» на пульте не работала: модалка стояла в HTML после `<script>`, её элементы были `null` | `mobile/index.html`                    | `[x] Устранено` |
+| **BUG-41**  | `NetworkClient` не диспетчеризовал `ROUND_CHANGED`, `BUZZ_RESET`, `SHOW_STATS`: ПК не переходил в новый раунд, «Показать статистику» и сброс баззера не доходили до клиентов | `js/net/NetworkClient.js`              | `[x] Устранено` |
+| **BUG-42**  | Конец раунда/игры на ПК определялся локально и расходился с сервером; после победного экрана все игроки (и ведущий) выкидывались в меню (`finishGame`) — «Новая игра» не работала | `js/game.js`                           | `[x] Устранено` |
+| **BUG-43**  | «Пропустить раунд» на ПК не сообщал серверу; в лобби пропуск раунда/передача хода запускали игру | `js/game.js`, `server/src/Room.js`     | `[x] Устранено` |
+| **BUG-44**  | После «К табло» на последнем вопросе раунда/игры пульт терял кнопки «Следующий раунд» / «Статистика» (состояние сбрасывалось в `BOARD`) | `mobile/mobile.js`                     | `[x] Устранено` |
+| **TASK-30** | Редизайн пульта ведущего: нижний «док» действий по фазам (`data-phase`), крупные кнопки судейства, редкие действия под «Ещё», компактные карточки игроков, светлая тема | `mobile/index.html`, `mobile/mobile.css`, `mobile/mobile.js` | `[x] Выполнено` |
+| **BUG-45**  | «Кот в мешке»: баззер открывался для всех до выбора ответчика, ведущий с телефона не мог назначить команду, ПК не реагировал на выбор (неверные поля `cat_transferred`) | `server/src/Room.js`, `mobile/mobile.js`, `js/game.js` | `[x] Устранено` |
+| **BUG-46**  | Аукцион: игроки не видели экран ставок (`QUESTION_ACTIVE` без `state`), вопрос открывался по таймеру без ведущего, ставки не ограничивались счётом | `server/src/Room.js`, `mobile/mobile.js` | `[x] Устранено` |
+| **BUG-47**  | Любая серверная ошибка («кнопка не активна») выкидывала игрока на экран входа | `mobile/mobile.js` | `[x] Устранено` |
+| **TASK-31** | Пульт ведущего: панель особого вопроса (кот — назначить отвечающего; аукцион за право ответа — назначить лидера по живым ставкам; аукцион для всех — принять ставки и открыть ввод ответов) | `mobile/*`, `server/src/Room.js` | `[x] Выполнено` |
+| **TASK-32** | Игроки: «Пас» на обычном вопросе (двойное нажатие; все спасовали → вопрос закрывается), ставки с ограничением по счёту и пасом; назначенный в «Коте»/лидер/участник аукциона обязан отвечать (пас запрещён сервером) | `server/src/Room.js`, `mobile/*`, `js/net/*` | `[x] Выполнено` |
+| **TASK-33** | Редизайн телефона игрока (нижний блок баззера, плашка «обязан ответить», экран ставок, иконка экрана ожидания) и чистка лишних иконок/текста на ПК-баннере LAN | `mobile/*`, `js/game.js`, `index.html` | `[x] Выполнено` |
+| **TASK-34** | Общее табло: вопрос, выбранный ведущим на телефоне, сначала мигает на сетке (≈1,3 с), затем открывается модалка; события игры во время мигания ставятся в очередь и проигрываются после открытия | `js/game.js`, `css/style.css` | `[x] Выполнено` |
+| **TASK-35** | Если все спасовали (или время вышло без ответа) — на общем экране показывается правильный ответ; на табло экран возвращается только по «К табло» ведущего (при ведущем с телефона на общем экране нет кнопки «Продолжить») | `server/src/Room.js`, `js/game.js` | `[x] Выполнено` |
+| **BUG-48**  | На общем экране `playBuzzerSound` падал (`configEnableSound is not defined`) в обработчике `buzz_locked`: при нажатии баззера общий таймер не замирал, не показывались «Отвечает игрок» и отдельный таймер ответа | `js/game.js`                           | `[x] Устранено` |
+| **BUG-49**  | События игры во время заставки особого вопроса на общем экране терялись (ставки, лидер, старт ответов аукциона) | `js/game.js`                           | `[x] Устранено` |
+| **TASK-36** | Общий аукцион: фиксированные 30 секунд на ввод ответа (не зависит от «времени обдумывания»), 30-секундный отсчёт на общем экране | `server/src/Room.js`, `js/game.js`, `mobile/mobile.js` | `[x] Выполнено` |
+| **TASK-37** | Раздел «Правила игры» (LAN и спецвопросы) обновлён под текущую игру: пульт ведущего, «К табло», тайминги, пас и обязанность отвечать, кот и аукционы | `index.html`                           | `[x] Выполнено` |
+| **TASK-38** | LAN: убраны баннеры-подсказки на общем экране («Кнопка активна», «Время на ответ истекло», «Неверно…»); кто отвечает — на боковой карточке, отсчёт — в главном таймере | `css/style.css` | `[x] Выполнено` |
+| **TASK-39** | Общий экран при ведущем с телефона: убраны кнопки «Зачесть/Отклонить» на карточке отвечающего и «Проверить ответ», карточка вопроса больше не растягивается по высоте боковой карточки; кнопки судейства остаются, только если ПК сам ведёт игру | `css/style.css`, `js/game.js` | `[x] Выполнено` |
