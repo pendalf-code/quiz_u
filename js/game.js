@@ -1344,6 +1344,10 @@ window.setGameData = function (newGameData) {
 
 function backToMainMenu() {
     if (isOnlineGame) {
+        isGameStarted = false;
+        if (hostNetworkClient && hostNetworkClient.isConnected) {
+            try { hostNetworkClient.resetToLobby(); } catch (_) {}
+        }
         showSubScreen('sub-menu-online-lobby');
     } else {
         showSubScreen('sub-menu-main');
@@ -1920,6 +1924,8 @@ function executeQuitToMainMenu() {
         hostNetworkClient = null;
     }
     isOnlineGame = false;
+    isGameStarted = false;
+    syncHostChrome();
     currentOnlineRoomCode = '';
     activeOnlineBuzzer = null;
     const mainBox = document.getElementById('main-app-box');
@@ -2159,7 +2165,8 @@ function initBoard() {
     }
 }
 
-function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overrideQuestion = null) {
+function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overrideQuestion = null, isFromNetwork = false) {
+    specialQuestionRevealed = false;
     stopTimer();
     stopQuestionAudio();
     currentThemeIdx = themeIdx;
@@ -2188,14 +2195,14 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
 
     if (question.type === 'cat' && !skipSplash) {
         showCatInBagSplash(() => {
-            openQuestion(themeIdx, qIdx, element, event, true, overrideQuestion);
+            openQuestion(themeIdx, qIdx, element, event, true, overrideQuestion, isFromNetwork);
         });
         return;
     }
 
     if ((question.type === 'auction' || question.type === 'auction_leader') && !skipSplash) {
         showAuctionSplash(question.type, () => {
-            openQuestion(themeIdx, qIdx, element, event, true, overrideQuestion);
+            openQuestion(themeIdx, qIdx, element, event, true, overrideQuestion, isFromNetwork);
         });
         return;
     }
@@ -2211,9 +2218,11 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
             banner.style.display = 'flex';
             banner.className = 'online-buzzer-banner';
             const text = document.getElementById('online-buzzer-text');
-            if (text) text.textContent = '⏳ Чтение вопроса... Кнопка активируется после таймера';
+            if (text) text.textContent = 'Чтение вопроса';
         }
-        hostNetworkClient.selectQuestion(currentThemeIdx, currentQuestionIdx, question);
+        if (!isFromNetwork) {
+            hostNetworkClient.selectQuestion(currentThemeIdx, currentQuestionIdx, question);
+        }
     } else {
         const banner = document.getElementById('online-buzzer-banner');
         if (banner) banner.style.display = 'none';
@@ -2315,7 +2324,9 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
         const badge = document.createElement('div');
         badge.id = 'modal-special-badge';
         badge.className = 'special-question-badge badge-cat';
-        badge.innerHTML = '🐱 КОТ В МЕШКЕ! 🐱<span>Вы обязаны выбрать команду-соперника!</span>';
+        badge.innerHTML = isOnlineGame
+            ? 'КОТ В МЕШКЕ<span>Ведущий назначает отвечающего</span>'
+            : '🐱 КОТ В МЕШКЕ! 🐱<span>Вы обязаны выбрать команду-соперника!</span>';
         const modalCard = document.querySelector('#question-modal .modal-card');
         modalCard.prepend(badge);
     } else if (question.type === 'auction') {
@@ -2323,14 +2334,18 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
         const badge = document.createElement('div');
         badge.id = 'modal-special-badge';
         badge.className = 'special-question-badge badge-auction';
-        badge.innerHTML = '💰 ВОПРОС СО СТАВКОЙ ДЛЯ ВСЕХ! 💰<span>Номинал: <b>' + currentCost + '</b>. Задайте ставку для каждой команды:</span>';
+        badge.innerHTML = isOnlineGame
+            ? 'ВОПРОС СО СТАВКОЙ<span>Номинал: <b>' + currentCost + '</b>. Игроки делают ставки на телефонах</span>'
+            : '💰 ВОПРОС СО СТАВКОЙ ДЛЯ ВСЕХ! 💰<span>Номинал: <b>' + currentCost + '</b>. Задайте ставку для каждой команды:</span>';
         document.querySelector('#question-modal .modal-card').prepend(badge);
     } else if (question.type === 'auction_leader') {
         playAuctionFanfareSound();
         const badge = document.createElement('div');
         badge.id = 'modal-special-badge';
         badge.className = 'special-question-badge badge-auction-leader';
-        badge.innerHTML = '🔨 АУКЦИОН ЗА ПРАВО ОТВЕТА! 🔨<span>Вопрос достанется <b>только самой высокой ставке</b>!</span>';
+        badge.innerHTML = isOnlineGame
+            ? 'АУКЦИОН ЗА ПРАВО ОТВЕТА<span>Отвечает только лидер торгов</span>'
+            : '🔨 АУКЦИОН ЗА ПРАВО ОТВЕТА! 🔨<span>Вопрос достанется <b>только самой высокой ставке</b>!</span>';
         document.querySelector('#question-modal .modal-card').prepend(badge);
     }
 
@@ -2359,7 +2374,7 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
             timerElem.className = "timer paused";
         }
         if (hintElem) {
-            hintElem.textContent = "⏳ Внимание! Выполните выбор ниже";
+            hintElem.textContent = isOnlineGame ? "Ждём решения ведущего" : "⏳ Внимание! Выполните выбор ниже";
             hintElem.style.color = "var(--gold-accent)";
         }
     }
@@ -2471,6 +2486,7 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
         modalElem.classList.add('active');
         setTimeout(() => cardElem.classList.add('zoom-in'), 10);
     }
+    if (isFromNetwork) finishNetworkQuestionOpen();
 }
 
 function setAuctionFieldValue(teamIdx, val) {
@@ -2609,12 +2625,60 @@ function confirmAllAuctionBets() {
     }
 }
 
-function selectTeamForCatInBag(teamIdx) {
+/**
+ * LAN: the host (phone) named the leader of the "auction for the right to answer".
+ */
+function onlineAuctionLeaderChosen(idx, bet) {
+    if (specialQuestionRevealed) return;
+    activeTeamIdxForQuestion = idx;
+    currentCost = bet || currentCost;
+    teams.forEach((t, i) => {
+        auctionBets[i] = {val: i === idx ? currentCost : (auctionBets[i] ? auctionBets[i].val : 0), isPassed: i !== idx};
+    });
+    if (!gameStats[idx]) gameStats[idx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
+    gameStats[idx].auctions++;
+
+    const listContainer = document.getElementById('teams-modal-list');
+    if (listContainer) listContainer.innerHTML = '';
+    const badge = document.getElementById('modal-special-badge');
+    if (badge) badge.innerHTML = `🔨 Торги завершены<span>Отвечает <b>${teams[idx].name}</b>, ставка <b>${currentCost}</b></span>`;
+    const hintElem = document.getElementById('timer-hint');
+    if (hintElem) hintElem.textContent = `Отвечает «${teams[idx].name}» · ставка ${currentCost}`;
+    const btnArea = document.getElementById('modal-buttons-area');
+    if (btnArea) btnArea.innerHTML = '';
+    setTimeout(startPausedSpecialTimer, 1500);
+}
+
+/**
+ * LAN: the host (phone) closed the bets of an auction for everyone; teams type their answers.
+ */
+function onlineAuctionAnswersStarted(payload) {
+    const q = currentActiveQuestion;
+    if (!isOnlineGame || !q || (q.type !== 'auction' && q.type !== 'auction_all')) return;
+    if (specialQuestionRevealed) return;
+    const bidding = (payload && payload.biddingPlayerIds) || [];
+    const bets = (payload && payload.bets) || {};
+    teams.forEach((t, i) => {
+        const isIn = bidding.includes(t.id);
+        auctionBets[i] = {val: Number(bets[t.id]) || currentCost, isPassed: !isIn};
+        if (!gameStats[i]) gameStats[i] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
+        if (isIn) gameStats[i].auctions++; else gameStats[i].passes++;
+    });
+    const listContainer = document.getElementById('teams-modal-list');
+    if (listContainer) listContainer.innerHTML = '';
+    const badge = document.getElementById('modal-special-badge');
+    if (badge) badge.innerHTML = '💰 Ставки приняты<span>Команды вводят ответы на телефонах</span>';
+    const btnArea = document.getElementById('modal-buttons-area');
+    if (btnArea) btnArea.innerHTML = '';
+    setTimeout(startPausedSpecialTimer, 1000);
+}
+
+function selectTeamForCatInBag(teamIdx, fromServer = false) {
     activeTeamIdxForQuestion = teamIdx;
     if (!gameStats[teamIdx]) gameStats[teamIdx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
     gameStats[teamIdx].cats++;
 
-    if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+    if (!fromServer && isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
         const targetTeam = teams[teamIdx];
         if (targetTeam && targetTeam.id) {
             hostNetworkClient.setCatTarget(targetTeam.id);
@@ -2628,13 +2692,23 @@ function selectTeamForCatInBag(teamIdx) {
     const badge = document.getElementById('modal-special-badge');
     if (badge) badge.remove();
     const btnArea = document.getElementById('modal-buttons-area');
+    if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+        // LAN: the server already started the question, reveal it without waiting for a click
+        if (btnArea) btnArea.innerHTML = '';
+        setTimeout(startPausedSpecialTimer, 1500);
+        return;
+    }
     if (btnArea) {
         btnArea.style.flexDirection = 'row';
         btnArea.innerHTML = '<button class="btn btn-success" id="btn-start-paused-timer" onclick="startPausedSpecialTimer()">⏱️ Открыть вопрос и запустить таймер</button>';
     }
 }
 
+let specialQuestionRevealed = false;
+
 function startPausedSpecialTimer() {
+    if (specialQuestionRevealed) return;
+    specialQuestionRevealed = true;
     const oldCatAnim = document.getElementById('modal-cat-animation');
     if (oldCatAnim) oldCatAnim.remove();
     const timerElem = document.getElementById('timer'), hintElem = document.getElementById('timer-hint'),
@@ -2707,12 +2781,28 @@ function startPausedSpecialTimer() {
         if (btnArea) btnArea.innerHTML = '<button class="btn btn-check" onclick="startTimerAfterVideo()">▶️ Пропустить видео и запустить таймер</button>';
     } else {
         stopTimer();
-        isReadingTime = (configReadingTime > 0);
-        timeLeft = isReadingTime ? configReadingTime : configThinkingTime;
+        const isOnlineAuctionAnswers = Boolean(isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected
+            && question && (question.type === 'auction' || question.type === 'auction_all'));
+        if (isOnlineAuctionAnswers) {
+            // Teams type their answers on phones: fixed window, no reading phase
+            const biddingIds = Object.keys(auctionBets)
+                .filter(idx => auctionBets[idx] && !auctionBets[idx].isPassed && auctionBets[idx].val > 0)
+                .map(idx => teams[idx] && teams[idx].id)
+                .filter(Boolean);
+            hostNetworkClient.startAuctionAnswer(biddingIds); // the server ignores a duplicate start
+        }
+        isReadingTime = isOnlineAuctionAnswers ? false : (configReadingTime > 0);
+        timeLeft = isOnlineAuctionAnswers ? AUCTION_ANSWER_SECONDS : (isReadingTime ? configReadingTime : configThinkingTime);
 
         if (timerElem) {
             timerElem.textContent = timeLeft;
-            if (isReadingTime) {
+            if (isOnlineAuctionAnswers) {
+                timerElem.className = "timer thinking";
+                if (hintElem) {
+                    hintElem.textContent = `Ответы команд: ${AUCTION_ANSWER_SECONDS} секунд`;
+                    hintElem.style.color = "#ff7675";
+                }
+            } else if (isReadingTime) {
                 timerElem.className = "timer reading";
                 if (hintElem) {
                     hintElem.textContent = "⏱️ Внимание! Чтение вопроса";
@@ -2774,7 +2864,7 @@ function startTimer() {
                     const banner = document.getElementById('online-buzzer-banner');
                     if (banner) {
                         const text = document.getElementById('online-buzzer-text');
-                        if (text) text.textContent = '🔔 Кнопка активна! Игроки могут отвечать со смартфонов';
+                        if (text) text.textContent = 'Кнопка активна';
                     }
                 }
             } else {
@@ -2836,7 +2926,7 @@ function toggleAnswerPause() {
 
         if (answeringModal) {
             answeringModal.classList.remove('hidden');
-            if (playerNumElem) playerNumElem.textContent = `Отвечает игрок #${activeTeamNum}`;
+            if (playerNumElem) playerNumElem.textContent = 'Отвечает игрок';
             if (avatarElem) avatarElem.textContent = (activeTeam && activeTeam.avatar) || '🐱';
             if (nameElem) nameElem.textContent = (activeTeam && activeTeam.name) || 'Команда';
             if (subElem) subElem.textContent = activeTeam ? `${activeTeam.score} очков` : `Команда ${activeTeamNum}`;
@@ -3119,6 +3209,11 @@ function showAnswer() {
         closeBtn.textContent = 'Продолжить игру';
         closeBtn.onclick = () => {
             stopQuestionAudio();
+            if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+                // The server closes the question for everybody; `question_closed` returns us to the board
+                hostNetworkClient.closeQuestion();
+                return;
+            }
             if (isTestMode) {
                 isTestMode = false;
                 closeSystemModal();
@@ -3133,11 +3228,13 @@ function showAnswer() {
             initBoard();
             closeSystemModal(true);
         };
-        btnArea.appendChild(closeBtn);
+        // LAN with a phone host: only the host's "К табло" leads back to the board
+        const phoneHostsOnline = isOnlineGame && !isLocalHostEnabled;
+        if (!phoneHostsOnline) btnArea.appendChild(closeBtn);
     }
 }
 
-function changeTeamScore(teamIdx, amount) {
+function changeTeamScore(teamIdx, amount, syncToServer = true) {
     if (coreScoreManager) {
         coreScoreManager.teams = teams;
         coreScoreManager.gameStats = gameStats;
@@ -3151,11 +3248,11 @@ function changeTeamScore(teamIdx, amount) {
         else if (amount < 0) gameStats[teamIdx].wrong++;
     }
 
-    if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected && teams[teamIdx] && teams[teamIdx].id) {
+    if (syncToServer && isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected && teams[teamIdx] && teams[teamIdx].id) {
         hostNetworkClient.updateScore(teams[teamIdx].id, amount);
     }
 
-    if (amount < 0 && isAnswerTimerActive) {
+    if (syncToServer && amount < 0 && isAnswerTimerActive) {
         unfreezeQuestionTimer();
     }
 
@@ -3166,7 +3263,17 @@ function changeTeamScore(teamIdx, amount) {
 
 function skipRound() {
     showSystemModal("⏭️ ПРОПУСК РАУНДА", "Вы уверены, что хотите пропустить текущий раунд?",
-        [{text: "Да, пропустить", class: "btn-danger", action: () => executeSkipRound()}, {
+        [{
+            text: "Да, пропустить", class: "btn-danger", action: () => {
+                if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+                    // The server skips the round and answers with `round_skipped` (handled by executeSkipRound)
+                    closeSystemModal();
+                    hostNetworkClient.skipRound();
+                } else {
+                    executeSkipRound();
+                }
+            }
+        }, {
             text: "Отмена",
             class: "btn-check",
             action: () => closeSystemModal()
@@ -3190,6 +3297,7 @@ function executeSkipRound() {
 }
 
 function checkRoundEnd() {
+    if (isOnlineGame) return; // LAN: the server decides when a round / the game ends
     const currentRound = gameData[currentRoundIndex];
     if (!currentRound) return;
     const allUsed = currentRound.themes.every(t => t.questions.every(q => q.used));
@@ -3217,12 +3325,6 @@ function showWinnerCelebration() {
 
     let winners = teams.filter(t => t.score === maxScore);
     triggerFireworksAnimation();
-
-    if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
-        hostNetworkClient.finishGame({
-            winners: winners.map(w => ({name: w.name, score: w.score}))
-        });
-    }
 
     let winnerText = "";
     let winnerDesc = "";
@@ -3629,6 +3731,14 @@ function generateStarrySky() {
 // --------------------------------------------------------------------------
 let isOnlineGame = false;
 let isGameStarted = false;
+const AUCTION_ANSWER_SECONDS = 30;
+let lastServerRoomState = 'LOBBY';
+let pendingNetworkQuestionOpen = false;
+const queuedNetworkEvents = [];
+const QUEUED_WHILE_BLINKING = new Set(['buzzer_ready', 'buzz_locked', 'cat_transferred', 'auction_leader_set',
+    'auction_answer_start', 'auction_bet_made', 'answer_timeout', 'judge_result', 'show_answer']);
+let onlineRoundEndShown = false;
+let onlineGameOverShown = false;
 let hostNetworkClient = null;
 let currentOnlineRoomCode = '';
 let isLocalHostEnabled = false;
@@ -3819,7 +3929,6 @@ function syncLobbySettings(options) {
 }
 
 function playBuzzerSound() {
-    if (!configEnableSound) return;
     try {
         const ctx = getAudioContext();
         if (!ctx) return;
@@ -3915,6 +4024,8 @@ function updateLocalGameSetupState() {
 
 function openOnlineLobby() {
     isOnlineGame = true;
+    syncHostChrome();
+    if (gameData && gameData.length > 0) window.isPackSelected = true;
     showSubScreen('sub-menu-online-lobby');
     updateLobbyPackDisplay();
     updateLobbySettingsChips();
@@ -3938,6 +4049,8 @@ function leaveOnlineLobby() {
     }
     isLocalHostEnabled = false;
     isOnlineGame = false;
+    isGameStarted = false;
+    syncHostChrome();
     currentOnlineRoomCode = '';
     activeOnlineBuzzer = null;
     showSubScreen('sub-menu-main');
@@ -4049,6 +4162,20 @@ function initHostNetwork(overrideUrl = null) {
 
         hostNetworkClient = new NetworkClient({url: targetUrl, isHost: true});
 
+        // While the picked cell blinks the modal is not open yet: hold gameplay events and replay them afterwards
+        const rawEmit = hostNetworkClient.emit.bind(hostNetworkClient);
+        hostNetworkClient.emit = (event, payload) => {
+            if (pendingNetworkQuestionOpen && QUEUED_WHILE_BLINKING.has(event)) {
+                queuedNetworkEvents.push([event, payload]);
+                return;
+            }
+            return rawEmit(event, payload);
+        };
+        hostNetworkClient.replayQueuedEvents = () => {
+            const queued = queuedNetworkEvents.splice(0);
+            queued.forEach(([event, payload]) => rawEmit(event, payload));
+        };
+
         hostNetworkClient.on('connected', () => {
             if (statusDot) statusDot.className = 'status-indicator status-connected';
             if (statusText) statusText.textContent = 'Подключено к серверу';
@@ -4147,11 +4274,13 @@ function initHostNetwork(overrideUrl = null) {
                 return;
             }
             if (teams && Array.isArray(teams)) {
-                const team = teams.find(t => t.id === data.playerId || t.name === data.playerName);
-                if (team) {
-                    team.score = data.newScore;
-                    updateTeamsPanel();
-                    renderModalTeamsList();
+                // Server is the score authority: mirror its value (and stats) without echoing back
+                const teamIdx = teams.findIndex(t => t.id === data.playerId || t.name === data.playerName);
+                if (teamIdx !== -1) {
+                    const diff = Number(data.newScore) - teams[teamIdx].score;
+                    if (diff !== 0 && Number.isFinite(diff)) {
+                        changeTeamScore(teamIdx, diff, false);
+                    }
                 }
             }
         });
@@ -4174,7 +4303,7 @@ function initHostNetwork(overrideUrl = null) {
                 timerElem.classList.remove('paused');
             }
             if (hintElem) {
-                hintElem.textContent = '🎙️ Ответ игрока!';
+                hintElem.textContent = 'Отвечает игрок';
                 hintElem.style.color = '#f1c40f';
             }
 
@@ -4198,7 +4327,7 @@ function initHostNetwork(overrideUrl = null) {
 
             if (answeringModal) {
                 answeringModal.classList.remove('hidden');
-                if (playerNumElem) playerNumElem.textContent = `Отвечает игрок #${playerDisplayNum}`;
+                if (playerNumElem) playerNumElem.textContent = 'Отвечает игрок';
                 if (avatarElem) avatarElem.textContent = payload.avatar || '👤';
                 if (nameElem) nameElem.textContent = payload.playerName || 'Игрок';
                 const matchingTeam = (teams && Array.isArray(teams)) ? teams.find(t => t.id === payload.playerId || t.name === payload.playerName) : null;
@@ -4223,7 +4352,7 @@ function initHostNetwork(overrideUrl = null) {
             }
             if (status) {
                 status.style.display = 'block';
-                status.textContent = `Отвечает игрок #${playerDisplayNum}:`;
+                status.textContent = 'Отвечает игрок:';
             }
             if (text) {
                 text.innerHTML = `<b>${payload.playerName}</b>`;
@@ -4278,22 +4407,35 @@ function initHostNetwork(overrideUrl = null) {
                 if (status) status.style.display = 'none';
                 if (ring) ring.style.display = 'none';
                 const text = document.getElementById('online-buzzer-text');
-                if (text) text.textContent = '🔔 Кнопка активна! Игроки могут нажимать на смартфонах';
+                if (text) text.textContent = 'Кнопка активна';
             }
         });
 
         hostNetworkClient.on('cat_transferred', (payload) => {
-            const targetIdx = teams.findIndex(t => t.id === payload.targetPlayerId || t.name === payload.targetPlayerName);
-            if (targetIdx !== -1) {
-                selectTeamForCatInBag(targetIdx);
+            const targetIdx = teams.findIndex(t => t.id === payload.toPlayerId || t.name === payload.toPlayerName);
+            // our own choice on this screen echoes back: nothing to do twice
+            if (targetIdx !== -1 && activeTeamIdxForQuestion !== targetIdx) {
+                selectTeamForCatInBag(targetIdx, true);
             }
+        });
+
+        hostNetworkClient.on('auction_leader_set', (payload) => {
+            const idx = teams.findIndex(t => t.id === payload.leaderPlayerId);
+            if (idx === -1 || activeTeamIdxForQuestion === idx) return;
+            onlineAuctionLeaderChosen(idx, payload.bet);
+        });
+
+        hostNetworkClient.on('auction_answer_start', (payload) => {
+            onlineAuctionAnswersStarted(payload);
         });
 
         hostNetworkClient.on('auction_bet_made', (payload) => {
             const teamIdx = teams.findIndex(t => t.id === payload.playerId);
             if (teamIdx !== -1) {
+                const card = document.getElementById(`auction-card-team-${teamIdx}`);
+                const isPassedNow = Boolean(card && card.classList.contains('passed'));
                 if (payload.amount === 0) {
-                    toggleAuctionPass(teamIdx);
+                    if (!isPassedNow) toggleAuctionPass(teamIdx);
                 } else {
                     setAuctionFieldValue(teamIdx, payload.amount);
                 }
@@ -4315,7 +4457,7 @@ function initHostNetwork(overrideUrl = null) {
                 timerElem.classList.remove('answering');
             }
             if (hintElem) {
-                hintElem.textContent = '⏰ Время на ответ истекло!';
+                hintElem.textContent = 'Время на ответ истекло';
                 hintElem.style.color = '#ff7675';
             }
 
@@ -4332,23 +4474,14 @@ function initHostNetwork(overrideUrl = null) {
                 if (status) status.style.display = 'none';
                 if (ring) ring.style.display = 'none';
                 const text = document.getElementById('online-buzzer-text');
-                if (text) text.textContent = '⏰ Время на ответ истекло!';
+                if (text) text.textContent = 'Время на ответ истекло';
             }
         });
 
         // Remote Host Game Controls (TASK-04)
         hostNetworkClient.on('judge_result', (payload) => {
             stopOnlineAnswerCountdown();
-            if (payload.playerId && (!activeOnlineBuzzer || !activeOnlineBuzzer.judgedLocally)) {
-                const teamIdx = teams.findIndex(t => t.id === payload.playerId || t.name === payload.playerName);
-                if (teamIdx !== -1) {
-                    const penalty = (currentLobbySettings && currentLobbySettings.penaltyEnabled) ? (payload.cost || currentCost) : 0;
-                    const delta = payload.isCorrect ? (payload.cost || currentCost) : -penalty;
-                    if (delta !== 0) {
-                        changeTeamScore(teamIdx, delta);
-                    }
-                }
-            }
+            // Score changes arrive separately via `score_updated` (server is the authority)
             if (payload.isCorrect) {
                 showAnswer();
             } else {
@@ -4368,7 +4501,7 @@ function initHostNetwork(overrideUrl = null) {
                     if (avatar) avatar.style.display = 'none';
                     if (status) status.style.display = 'none';
                     if (ring) ring.style.display = 'none';
-                    if (text) text.textContent = '🔔 Неверно! Кнопка снова активна для остальных игроков';
+                    if (text) text.textContent = 'Неверно — кнопка снова активна';
 
                     const btnArea = document.getElementById('modal-buttons-area');
                     if (btnArea) {
@@ -4403,7 +4536,7 @@ function initHostNetwork(overrideUrl = null) {
                     if (avatar) avatar.style.display = 'none';
                     if (status) status.style.display = 'none';
                     if (ring) ring.style.display = 'none';
-                    if (text) text.textContent = '❌ Неверно! Никто не ответил правильно';
+                    if (text) text.textContent = 'Неверно';
                     showAnswer();
                 }
             }
@@ -4443,9 +4576,13 @@ function initHostNetwork(overrideUrl = null) {
             updateTeamsPanel();
             initBoard();
             closeSystemModal(true);
+            handleOnlineRoundTransition();
         });
 
         hostNetworkClient.on('question_active', (payload) => {
+            if (!isGameStarted && typeof startOnlineGame === 'function') {
+                startOnlineGame(true);
+            }
             const modal = document.getElementById('question-modal');
             const isModalActive = modal && modal.classList.contains('active') && modal.style.display !== 'none';
             if (!isModalActive) {
@@ -4453,7 +4590,7 @@ function initHostNetwork(overrideUrl = null) {
                 const questionIdx = payload.questionIdx !== undefined ? payload.questionIdx : 0;
                 const targetRow = document.getElementById(`theme-row-${themeIdx}`);
                 const targetCell = targetRow ? targetRow.querySelectorAll('.question-cost')[questionIdx] : null;
-                openQuestion(themeIdx, questionIdx, targetCell || document.createElement('div'), null, false, payload.question);
+                openQuestionFromHostPhone(themeIdx, questionIdx, targetCell, payload.question);
             }
         });
 
@@ -4461,6 +4598,7 @@ function initHostNetwork(overrideUrl = null) {
             if (payload && payload.isHostOnPC !== undefined) {
                 isLocalHostEnabled = Boolean(payload.isHostOnPC);
             }
+            syncHostChrome();
             if (payload && payload.options) {
                 syncLobbySettings(payload.options);
             }
@@ -4479,10 +4617,29 @@ function initHostNetwork(overrideUrl = null) {
                     initBoard();
                 }
             }
+            lastServerRoomState = payload.state;
+            if (payload.state === 'BOARD') onlineRoundEndShown = false;
+            if (payload.state === 'LOBBY') {
+                const wasInGame = isGameStarted;
+                isGameStarted = false;
+                onlineRoundEndShown = false;
+                onlineGameOverShown = false;
+                if (wasInGame) {
+                    // Mobile host restarted the game: bring the big screen back to the lobby
+                    closeSystemModal();
+                    hideGameLayout();
+                    showSubScreen('sub-menu-online-lobby');
+                    renderLobbyPlayers();
+                }
+            } else if (isGameStarted) {
+                const questionModal = document.getElementById('question-modal');
+                const questionOpen = questionModal && questionModal.classList.contains('active') && questionModal.style.display !== 'none';
+                if (!questionOpen) handleOnlineRoundTransition();
+            }
             if (payload.state === 'BOARD' && !isGameStarted) {
-                // If remote host pressed 'Start Game' in lobby
+                // Remote host pressed 'Start Game' in lobby: the server is already in BOARD
                 if (typeof startOnlineGame === 'function') {
-                    startOnlineGame();
+                    startOnlineGame(true);
                 }
             } else if (!isGameStarted) {
                 renderLobbyPlayers();
@@ -4490,6 +4647,7 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('round_changed', (payload) => {
+            onlineRoundEndShown = false;
             currentRoundIndex = (payload && payload.roundIndex !== undefined) ? payload.roundIndex : (currentRoundIndex + 1);
             currentTurnTeamIdx = 0;
             updateTurnDisplay();
@@ -4523,6 +4681,52 @@ function initHostNetwork(overrideUrl = null) {
     startConnection(initialWsUrl);
 }
 
+function finishNetworkQuestionOpen() {
+    if (!pendingNetworkQuestionOpen) return;
+    pendingNetworkQuestionOpen = false;
+    if (hostNetworkClient && typeof hostNetworkClient.replayQueuedEvents === 'function') {
+        hostNetworkClient.replayQueuedEvents();
+    }
+}
+
+/**
+ * The host picked a question on the phone: blink the cell on the big board, then open the modal.
+ */
+function openQuestionFromHostPhone(themeIdx, questionIdx, cell, question) {
+    if (pendingNetworkQuestionOpen) return;
+    const hasRealCell = Boolean(cell && cell.isConnected && !cell.classList.contains('used'));
+    const open = () => {
+        if (hasRealCell) cell.classList.remove('cell-flash');
+        // Special questions play a splash first: events stay queued until the modal is really on screen
+        openQuestion(themeIdx, questionIdx, cell || document.createElement('div'), null, false, question, true);
+        setTimeout(finishNetworkQuestionOpen, 12000); // safety net if the modal never opened
+    };
+    if (!hasRealCell) {
+        open();
+        return;
+    }
+    pendingNetworkQuestionOpen = true;
+    cell.classList.add('cell-flash');
+    try { playTickSound(); } catch (_) {}
+    setTimeout(open, 1300);
+}
+
+/**
+ * LAN: the server owns round / game flow. Once the question modal is closed, show the
+ * "round finished" notice or the winners screen that the server state asks for.
+ */
+function handleOnlineRoundTransition() {
+    if (!isOnlineGame || !isGameStarted) return;
+    if (lastServerRoomState === 'ROUND_END' && !onlineRoundEndShown) {
+        onlineRoundEndShown = true;
+        showSystemModal("🏁 РАУНД ЗАВЕРШЁН", "Все вопросы раунда разыграны! Ведущий переходит к следующему раунду.");
+    } else if (lastServerRoomState === 'GAME_OVER' && !onlineGameOverShown) {
+        onlineGameOverShown = true;
+        hideGameLayout();
+        showWinnerCelebration();
+    }
+}
+
 function renderLobbyQRCode(url) {
     const container = document.getElementById('lobby-qr-code');
     if (!container) return;
@@ -4546,8 +4750,16 @@ function renderLobbyQRCode(url) {
     }
 }
 
+// Body classes drive which controls the big screen shows (CSS): with a phone host it is a pure display
+function syncHostChrome() {
+    if (typeof document === 'undefined' || !document.body) return;
+    document.body.classList.toggle('phone-host-online', Boolean(isOnlineGame && !isLocalHostEnabled));
+    document.body.classList.toggle('pc-judges', Boolean(isOnlineGame && isLocalHostEnabled));
+}
+
 function toggleLocalHost() {
     isLocalHostEnabled = !isLocalHostEnabled;
+    syncHostChrome();
     if (hostNetworkClient) {
         hostNetworkClient.setLocalHost(isLocalHostEnabled);
     }
@@ -4719,12 +4931,13 @@ function reconnectHostLobby() {
     initHostNetwork(customUrl);
 }
 
-function startOnlineGame() {
-    if (!hostNetworkClient) return;
-    if (!gameData || gameData.length === 0 || !window.isPackSelected) {
+function startOnlineGame(fromServer = false) {
+    if (!hostNetworkClient || isGameStarted) return;
+    if (!gameData || gameData.length === 0) {
         showSystemModal("⚠️ Пак не выбран", "Перед стартом сетевой игры необходимо выбрать пак вопросов в каталоге или загрузить свой пак.");
         return;
     }
+    window.isPackSelected = true;
     const host = hostNetworkClient.getHost();
     const hasHost = Boolean((host && host.isConnected && (host.id !== 'host_pc' || isLocalHostEnabled)) || (isLocalHostEnabled && hostNetworkClient && hostNetworkClient.isHostOnPC));
     if (!hasHost) {
@@ -4744,8 +4957,14 @@ function startOnlineGame() {
         avatar: p.avatar || '🎮'
     }));
 
-    hostNetworkClient.setPack(gameData);
-    hostNetworkClient.startGame();
+    // Set before talking to the server: its `room_state: BOARD` echo must not restart the game
+    isGameStarted = true;
+    onlineRoundEndShown = false;
+    onlineGameOverShown = false;
+    if (!fromServer) {
+        hostNetworkClient.setPack(gameData);
+        hostNetworkClient.startGame();
+    }
 
     finalizeGameStartWithFirstTurn(0);
 }
@@ -4754,19 +4973,8 @@ function judgeOnlineAnswer(isCorrect) {
     if (!isOnlineGame || !hostNetworkClient) return;
     stopOnlineAnswerCountdown();
 
-    if (activeOnlineBuzzer) {
-        activeOnlineBuzzer.judgedLocally = true;
-        const teamIdx = teams.findIndex(t => t.id === activeOnlineBuzzer.playerId || t.name === activeOnlineBuzzer.playerName);
-        if (teamIdx !== -1) {
-            const penalty = (currentLobbySettings && currentLobbySettings.penaltyEnabled) ? getPenaltyDeduction(currentCost) : 0;
-            const delta = isCorrect ? currentCost : -penalty;
-            if (delta !== 0) {
-                changeTeamScore(teamIdx, delta);
-            }
-        }
-    }
-
-    hostNetworkClient.judgeAnswer(isCorrect);
+    // The server applies the score (and the penalty from room settings) and broadcasts `score_updated`
+    hostNetworkClient.judgeAnswer(isCorrect, Boolean(!isCorrect && currentLobbySettings && currentLobbySettings.penaltyEnabled));
 
     if (isCorrect) {
         showAnswer();
@@ -4786,7 +4994,7 @@ function judgeOnlineAnswer(isCorrect) {
         if (avatar) avatar.style.display = 'none';
         if (status) status.style.display = 'none';
         if (ring) ring.style.display = 'none';
-        if (text) text.textContent = '🔔 Неверно! Кнопка снова активна для остальных игроков';
+        if (text) text.textContent = 'Неверно — кнопка снова активна';
 
         const btnArea = document.getElementById('modal-buttons-area');
         if (btnArea) {

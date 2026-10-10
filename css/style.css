@@ -7453,3 +7453,40 @@ body.light-theme .gamepad-toast {
         max-width: 600px;
     }
 }
+
+/* LAN: the host picked this question on the phone */
+@keyframes question-cell-flash {
+    0%, 100% { transform: scale(1); filter: brightness(1); box-shadow: 0 0 0 0 rgba(253, 216, 53, 0); }
+    50% { transform: scale(1.14); filter: brightness(1.7); box-shadow: 0 0 34px 10px rgba(253, 216, 53, 0.85); }
+}
+
+.question-cost.cell-flash {
+    position: relative;
+    z-index: 5;
+    animation: question-cell-flash 0.43s ease-in-out 3;
+}
+
+/* LAN: the hint banner ("Кнопка активна", "Время на ответ истекло"...) is not shown any more.
+   Who is answering is on the side card, the countdown is the main timer. The markup and the JS that
+   fills it are kept so that the ring / avatar elements stay available. */
+.online-buzzer-banner,
+#online-buzzer-banner {
+    display: none !important;
+}
+
+/* ===== LAN question screen: compact, no controls when a phone hosts ===== */
+.question-modal-layout { align-items: center; gap: 18px; }
+
+.answering-player-modal {
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 22px;
+}
+
+/* Judging buttons live on the host's phone; the big screen shows them only if the PC itself hosts */
+.answering-controls-row { display: none; }
+body.pc-judges .answering-controls-row { display: flex; }
+
+/* "Проверить ответ" and an empty button area are not needed on a pure display */
+body.phone-host-online #modal-buttons-area:has(#btn-show-answer:only-child) { display: none; }
+body.phone-host-online #teams-modal-list:empty { display: none; }
