@@ -1,14 +1,14 @@
 ## 📋 Описание изменений
 
 <!-- Кратко и четко опишите суть внесенных изменений, номер связанной задачи из TASKS.md или ROADMAP.md -->
-**Связанная задача:** [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) # `TASK-XX`
+**Связанная задача:** [TASKS.md](docs/TASKS.md) # `TASK-XX`
 
 ### Что сделано:
 - 
 
 ---
 
-## 📂 Затронутые файлы и компоненты
+## 📁 Затронутые файлы и компоненты
 
 | Файл | Назначение / Характер изменений |
 | :--- | :--- |
@@ -29,14 +29,14 @@
 - [ ] **Тестирование:**
   - [ ] Клиентские тесты пройдены: `npm test`
   - [ ] Серверные тесты пройдены: `cd server && npm test`
-- [ ] **Синхронизация трекеров:** Статусы обновлены в [TASKS.md](file:///C:/Users/user/IdeaProjects/quiz_u/TASKS.md) и [ROADMAP.md](file:///C:/Users/user/IdeaProjects/quiz_u/ROADMAP.md).
+- [ ] **Синхронизация трекеров:** Статусы обновлены в [TASKS.md](docs/TASKS.md) и [ROADMAP.md](docs/ROADMAP.md).
 - [ ] **Ветка:** Разработка велась строго в тематической ветке от `feature/online-multiplayer` (нет прямых коммитов в `main`/`dev`).
 
 ---
 
 ## 🔍 Инструкция для ревьюера
 
-Пожалуйста, руководствуйтесь стандартами [REVIEW_GUIDE.md](file:///C:/Users/user/IdeaProjects/quiz_u/REVIEW_GUIDE.md):
+Пожалуйста, руководствуйтесь стандартами [REVIEW_GUIDE.md](docs/REVIEW_GUIDE.md):
 - Используйте префиксы Conventional Comments: `[blocker]`, `[should]`, `[suggestion]`, `[nit]`, `[question]`, `[praise]`.
 - Разделяйте код и личность автора, предлагайте конкретные примеры исправлений.
 - Проверьте отсутствие регрессий в смежных модулях.

@@ -4,10 +4,11 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
+const DOCS_DIR = path.join(ROOT_DIR, 'docs');
 
-test('REVIEW_GUIDE.md: File exists, is valid UTF-8, and has no replacement characters', () => {
-    const reviewGuidePath = path.join(ROOT_DIR, 'REVIEW_GUIDE.md');
-    assert.ok(fs.existsSync(reviewGuidePath), 'REVIEW_GUIDE.md must exist in project root');
+test('REVIEW_GUIDE.md: File exists in docs/, is valid UTF-8, and has no replacement characters', () => {
+    const reviewGuidePath = path.join(DOCS_DIR, 'REVIEW_GUIDE.md');
+    assert.ok(fs.existsSync(reviewGuidePath), 'docs/REVIEW_GUIDE.md must exist in docs directory');
 
     const content = fs.readFileSync(reviewGuidePath, 'utf8');
     assert.ok(content.length > 5000, 'REVIEW_GUIDE.md should contain detailed instructions');
@@ -15,7 +16,7 @@ test('REVIEW_GUIDE.md: File exists, is valid UTF-8, and has no replacement chara
 });
 
 test('REVIEW_GUIDE.md: Contains Conventional Comments standard with all prefixes', () => {
-    const reviewGuidePath = path.join(ROOT_DIR, 'REVIEW_GUIDE.md');
+    const reviewGuidePath = path.join(DOCS_DIR, 'REVIEW_GUIDE.md');
     const content = fs.readFileSync(reviewGuidePath, 'utf8');
 
     const requiredPrefixes = [
@@ -33,7 +34,7 @@ test('REVIEW_GUIDE.md: Contains Conventional Comments standard with all prefixes
 });
 
 test('REVIEW_GUIDE.md: Contains Quiz U Quality Gates & Architecture Invariants', () => {
-    const reviewGuidePath = path.join(ROOT_DIR, 'REVIEW_GUIDE.md');
+    const reviewGuidePath = path.join(DOCS_DIR, 'REVIEW_GUIDE.md');
     const content = fs.readFileSync(reviewGuidePath, 'utf8');
 
     assert.ok(content.includes('Zero-Build'), 'Must specify Zero-Build invariant');
@@ -43,7 +44,7 @@ test('REVIEW_GUIDE.md: Contains Quiz U Quality Gates & Architecture Invariants',
 });
 
 test('REVIEW_GUIDE.md: Contains all 8 phases of comprehensive project review plan', () => {
-    const reviewGuidePath = path.join(ROOT_DIR, 'REVIEW_GUIDE.md');
+    const reviewGuidePath = path.join(DOCS_DIR, 'REVIEW_GUIDE.md');
     const content = fs.readFileSync(reviewGuidePath, 'utf8');
 
     for (let phase = 1; phase <= 8; phase++) {
@@ -74,12 +75,12 @@ test('.github/pull_request_template.md: File exists, valid UTF-8, contains check
     assert.ok(content.includes('REVIEW_GUIDE.md'), 'Must link to REVIEW_GUIDE.md');
 });
 
-test('Project documentation cross-linking integrity', () => {
+test('Project documentation cross-linking integrity in docs/', () => {
     const filesToTest = [
-        'DEV_GUIDE.md',
-        'README.md',
-        'TASKS.md',
-        'ROADMAP.md',
+        path.join('docs', 'DEV_GUIDE.md'),
+        path.join('docs', 'README.md'),
+        path.join('docs', 'TASKS.md'),
+        path.join('docs', 'ROADMAP.md'),
         path.join('.aiassistant', 'rules', 'code style rules.md')
     ];
 
