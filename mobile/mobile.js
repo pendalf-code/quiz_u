@@ -511,25 +511,7 @@
         if (elements.hostLobbyAction) {
             if (currentRoomState === 'LOBBY' || currentRoomState === 'INIT') {
                 elements.hostLobbyAction.style.display = 'block';
-                if (elements.btnHostNextRound) {
-            elements.btnHostNextRound.addEventListener('click', () => {
-                if (!netClient) return;
-                netClient.nextRound();
-                haptic('success');
-                showToast('?? ??????? ? ?????????? ??????...', 'info');
-            });
-        }
-
-        if (elements.btnHostShowStats) {
-            elements.btnHostShowStats.addEventListener('click', () => {
-                if (!netClient) return;
-                netClient.showStats();
-                haptic('success');
-                showToast('?? ????? ?????????? ?? ??...', 'info');
-            });
-        }
-
-        if (elements.btnHostStartGame) {
+                if (elements.btnHostStartGame) {
                     elements.btnHostStartGame.disabled = !canStart;
                     if (!canStart) {
                         elements.btnHostStartGame.textContent = `🚀 Начать игру (Игроков: ${activePlayers.length}/1)`;
@@ -539,6 +521,22 @@
                 }
             } else {
                 elements.hostLobbyAction.style.display = 'none';
+            }
+        }
+
+        if (elements.hostRoundEndAction) {
+            if (currentRoomState === 'ROUND_END') {
+                elements.hostRoundEndAction.classList.remove('hidden');
+            } else {
+                elements.hostRoundEndAction.classList.add('hidden');
+            }
+        }
+
+        if (elements.hostGameOverAction) {
+            if (currentRoomState === 'GAME_OVER') {
+                elements.hostGameOverAction.classList.remove('hidden');
+            } else {
+                elements.hostGameOverAction.classList.add('hidden');
             }
         }
 
@@ -1385,7 +1383,32 @@
         });
 
         netClient.on('show_stats', () => {
-            showToast('?? ?????????? ???????????? ?? ????? ??????!', 'info', 3000);
+            showToast('📊 Статистика отображена на общем экране!', 'info', 3000);
+        });
+
+        netClient.on('turn_passed', () => {
+            showToast('🔄 Ход передан следующей команде', 'info');
+        });
+
+        netClient.on('round_skipped', (payload) => {
+            showToast(`⏩ Раунд пропущен ведущим! Переход к раунду ${(payload.roundIndex || 0) + 1}`, 'warning');
+        });
+
+        netClient.on('cat_transferred', (payload) => {
+            if (state.selectedRole === 'host') return;
+            const isTarget = state.selfPlayer && payload.toPlayerId === state.selfPlayer.id;
+            if (isTarget) {
+                showToast('🐱 Вам передан «Кот в мешке»!', 'warning');
+                if (elements.waitingTitle) elements.waitingTitle.textContent = '🐱 Кот в мешке!';
+                if (elements.waitingDesc) elements.waitingDesc.textContent = 'Соперник передал вопрос вам! Приготовьтесь к ответу.';
+                showScreen('waiting');
+            } else {
+                const targetName = payload.toPlayerName || 'сопернику';
+                showToast(`🐱 Кот в мешке передан игроку ${targetName}`, 'info');
+                if (elements.waitingTitle) elements.waitingTitle.textContent = '🐱 Кот в мешке';
+                if (elements.waitingDesc) elements.waitingDesc.textContent = `Вопрос передан ${targetName}. Ожидайте...`;
+                showScreen('waiting');
+            }
         });
 
         netClient.on('question_closed', () => {
@@ -1670,6 +1693,23 @@
                 netClient.startGame();
                 haptic('success');
                 showToast('Запуск игры...', 'success');
+            });
+        }
+        if (elements.btnHostNextRound) {
+            elements.btnHostNextRound.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.nextRound();
+                haptic('success');
+                showToast('🚀 Переход к следующему раунду...', 'info');
+            });
+        }
+
+        if (elements.btnHostShowStats) {
+            elements.btnHostShowStats.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.showStats();
+                haptic('success');
+                showToast('🏆 Показ статистики на ТВ...', 'info');
             });
         }
 

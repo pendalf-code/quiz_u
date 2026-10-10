@@ -14,17 +14,18 @@ describe('Answering Side Modal, Frozen Timer, Exit to Menu & Auto-pause Test Sui
     const mobileCss = fs.readFileSync(path.join(rootDir, 'mobile', 'mobile.css'), 'utf8');
     const mobileJs = fs.readFileSync(path.join(rootDir, 'mobile', 'mobile.js'), 'utf8');
 
-    test('1. Timer freeze styling and logic when player answers', () => {
-        // CSS includes .timer.frozen styling with frosty glow
-        assert.ok(styleCss.includes('.timer.frozen'), '.timer.frozen CSS rule exists in style.css');
-        assert.ok(styleCss.includes('timer-frost-glow'), 'timer-frost-glow animation exists in style.css');
+    test('1. Timer yellow circle answering styling and logic when player answers (freeze removed)', () => {
+        // CSS includes .timer.answering styling with yellow glow and animation
+        assert.ok(styleCss.includes('.timer.answering'), '.timer.answering CSS rule exists in style.css');
+        assert.ok(styleCss.includes('answerPulse'), 'answerPulse animation exists in style.css');
+        assert.ok(styleCss.includes('#f39c12'), '#f39c12 yellow/gold background exists in style.css');
 
         // game.js guards startTimer from running during answering
         assert.ok(gameJs.includes('if (isAnswerTimerActive) return;'), 'startTimer() guards against running while answer is active');
 
-        // game.js applies .frozen class when buzzer is locked or answer paused
-        assert.ok(gameJs.includes("timerElem.classList.add('frozen')"), 'timerElem receives frozen class when answering starts');
-        assert.ok(gameJs.includes("timerElem.classList.remove('frozen')"), 'timerElem loses frozen class when answering finishes');
+        // game.js applies answering class when buzzer is locked or answer paused
+        assert.ok(gameJs.includes("timerElem.className = 'timer answering'"), 'timerElem receives answering class when answering starts');
+        assert.ok(gameJs.includes("timerElem.classList.remove('answering')"), 'timerElem loses answering class when answering finishes');
     });
 
     test('2. "Отвечает игрок N" side modal exists beside the question window', () => {

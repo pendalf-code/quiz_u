@@ -521,7 +521,13 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.PLAYER_SUBMIT_ANSWER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.playerId) return;
-            room.handleAnswerSubmit(ws.playerId, payload.answerText);
+            const res = room.handleAnswerSubmit(ws.playerId, payload.answerText);
+            if (res && !res.success && res.error) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: res.error,
+                    message: res.message
+                }));
+            }
             break;
         }
 

@@ -157,9 +157,8 @@ class Room {
                     if (avatar) this.hostPlayer.avatar = avatar;
                     this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
                         player: this.sanitizeHost(this.hostPlayer),
-                        role: 'host',
-                        isReconnect: true
-                    });
+                        role: 'host', isReconnect: true });
+                    this.broadcastRoomState();
                     return { success: true, player: this.hostPlayer, role: 'host', isReconnect: true };
                 }
 
@@ -206,9 +205,8 @@ class Room {
                     if (avatar) p.avatar = avatar;
                     this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
                         player: this.sanitizePlayer(p),
-                        role: 'player',
-                        isReconnect: true
-                    });
+                        role: 'player', isReconnect: true });
+                    this.broadcastRoomState();
                     return { success: true, player: p, role: 'player', isReconnect: true };
                 }
             }
@@ -228,10 +226,9 @@ class Room {
                 if (avatar) p.avatar = avatar;
                 this.broadcastToAll(MSG_TYPES.PLAYER_JOINED, {
                     player: this.sanitizePlayer(p),
-                    role: 'player',
-                    isReconnect: true
-                });
-                return { success: true, player: p, role: 'player', isReconnect: true };
+                    role: 'player', isReconnect: true });
+                    this.broadcastRoomState();
+                    return { success: true, player: p, role: 'player', isReconnect: true };
             }
         }
 
@@ -696,6 +693,7 @@ class Room {
         this.broadcastToAll(MSG_TYPES.BUZZER_READY, {
             cost: this.currentCost,
             thinkingTime: tTime,
+            remainingThinkingTime: tTime,
             allowedPlayerIds: this.allowedBuzzerPlayerIds
         });
     }
@@ -808,6 +806,11 @@ class Room {
         if (this.thinkingTimer) {
             clearTimeout(this.thinkingTimer);
             this.thinkingTimer = null;
+        }
+        if (this.thinkingTimerStartedAt) {
+            const elapsed = (Date.now() - this.thinkingTimerStartedAt) / 1000;
+            this.remainingThinkingTime = Math.max(0, (this.remainingThinkingTime !== undefined ? this.remainingThinkingTime : (this.options.thinkingTime || 30)) - elapsed);
+            this.thinkingTimerStartedAt = null;
         }
         this.buzzedPlayers.add(playerId);
         this.activeBuzzerPlayerId = playerId;
@@ -923,6 +926,7 @@ class Room {
             this.broadcastToAll(MSG_TYPES.ANSWER_TIMEOUT, {
                 message: 'Время на вопрос истекло!'
             });
+            this.broadcastRoomState();
         }
     }
 
@@ -987,7 +991,14 @@ class Room {
             this.answerTimer = null;
         }
 
-        const answeringPlayerId = this.activeBuzzerPlayerId;
+        let answeringPlayerId = this.activeBuzzerPlayerId;
+        if (!answeringPlayerId && (this.stateMachine.state === 'AUCTION_ANSWERING' || (this.currentQuestion && (this.currentQuestion.type === 'auction' || this.currentQuestion.type === 'auction_all')))) {
+            if (this.biddingPlayerIds && this.biddingPlayerIds.length > 0) {
+                answeringPlayerId = this.biddingPlayerIds[0];
+            } else if (this.auctionAnswers && this.auctionAnswers.size > 0) {
+                answeringPlayerId = Array.from(this.auctionAnswers.keys())[0];
+            }
+        }
         if (!answeringPlayerId) {
             return { success: false, message: 'Нет отвечающего игрока' };
         }
@@ -995,13 +1006,16 @@ class Room {
         const answeringPlayer = this.players.get(answeringPlayerId);
         const answeringPlayerName = answeringPlayer ? answeringPlayer.name : 'Игрок';
 
+        const isAuction = (this.stateMachine.state === 'AUCTION_ANSWERING' || (this.currentQuestion && (this.currentQuestion.type === 'auction' || this.currentQuestion.type === 'auction_all')));
+        const costToApply = isAuction ? this.getAuctionBet(answeringPlayerId) : this.currentCost;
+
         if (isCorrect) {
-            this.updatePlayerScore(answeringPlayerId, this.currentCost);
+            this.updatePlayerScore(answeringPlayerId, costToApply);
             this.broadcastToAll(MSG_TYPES.JUDGE_RESULT, {
                 isCorrect: true,
                 playerId: answeringPlayerId,
                 playerName: answeringPlayerName,
-                cost: this.currentCost,
+                cost: costToApply,
                 reopened: false
             });
             this.finishQuestion();
@@ -1059,6 +1073,13 @@ class Room {
                 const elapsed = (Date.now() - (this.readingTimerStartedAt || Date.now())) / 1000;
                 this.remainingReadingTime = Math.max(0.5, (this.readingTimerDuration || 7) - elapsed);
             }
+            if (this.thinkingTimer) {
+                clearTimeout(this.thinkingTimer);
+                this.thinkingTimer = null;
+                const elapsed = (Date.now() - (this.thinkingTimerStartedAt || Date.now())) / 1000;
+                this.remainingThinkingTime = Math.max(0.5, (this.remainingThinkingTime || this.options.thinkingTime || 30) - elapsed);
+                this.thinkingTimerStartedAt = null;
+            }
             if (this.answerTimer) {
                 clearTimeout(this.answerTimer);
                 this.answerTimer = null;
@@ -1074,6 +1095,13 @@ class Room {
                     this.activateBuzzer();
                 }, rem * 1000);
                 if (this.readingTimer.unref) this.readingTimer.unref();
+            } else if (this.stateMachine.state === 'BUZZ_ACTIVE' && this.remainingThinkingTime > 0) {
+                const rem = this.remainingThinkingTime;
+                this.thinkingTimerStartedAt = Date.now();
+                this.thinkingTimer = setTimeout(() => {
+                    this.handleThinkingTimeout();
+                }, rem * 1000);
+                if (this.thinkingTimer.unref) this.thinkingTimer.unref();
             } else if (this.stateMachine.state === 'ANSWERING' && this.activeBuzzerPlayerId && this.remainingAnswerTime > 0) {
                 const rem = this.remainingAnswerTime;
                 this.answerTimerStartedAt = Date.now();

@@ -927,6 +927,7 @@ function unfreezeQuestionTimer() {
     if (timerElem && hintElem) {
         timerElem.classList.remove('frozen');
         timerElem.classList.remove('paused');
+        timerElem.classList.remove('answering');
         timerElem.textContent = timeLeft;
         timerElem.className = isReadingTime ? 'timer reading' : 'timer thinking';
         hintElem.textContent = isReadingTime ? '⏱️ Внимание! Чтение вопроса' : '🔥 Время пошло! Обсуждение';
@@ -952,6 +953,7 @@ function startOnlineAnswerCountdown(seconds) {
 
     const modalRingProgress = document.getElementById('answering-ring-progress');
     const modalRingSecs = document.getElementById('answering-ring-seconds');
+    const timerElem = document.getElementById('timer');
 
     const circumference = 2 * Math.PI * 42; // ~263.89
 
@@ -967,7 +969,15 @@ function startOnlineAnswerCountdown(seconds) {
     if (modalRingProgress) {
         modalRingProgress.style.strokeDasharray = `${circumference}`;
         modalRingProgress.style.strokeDashoffset = '0';
-        modalRingProgress.style.stroke = '#38bdf8';
+        modalRingProgress.style.stroke = '#f39c12';
+    }
+
+    if (timerElem) {
+        timerElem.textContent = seconds;
+        timerElem.className = 'timer answering';
+                timerElem.classList.add('paused');
+                timerElem.classList.remove('frozen');
+        timerElem.classList.remove('paused');
     }
 
     const stepMs = 100;
@@ -981,12 +991,17 @@ function startOnlineAnswerCountdown(seconds) {
 
         if (ringSecs) ringSecs.textContent = secsLeft;
         if (modalRingSecs) modalRingSecs.textContent = secsLeft;
+        const currentTimer = document.getElementById('timer');
+        if (currentTimer && isAnswerTimerActive) {
+            currentTimer.textContent = secsLeft;
+            currentTimer.className = 'timer answering';
+        }
 
-        let strokeColor = '#38bdf8';
+        let strokeColor = '#f39c12';
         if (progress <= 0.3) {
             strokeColor = '#ff7675';
         } else if (progress <= 0.6) {
-            strokeColor = '#f39c12';
+            strokeColor = '#fdcb6e';
         }
 
         if (ringProgress) {
@@ -1001,16 +1016,15 @@ function startOnlineAnswerCountdown(seconds) {
         if (currentStep <= 0) {
             stopOnlineAnswerCountdown();
             playTimeUpSound();
-            const timerElem = document.getElementById('timer');
+            const currentTimerEl = document.getElementById('timer');
             const hintElem = document.getElementById('timer-hint');
-            if (timerElem) {
-                timerElem.textContent = Math.max(0, savedThinkingTime);
-                timerElem.className = 'timer frozen';
-                timerElem.classList.add('paused');
+            if (currentTimerEl) {
+                currentTimerEl.textContent = Math.max(0, savedThinkingTime);
+                currentTimerEl.className = 'timer answering';
             }
             if (hintElem) {
-                hintElem.textContent = '❄️ Таймер заморожен';
-                hintElem.style.color = '#38bdf8';
+                hintElem.textContent = '⏰ Время на ответ вышло!';
+                hintElem.style.color = '#ff7675';
             }
         }
     }, stepMs);
@@ -2800,11 +2814,12 @@ function toggleAnswerPause() {
         playStartThinkingSound();
 
         if (timerElem && hintElem) {
-            timerElem.textContent = timeLeft;
+            timerElem.textContent = currentAnswerSec;
+            timerElem.className = 'timer answering';
             timerElem.classList.remove('paused');
-            timerElem.classList.add('frozen');
-            hintElem.textContent = "❄️ Таймер заморожен (ответ команды)";
-            hintElem.style.color = "#38bdf8";
+            timerElem.classList.remove('frozen');
+            hintElem.textContent = "🎙️ Ответ команды!";
+            hintElem.style.color = "#f1c40f";
         }
 
         // Show answering side modal
@@ -2832,18 +2847,22 @@ function toggleAnswerPause() {
         if (modalRingProgress) {
             modalRingProgress.style.strokeDasharray = `${circumference}`;
             modalRingProgress.style.strokeDashoffset = '0';
-            modalRingProgress.style.stroke = '#38bdf8';
+            modalRingProgress.style.stroke = '#f39c12';
         }
 
         answerCountdownInterval = setInterval(() => {
             currentAnswerSec--;
+            if (timerElem) {
+                timerElem.textContent = currentAnswerSec;
+                timerElem.className = 'timer answering';
+            }
             if (modalRingSecs) modalRingSecs.textContent = currentAnswerSec;
             if (modalRingProgress) {
                 const frac = Math.max(0, currentAnswerSec / configAnswerTime);
                 modalRingProgress.style.strokeDashoffset = `${circumference * (1 - frac)}`;
                 if (frac <= 0.3) modalRingProgress.style.stroke = '#ff7675';
-                else if (frac <= 0.6) modalRingProgress.style.stroke = '#f39c12';
-                else modalRingProgress.style.stroke = '#38bdf8';
+                else if (frac <= 0.6) modalRingProgress.style.stroke = '#fdcb6e';
+                else modalRingProgress.style.stroke = '#f39c12';
             }
             if (currentAnswerSec > 0 && currentAnswerSec <= 3) playTickSound();
 
@@ -3134,6 +3153,10 @@ function changeTeamScore(teamIdx, amount) {
 
     if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected && teams[teamIdx] && teams[teamIdx].id) {
         hostNetworkClient.updateScore(teams[teamIdx].id, amount);
+    }
+
+    if (amount < 0 && isAnswerTimerActive) {
+        unfreezeQuestionTimer();
     }
 
     updateTeamsPanel();
@@ -4137,7 +4160,7 @@ function initHostNetwork(overrideUrl = null) {
             activeOnlineBuzzer = payload;
             playBuzzerSound();
 
-            // Freeze common question timer
+            // Stop common question timer
             savedThinkingTime = Math.max(0, timeLeft);
             stopTimer();
             isAnswerTimerActive = true;
@@ -4145,12 +4168,14 @@ function initHostNetwork(overrideUrl = null) {
             const timerElem = document.getElementById('timer');
             const hintElem = document.getElementById('timer-hint');
             if (timerElem) {
-                timerElem.textContent = savedThinkingTime;
-                timerElem.className = 'timer frozen';
+                timerElem.textContent = payload.answerTime || configAnswerTime;
+                timerElem.className = 'timer answering';
+                timerElem.classList.remove('frozen');
+                timerElem.classList.remove('paused');
             }
             if (hintElem) {
-                hintElem.textContent = '❄️ Таймер заморожен (ответ игрока)';
-                hintElem.style.color = '#38bdf8';
+                hintElem.textContent = '🎙️ Ответ игрока!';
+                hintElem.style.color = '#f1c40f';
             }
 
             // Determine player display number (Requirement 2)
@@ -4216,19 +4241,27 @@ function initHostNetwork(overrideUrl = null) {
 
             const timerElem = document.getElementById('timer');
             const hintElem = document.getElementById('timer-hint');
-            if (isAnswerTimerActive || (timerElem && timerElem.classList.contains('frozen'))) {
+            if (isAnswerTimerActive || (timerElem && (timerElem.classList.contains('answering') || timerElem.classList.contains('frozen')))) {
                 isAnswerTimerActive = false;
+                if (payload && payload.remainingThinkingTime !== undefined) {
+                    savedThinkingTime = payload.remainingThinkingTime;
+                }
+                timeLeft = Math.max(0, savedThinkingTime);
                 if (timerElem) {
-                    timerElem.className = 'timer thinking';
-                    timerElem.textContent = savedThinkingTime;
+                    timerElem.className = isReadingTime ? 'timer reading' : 'timer thinking';
+                    timerElem.classList.remove('frozen');
+                    timerElem.classList.remove('paused');
+                    timerElem.classList.remove('answering');
+                    timerElem.textContent = timeLeft;
                 }
                 if (hintElem) {
-                    hintElem.textContent = '🔥 Время пошло! Обсуждение';
-                    hintElem.style.color = '#ff7675';
+                    hintElem.textContent = isReadingTime ? '⏱️ Внимание! Чтение вопроса' : '🔥 Время пошло! Обсуждение';
+                    hintElem.style.color = isReadingTime ? '#81ecec' : '#ff7675';
                 }
-                if (savedThinkingTime > 0) {
-                    timeLeft = savedThinkingTime;
+                if (timeLeft > 0) {
                     startTimer();
+                } else {
+                    playTimeUpSound();
                 }
             }
 
@@ -4277,11 +4310,13 @@ function initHostNetwork(overrideUrl = null) {
             const hintElem = document.getElementById('timer-hint');
             if (timerElem) {
                 timerElem.textContent = Math.max(0, savedThinkingTime);
-                timerElem.className = 'timer frozen';
+                timerElem.className = isReadingTime ? 'timer reading' : 'timer thinking';
+                timerElem.classList.remove('frozen');
+                timerElem.classList.remove('answering');
             }
             if (hintElem) {
-                hintElem.textContent = '❄️ Таймер заморожен';
-                hintElem.style.color = '#38bdf8';
+                hintElem.textContent = '⏰ Время на ответ истекло!';
+                hintElem.style.color = '#ff7675';
             }
 
             const banner = document.getElementById('online-buzzer-banner');

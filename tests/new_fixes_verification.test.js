@@ -79,17 +79,16 @@ describe('Verification of 7 Host, Mobile & Freeze Mechanics Fixes', () => {
         assert.equal(testRoom.players.get(p.id).score, 500, 'Score must remain 500 after timeout without deduction');
     });
 
-    test('Fix 5 & 6: Timer freeze on buzzer and clean snowflake icon styling', () => {
-        // CSS snowflake styling does not inherit pause bar transforms or backgrounds
-        assert.ok(styleCss.includes('.timer.frozen::before'), '.timer.frozen::before rule exists');
-        assert.ok(styleCss.includes('display: none !important;'), '::before is hidden when timer is frozen');
-        assert.ok(styleCss.includes("content: '❄️' !important;"), 'Snowflake icon content exists');
-        assert.ok(styleCss.includes('transform: none !important;'), 'Transform none ensures snowflake icon does not shift');
+    test('Fix 5 & 6: Timer yellow circle on buzzer and freeze removed', () => {
+        // CSS snowflake styling is completely disabled
+        assert.ok(styleCss.includes('.timer.frozen::after') || styleCss.includes('.timer.answering::after'), 'Pseudo element rule exists');
+        assert.ok(styleCss.includes('display: none !important;'), '::after is hidden');
+        assert.ok(styleCss.includes('#f39c12'), 'Yellow gold background exists');
 
         // game.js unfreezeQuestionTimer logic
         assert.ok(gameJs.includes('unfreezeQuestionTimer()'), 'unfreezeQuestionTimer function exists');
-        assert.ok(gameJs.includes("timerElem.classList.add('frozen')"), 'Frozen class added on buzzer lock');
-        assert.ok(gameJs.includes("timerElem.classList.remove('frozen')"), 'Frozen class removed on unfreeze');
+        assert.ok(gameJs.includes("timerElem.className = 'timer answering'"), 'Answering class added on buzzer lock');
+        assert.ok(gameJs.includes("timerElem.classList.remove('answering')"), 'Answering class removed on unfreeze');
     });
 
     test('Fix 7: Game over redirects everyone on mobile to main menu', () => {

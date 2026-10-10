@@ -7117,46 +7117,27 @@ body.light-theme .gamepad-toast {
     width: auto;
 }
 
-/* Frozen Timer Style */
-.timer.frozen {
-    background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-    border: 3px solid #38bdf8 !important;
-    box-shadow: 0 0 25px rgba(56, 189, 248, 0.75), inset 0 0 15px rgba(255, 255, 255, 0.4) !important;
+/* Answering Timer Style (Yellow Circle) */
+.timer.frozen,
+.timer.answering {
+    background: #f39c12 !important;
+    border: 3px solid var(--gold-accent) !important;
+    box-shadow: 0 0 25px rgba(243, 156, 18, 0.7) !important;
     color: #ffffff !important;
     position: relative !important;
-    animation: timer-frost-glow 2s infinite alternate ease-in-out !important;
+    animation: answerPulse 0.8s infinite alternate !important;
     opacity: 1 !important;
 }
 
-.timer.frozen::before {
+.timer.frozen::before,
+.timer.answering::before {
     display: none !important;
 }
 
-.timer.frozen::after {
-    content: '❄️' !important;
-    position: absolute !important;
-    top: -8px !important;
-    right: -8px !important;
-    transform: none !important;
-    width: auto !important;
-    height: auto !important;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    font-size: 22px !important;
-    line-height: 1 !important;
-    filter: drop-shadow(0 0 6px #38bdf8) !important;
-    pointer-events: none !important;
-}
-
-@keyframes timer-frost-glow {
-    0% {
-        box-shadow: 0 0 16px rgba(56, 189, 248, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3);
-    }
-    100% {
-        box-shadow: 0 0 34px rgba(56, 189, 248, 0.95), inset 0 0 20px rgba(255, 255, 255, 0.6);
-    }
+.timer.frozen::after,
+.timer.answering::after {
+    display: none !important;
+    content: '' !important;
 }
 
 /* Answering Player Side Card */
@@ -7314,7 +7295,7 @@ body.light-theme .gamepad-toast {
 
 .answering-ring-progress {
     fill: none;
-    stroke: #38bdf8;
+    stroke: #f39c12;
     stroke-width: 8;
     stroke-linecap: round;
     stroke-dasharray: 263.89;

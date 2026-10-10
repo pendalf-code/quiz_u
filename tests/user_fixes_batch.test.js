@@ -26,8 +26,8 @@ describe('User 9 Fixes & Features Verification Suite', () => {
         assert.ok(gameJs.includes('hostNetworkClient.on(\'question_closed\''), 'game.js handles question_closed to re-render board');
     });
 
-    test('3. Timer freeze indicator on buzzer press: snowflake and frozen styles applied', () => {
-        assert.ok(gameJs.includes("timerElem.className = 'timer frozen'"), 'Timer gets frozen class on buzz_locked');
+    test('3. Timer yellow circle indicator on buzzer press: answering style applied and freeze removed', () => {
+        assert.ok(gameJs.includes("timerElem.className = 'timer answering'"), 'Timer gets answering class on buzz_locked');
         assert.ok(mobileCss.includes('.giant-buzzer-btn.state-paused'), 'Buzzer has paused styling');
     });
 
