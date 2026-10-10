@@ -56,6 +56,7 @@
 
         // Waiting Screen
         waitingTitle: document.getElementById('waiting-title'),
+        waitingIcon: document.querySelector('#screen-waiting .waiting-icon'),
         waitingDesc: document.getElementById('waiting-desc'),
         waitingScore: document.getElementById('waiting-score'),
         waitingPlayersList: document.getElementById('waiting-players-list'),
@@ -78,6 +79,15 @@
 
         // Auction Screen
         auctionNominal: document.getElementById('auction-nominal'),
+        auctionRange: document.getElementById('auction-range'),
+        auctionRule: document.getElementById('auction-rule'),
+        btnPassQuestion: document.getElementById('btn-pass-question'),
+        buzzerObligation: document.getElementById('buzzer-obligation'),
+        hostSpecialPanel: document.getElementById('host-special-panel'),
+        hostSpecialTitle: document.getElementById('host-special-title'),
+        hostSpecialDesc: document.getElementById('host-special-desc'),
+        hostSpecialList: document.getElementById('host-special-list'),
+        btnHostSpecialAction: document.getElementById('btn-host-special-action'),
         auctionBalance: document.getElementById('auction-balance'),
         auctionForm: document.getElementById('auction-form'),
         betInput: document.getElementById('bet-input'),
@@ -143,6 +153,7 @@
         btnHostNextRound: document.getElementById('btn-host-next-round'),
         hostGameOverAction: document.getElementById('host-game-over-action'),
         btnHostShowStats: document.getElementById('btn-host-show-stats'),
+        btnHostRestartLobby: document.getElementById('btn-host-restart-lobby'),
 
         // Toast
         toast: document.getElementById('mobile-toast'),
@@ -371,6 +382,12 @@
                 elements.buzzerText.textContent = 'ОТВЕТИТЬ!';
                 elements.buzzerSubtext.textContent = 'ЖМИТЕ БЫСТРЕЕ!';
                 elements.buzzerStatusBadge.textContent = 'Кнопка открыта!';
+                if (state.isPaused) {
+                    btn.disabled = true;
+                    btn.classList.add('state-paused');
+                    elements.buzzerText.textContent = '⏸️ ПАУЗА В ИГРЕ';
+                    elements.buzzerSubtext.textContent = 'Ожидайте снятия паузы ведущим';
+                }
                 break;
 
             case 'self':
@@ -400,6 +417,80 @@
                 elements.buzzerStatusBadge.textContent = 'Штраф';
                 break;
         }
+        updatePassControls();
+    }
+
+    // Pass button (only while the buzzer is waiting / open) and the "you must answer" notice
+    function updatePassControls() {
+        const canPass = !state.mustAnswer && !state.isPassed && state.isEligibleForBuzzer !== false
+            && (state.buzzerState === 'locked' || state.buzzerState === 'ready');
+        if (elements.btnPassQuestion) {
+            elements.btnPassQuestion.classList.toggle('hidden', !canPass);
+            if (!canPass) resetPassConfirm();
+        }
+        if (elements.buzzerObligation) {
+            const show = Boolean(state.mustAnswer) && (state.buzzerState === 'locked' || state.buzzerState === 'ready');
+            elements.buzzerObligation.classList.toggle('hidden', !show);
+            elements.buzzerObligation.textContent = state.mustAnswer ? state.mustAnswerText || 'Вы обязаны ответить на этот вопрос' : '';
+        }
+    }
+
+    function resetPassConfirm() {
+        if (state.passConfirmTimer) {
+            clearTimeout(state.passConfirmTimer);
+            state.passConfirmTimer = null;
+        }
+        if (elements.btnPassQuestion) {
+            elements.btnPassQuestion.classList.remove('confirm');
+            elements.btnPassQuestion.textContent = 'Пас — не отвечаю';
+        }
+    }
+
+    // A leading emoji of the title becomes the big icon of the waiting screen
+    function setWaitingTexts(title, desc) {
+        let icon = '⌛';
+        let text = title;
+        const match = /^(\p{Extended_Pictographic}️?)\s*(.*)$/u.exec(title || '');
+        if (match) {
+            icon = match[1];
+            text = match[2];
+        }
+        if (elements.waitingIcon) elements.waitingIcon.textContent = icon;
+        if (elements.waitingTitle) elements.waitingTitle.textContent = text;
+        if (elements.waitingDesc) elements.waitingDesc.textContent = desc;
+    }
+
+    // Auction bet screen: limits, rule text, default bet
+    function openAuctionScreen(cost) {
+        const nominal = Number(cost) || state.currentCost || 100;
+        const balance = (state.selfPlayer && Number(state.selfPlayer.score)) || 0;
+        const maxBet = Math.max(nominal, balance);
+        state.betMin = nominal;
+        state.betMax = maxBet;
+        state.betSubmitted = false;
+        state.currentCost = nominal;
+        if (elements.auctionNominal) elements.auctionNominal.textContent = nominal;
+        if (elements.auctionBalance) elements.auctionBalance.textContent = balance;
+        if (elements.auctionRange) elements.auctionRange.textContent = nominal === maxBet ? `${nominal}` : `${nominal} – ${maxBet}`;
+        if (elements.auctionRule) {
+            elements.auctionRule.textContent = state.questionType === 'auction_leader'
+                ? 'Побеждает самая высокая ставка — только победитель отвечает на вопрос.'
+                : 'Сделавший ставку обязан ответить текстом — на ответ 30 секунд. Ошибка стоит вам ставки. Не уверены — пас.';
+        }
+        if (elements.betInput) {
+            elements.betInput.min = nominal;
+            elements.betInput.max = maxBet;
+            elements.betInput.value = nominal;
+        }
+        showScreen('auction');
+    }
+
+    function clampBet(value) {
+        const v = parseInt(value, 10);
+        const min = state.betMin || state.currentCost || 100;
+        const max = state.betMax || min;
+        if (isNaN(v)) return min;
+        return Math.min(Math.max(v, min), max);
     }
 
     // =========================================================================
@@ -489,6 +580,8 @@
                 'AUCTION_BETTING': 'Аукцион',
                 'CAT_CHOOSING': 'Кот в мешке',
                 'ROUND_END': 'Конец раунда',
+                'AUCTION_ANSWERING': 'Ответы аукциона',
+                'QUESTION_CLOSED': 'Время вышло',
                 'GAME_OVER': 'Игра завершена'
             };
             elements.hostStateBadge.textContent = stateLabels[currentRoomState] || currentRoomState;
@@ -542,8 +635,10 @@
 
         // Toggle Question card vs Board panel
         const isQuestionActive = Boolean(state.activeQuestion && (state.activeQuestion.q || state.activeQuestion.text));
+        const isBoardState = (currentRoomState === 'BOARD') && !isQuestionActive;
+
         if (elements.hostBoardPanel) {
-            if (!isQuestionActive && (currentRoomState === 'BOARD' || state.boardData)) {
+            if (isBoardState && state.boardData) {
                 elements.hostBoardPanel.classList.remove('hidden');
                 renderHostBoardGrid(state.boardData);
             } else {
@@ -551,12 +646,41 @@
             }
         }
         if (elements.hostQuestionCard) {
-            if (!isQuestionActive && (currentRoomState === 'BOARD' || state.boardData)) {
+            if (isBoardState && state.boardData) {
                 elements.hostQuestionCard.classList.add('hidden');
             } else {
                 elements.hostQuestionCard.classList.remove('hidden');
             }
         }
+
+        // Screen phase drives which controls the dock shows (see `#screen-host[data-phase]` in mobile.css)
+        let hostPhase = 'board';
+        if (currentRoomState === 'LOBBY' || currentRoomState === 'INIT') hostPhase = 'lobby';
+        else if ((currentRoomState === 'CAT_CHOOSING' || currentRoomState === 'AUCTION_BETTING') && isQuestionActive) hostPhase = 'special';
+        else if (currentRoomState === 'GAME_OVER') hostPhase = 'game_over';
+        else if (currentRoomState === 'ROUND_END') hostPhase = 'round_end';
+        else if (isQuestionActive) {
+            if (state.activeAnsweringPlayer) hostPhase = 'answering';
+            else if (currentRoomState === 'BOARD') hostPhase = 'finished';
+            else hostPhase = 'question';
+        }
+        if (elements.screens.host) elements.screens.host.dataset.phase = hostPhase;
+        renderHostSpecialPanel();
+
+        // Game-flow controls make no sense in the lobby or after the game is over
+        const isGameRunning = !['INIT', 'LOBBY', 'GAME_OVER'].includes(currentRoomState);
+        [elements.btnHostPassTurn, elements.btnHostSkipRound, elements.btnHostAddAllScores, elements.btnHostPause].forEach((btn) => {
+            if (btn) btn.disabled = !isGameRunning;
+        });
+        if (elements.hostStateBadge && currentRoomState === 'BOARD' && isQuestionActive) {
+            elements.hostStateBadge.textContent = 'Вопрос завершён';
+        }
+        if (elements.btnHostCloseQuestion) {
+            elements.btnHostCloseQuestion.classList.toggle('attention', currentRoomState === 'BOARD' && isQuestionActive);
+        }
+
+        if (elements.btnHostShowAnswer) elements.btnHostShowAnswer.disabled = !isQuestionActive;
+        if (elements.btnHostCloseQuestion) elements.btnHostCloseQuestion.disabled = !isQuestionActive;
 
         // Question text and secret answer card
         if (elements.hostQuestionText) {
@@ -619,8 +743,8 @@
             if (elements.btnHostJudgeWrong) elements.btnHostJudgeWrong.disabled = false;
             if (elements.btnHostJudgeWrongPenalty) elements.btnHostJudgeWrongPenalty.disabled = false;
             if (elements.btnHostJudgeCorrectText) elements.btnHostJudgeCorrectText.textContent = `Зачесть (+${state.currentCost})`;
-            if (elements.btnHostJudgeWrongText) elements.btnHostJudgeWrongText.textContent = 'Отклонить (без вычета)';
-            if (elements.btnHostJudgeWrongPenaltyText) elements.btnHostJudgeWrongPenaltyText.textContent = `Отклонить с вычетом (-${state.currentCost})`;
+            if (elements.btnHostJudgeWrongText) elements.btnHostJudgeWrongText.textContent = 'Не засчитать';
+            if (elements.btnHostJudgeWrongPenaltyText) elements.btnHostJudgeWrongPenaltyText.textContent = `Штраф (-${state.currentCost})`;
         } else {
             if (elements.hostAnsweringBanner) elements.hostAnsweringBanner.classList.add('hidden');
             if (elements.hostPlayerSubmittedBox) elements.hostPlayerSubmittedBox.classList.add('hidden');
@@ -640,6 +764,85 @@
                 if (elements.hostPauseText) elements.hostPauseText.textContent = 'Пауза';
                 elements.btnHostPause.classList.remove('paused');
             }
+        }
+    }
+
+    // Host: special questions (cat in the bag / auctions) need a decision from the host
+    function renderHostSpecialPanel() {
+        const panel = elements.hostSpecialPanel;
+        if (!panel) return;
+        const roomState = state.roomState;
+        const isSpecial = (roomState === 'CAT_CHOOSING' || roomState === 'AUCTION_BETTING') && Boolean(state.activeQuestion);
+        panel.classList.toggle('hidden', !isSpecial);
+        if (!isSpecial) return;
+
+        const type = state.questionType || (state.activeQuestion && state.activeQuestion.type) || 'normal';
+        const players = ((netClient ? netClient.getPlayersList() : []) || []).filter(p => p.role !== 'host');
+        const bets = state.liveBets || {};
+        const placed = state.betPlaced || {};
+        const cost = state.currentCost || 100;
+        const list = elements.hostSpecialList;
+        const action = elements.btnHostSpecialAction;
+        if (list) list.innerHTML = '';
+        if (action) action.classList.add('hidden');
+
+        const isCat = (type === 'cat' || type === 'secret');
+        if (elements.hostSpecialTitle) {
+            elements.hostSpecialTitle.textContent = isCat ? '🐱 Кот в мешке' : (type === 'auction_leader' ? '🔨 Аукцион за право ответа' : '💰 Вопрос со ставками');
+        }
+        if (elements.hostSpecialDesc) {
+            elements.hostSpecialDesc.textContent = isCat
+                ? `Назначьте команду, которая обязана ответить (${cost} очков).`
+                : (type === 'auction_leader'
+                    ? 'Игроки ставят с телефонов. Назначьте лидера — отвечает только он, цена вопроса = его ставка.'
+                    : 'Игроки ставят с телефонов. Все, кто поставил, обязаны ответить текстом — вы увидите ответы и оцените каждый.');
+        }
+        if (!list) return;
+
+        const maxBet = Math.max(0, ...players.map(p => bets[p.id] || 0));
+        players.forEach((p) => {
+            const row = document.createElement('div');
+            row.className = 'host-special-item' + (p.isConnected === false ? ' offline' : '');
+            const bet = bets[p.id] || 0;
+            let betLabel = '';
+            if (!isCat) betLabel = placed[p.id] ? (bet > 0 ? `${bet}` : 'ПАС') : 'думает…';
+            const isTop = !isCat && bet > 0 && bet === maxBet;
+            row.innerHTML = `
+                <span class="host-special-avatar">${p.avatar || '🐱'}</span>
+                <span class="host-special-name">${escapeHtml(p.name)}</span>
+                <span class="host-special-score">${p.score || 0}</span>
+                ${isCat ? '' : `<span class="host-special-bet${isTop ? ' top' : ''}${placed[p.id] && bet === 0 ? ' pass' : ''}">${betLabel}</span>`}
+            `;
+            if (isCat || type === 'auction_leader') {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'host-special-pick';
+                btn.textContent = isCat ? 'Отвечает' : 'Лидер';
+                btn.disabled = (p.isConnected === false) || (!isCat && bet <= 0);
+                btn.addEventListener('click', () => {
+                    if (!netClient) return;
+                    haptic('buzz_press');
+                    if (isCat) {
+                        netClient.setCatTarget(p.id);
+                    } else {
+                        netClient.setAuctionLeader(p.id, bet);
+                    }
+                });
+                row.appendChild(btn);
+            }
+            list.appendChild(row);
+        });
+
+        if (action && type !== 'auction_leader' && !isCat) {
+            const bidders = players.filter(p => (bets[p.id] || 0) > 0).map(p => p.id);
+            action.classList.remove('hidden');
+            action.disabled = bidders.length === 0;
+            action.textContent = bidders.length === 0 ? 'Ждём ставки…' : `Принять ставки (${bidders.length}) и открыть вопрос`;
+            action.onclick = () => {
+                if (!netClient) return;
+                haptic('success');
+                netClient.startAuctionAnswer(bidders);
+            };
         }
     }
 
@@ -708,15 +911,15 @@
         playerList.forEach((p) => {
             const qCost = state.currentCost || 100;
             const row = document.createElement('div');
-            row.className = 'host-player-row';
+            row.className = 'host-player-row' + (p.isConnected === false ? ' offline' : '');
             row.innerHTML = `
                 <div class="host-player-info">
                     <span class="host-player-avatar">${p.avatar || '🐱'}</span>
                     <span class="host-player-name">${escapeHtml(p.name)}</span>
+                    <span class="host-player-score">${p.score || 0}</span>
                 </div>
                 <div class="host-player-actions">
                     <button type="button" class="score-step-btn minus-cost" data-id="${p.id}" title="Снять ${qCost}">-${qCost}</button>
-                    <span class="host-player-score">${p.score || 0}</span>
                     <button type="button" class="score-step-btn plus-cost" data-id="${p.id}" title="Начислить ${qCost}">+${qCost}</button>
                     <div class="host-score-n-wrap">
                         <input type="number" class="score-n-input" value="${initialN}" min="1" step="50" inputmode="numeric" />
@@ -954,10 +1157,15 @@
         });
 
         netClient.on('server_error', (payload) => {
-            elements.joinError.textContent = payload.message || 'Ошибка сервера';
-            elements.joinError.classList.remove('hidden');
             haptic('error');
             showToast(payload.message || 'Ошибка', 'error');
+
+            // In-game errors ("button not active", "already answered"...) must not throw the player out of the game
+            const isJoining = !state.selfPlayer || state.currentScreen === 'join';
+            if (!isJoining) return;
+
+            elements.joinError.textContent = payload.message || 'Ошибка сервера';
+            elements.joinError.classList.remove('hidden');
 
             // If host role was taken, automatically switch role selector to player
             if (payload.code === 'HOST_ALREADY_EXISTS') {
@@ -972,6 +1180,7 @@
             updateRoomBadge(payload.roomCode);
 
             if (payload.self) {
+                state.selfPlayer = Object.assign({}, state.selfPlayer || {}, payload.self);
                 updatePlayerBadge(payload.self);
                 localStorage.setItem(STORAGE_KEYS.NAME, payload.self.name);
                 localStorage.setItem(STORAGE_KEYS.AVATAR, payload.self.avatar);
@@ -991,9 +1200,13 @@
                 localStorage.setItem(STORAGE_KEYS.TOKEN, payload.sessionToken);
             }
 
-            if (payload.cost) {
-                state.currentCost = payload.cost;
-                elements.buzzerCostBadge.textContent = `${payload.cost} очков`;
+            const roomCost = payload.cost || payload.currentCost;
+            if (roomCost) {
+                state.currentCost = roomCost;
+                elements.buzzerCostBadge.textContent = `${roomCost} очков`;
+            }
+            if (payload.currentQuestion && payload.currentQuestion.type) {
+                state.questionType = payload.currentQuestion.type;
             }
 
             if (payload.board) {
@@ -1002,25 +1215,61 @@
 
             renderPlayersList(payload.players);
 
+            if (payload.isPaused !== undefined) {
+                state.isPaused = Boolean(payload.isPaused);
+                if (elements.mobilePauseBanner && !state.isPaused) {
+                    elements.mobilePauseBanner.classList.add('hidden');
+                }
+            }
+
             // Handle Host Role Screen View
             if (state.selectedRole === 'host') {
+                if (payload.auctionBets) {
+                    state.liveBets = Object.assign({}, payload.auctionBets);
+                    state.betPlaced = {};
+                    Object.keys(payload.auctionBets).forEach((id) => { state.betPlaced[id] = true; });
+                }
+                if (payload.currentQuestion) {
+                    state.questionType = payload.currentQuestion.type || state.questionType;
+                }
+                if (payload.currentQuestion && !state.activeQuestion) {
+                    // Page reload / reconnect in the middle of a question
+                    state.activeQuestion = payload.currentQuestion;
+                    state.activeThemeName = payload.themeName || state.activeThemeName;
+                    state.currentCost = payload.currentCost || state.currentCost;
+                }
                 showScreen('host');
                 updateHostScreen(payload.state, payload);
                 renderHostPlayersList(payload.players);
                 return;
             }
 
-            // Update description based on role
-            elements.waitingDesc.textContent = 'Ведущий выбирает вопрос на табло...';
+            // Update texts based on state (stale "wrong answer" / "time is up" texts must not stick)
 
             // Handle Room States for Players
             switch (payload.state) {
                 case 'INIT':
                 case 'LOBBY':
+                    stopAnswerTimer();
+                    setWaitingTexts('Ожидание игры', 'Ведущий скоро начнёт игру...');
+                    showScreen('waiting');
+                    break;
+
                 case 'BOARD':
+                    stopAnswerTimer();
+                    setWaitingTexts('Внимание на экран!', 'Ведущий выбирает вопрос на табло...');
+                    showScreen('waiting');
+                    break;
+
                 case 'ROUND_END':
+                    stopAnswerTimer();
+                    setWaitingTexts('🏁 Раунд завершён', 'Ожидайте начала следующего раунда...');
+                    showScreen('waiting');
+                    break;
+
                 case 'GAME_OVER':
                     stopAnswerTimer();
+                    setWaitingTexts('🏆 Игра окончена', 'Итоги на главном экране. Ожидайте решения ведущего...');
                     showScreen('waiting');
                     break;
 
@@ -1030,21 +1279,41 @@
                     showScreen('buzzer');
                     break;
 
-                case 'BUZZ_ACTIVE':
-                    showScreen('buzzer');
-                    setBuzzerState('ready');
+                case 'BUZZ_ACTIVE': {
+                    const openFor = Array.isArray(payload.buzzerOpenFor) ? payload.buzzerOpenFor : null;
+                    const selfId = state.selfPlayer && state.selfPlayer.id;
+                    state.isEligibleForBuzzer = !openFor || !selfId || openFor.includes(selfId);
+                    if (Array.isArray(payload.passedPlayerIds)) {
+                        state.isPassed = Boolean(selfId && payload.passedPlayerIds.includes(selfId));
+                    }
+                    // Reconnect in the middle of a cat / leader question: the obligation must survive it
+                    if (selfId && payload.catTargetPlayerId === selfId) {
+                        state.mustAnswer = true;
+                        state.mustAnswerText = 'Вам назначен «Кот в мешке» — отвечать обязательно';
+                    } else if (selfId && payload.auctionLeaderPlayerId === selfId) {
+                        state.mustAnswer = true;
+                        state.mustAnswerText = 'Вы выиграли торги — отвечать обязательно';
+                    }
+                    if (state.isEligibleForBuzzer) {
+                        showScreen('buzzer');
+                        setBuzzerState('ready');
+                    } else if (state.currentScreen !== 'waiting') {
+                        showScreen('waiting');
+                    }
                     break;
+                }
 
                 case 'AUCTION_BETTING':
-                    showScreen('auction');
-                    elements.auctionNominal.textContent = payload.currentCost || 100;
-                    elements.betInput.value = payload.currentCost || 100;
-                    elements.betInput.min = payload.currentCost || 100;
+                    state.questionType = (payload.currentQuestion && payload.currentQuestion.type) || state.questionType;
+                    if (!state.betSubmitted && state.currentScreen !== 'auction') {
+                        state.currentCost = payload.currentCost || state.currentCost;
+                        openAuctionScreen(payload.currentCost);
+                    }
                     break;
 
                 case 'CAT_CHOOSING':
-                    showScreen('cat');
-                    renderCatPlayersList(payload.players);
+                    setWaitingTexts('🐱 Кот в мешке', 'Ведущий выбирает, кто будет отвечать на этот вопрос...');
+                    showScreen('waiting');
                     break;
             }
         });
@@ -1059,6 +1328,8 @@
             state.auctionBiddingPlayers = [];
             state.auctionBets = {};
             state.auctionSubmittedAnswers = {};
+            state.liveBets = {};
+            state.questionType = payload.questionType || (payload.question && payload.question.type) || 'normal';
 
             if (elements.hostAuctionPanel) elements.hostAuctionPanel.classList.add('hidden');
             if (elements.buzzerBtn) elements.buzzerBtn.style.display = '';
@@ -1069,8 +1340,26 @@
                 return;
             }
 
+            state.questionType = payload.questionType || (payload.question && payload.question.type) || 'normal';
+            state.mustAnswer = false;
+            state.mustAnswerText = '';
+            state.isPassed = false;
+            state.betSubmitted = false;
+            resetPassConfirm();
+
             elements.buzzerCostBadge.textContent = `${state.currentCost} очков`;
             elements.answerCostHint.textContent = `Ставка: ${state.currentCost} очков`;
+
+            if (payload.state === 'CAT_CHOOSING') {
+                setWaitingTexts('🐱 Кот в мешке', 'Ведущий выбирает, кто будет отвечать на этот вопрос...');
+                showScreen('waiting');
+                return;
+            }
+            if (payload.state === 'AUCTION_BETTING') {
+                openAuctionScreen(payload.cost);
+                return;
+            }
+
             setBuzzerState('locked');
             showScreen('buzzer');
         });
@@ -1092,6 +1381,14 @@
             } else {
                 state.isEligibleForBuzzer = true;
             }
+
+            const selfIdForBuzz = state.selfPlayer && state.selfPlayer.id;
+            const restrictedQuestion = ['cat', 'secret', 'auction_leader'].includes(state.questionType);
+            state.mustAnswer = Boolean(state.isEligibleForBuzzer && restrictedQuestion && selfIdForBuzz
+                && Array.isArray(payload.allowedPlayerIds) && payload.allowedPlayerIds.length === 1);
+            state.mustAnswerText = state.questionType === 'auction_leader'
+                ? 'Вы выиграли торги — отвечать обязательно'
+                : 'Вам назначен «Кот в мешке» — отвечать обязательно';
 
             if (state.isEligibleForBuzzer) {
                 if (elements.buzzerBtn) elements.buzzerBtn.style.display = '';
@@ -1132,7 +1429,7 @@
                     elements.hostAuctionSecretAnswer.textContent = (state.activeQuestion && (state.activeQuestion.a || state.activeQuestion.answer)) || '—';
                 }
                 renderHostAuctionList();
-                updateHostScreen('ANSWERING');
+                updateHostScreen('AUCTION_ANSWERING');
                 return;
             }
 
@@ -1141,7 +1438,7 @@
                 // Bidding team must type answer instead of buzzer!
                 const myBet = (state.auctionBets && state.auctionBets[state.selfPlayer.id]) || state.currentCost;
                 if (elements.answerCostHint) {
-                    elements.answerCostHint.textContent = `🔥 ОБЩИЙ АУКЦИОН | Ваша ставка: ${myBet} очков`;
+                    elements.answerCostHint.textContent = `Аукцион: ваша ставка ${myBet}. Отвечать обязательно`;
                 }
                 if (elements.answerInput) {
                     elements.answerInput.value = '';
@@ -1289,6 +1586,20 @@
             state.isPaused = Boolean(payload.isPaused);
             state.isAnswerTimerPaused = state.isPaused;
 
+            const pauseBanner = elements.mobilePauseBanner;
+            if (pauseBanner) {
+                if (payload.isPaused) {
+                    pauseBanner.classList.remove('hidden');
+                    if (elements.mobilePauseText) {
+                        elements.mobilePauseText.textContent = payload.reason === 'disconnect'
+                            ? `⏸️ Игра на паузе: игрок ${payload.disconnectedPlayerName || ''} отключился`
+                            : '⏸️ Игра на паузе';
+                    }
+                } else {
+                    pauseBanner.classList.add('hidden');
+                }
+            }
+
             if (state.selectedRole === 'host') {
                 updateHostScreen(state.roomState);
             } else {
@@ -1336,6 +1647,9 @@
         netClient.on('player_joined', (payload) => {
             if (payload.player) {
                 showToast(`Вошёл: ${payload.player.name}${payload.role === 'host' ? ' (Ведущий)' : ''}`, 'info', 2000);
+                if (state.selfPlayer && (!state.selfPlayer.id || state.selfPlayer.name === payload.player.name)) {
+                    state.selfPlayer = Object.assign({}, state.selfPlayer, payload.player);
+                }
             }
             const players = netClient.getPlayersList();
             renderPlayersList(players);
@@ -1398,26 +1712,75 @@
             if (state.selectedRole === 'host') return;
             const isTarget = state.selfPlayer && payload.toPlayerId === state.selfPlayer.id;
             if (isTarget) {
-                showToast('🐱 Вам передан «Кот в мешке»!', 'warning');
-                if (elements.waitingTitle) elements.waitingTitle.textContent = '🐱 Кот в мешке!';
-                if (elements.waitingDesc) elements.waitingDesc.textContent = 'Соперник передал вопрос вам! Приготовьтесь к ответу.';
+                state.mustAnswer = true;
+                state.mustAnswerText = 'Вам назначен «Кот в мешке» — отвечать обязательно';
+                haptic('buzz_won');
+                setWaitingTexts('🐱 Кот достался вам!', 'Вы обязаны ответить на этот вопрос. Приготовьтесь — кнопка скоро откроется.');
                 showScreen('waiting');
             } else {
-                const targetName = payload.toPlayerName || 'сопернику';
-                showToast(`🐱 Кот в мешке передан игроку ${targetName}`, 'info');
-                if (elements.waitingTitle) elements.waitingTitle.textContent = '🐱 Кот в мешке';
-                if (elements.waitingDesc) elements.waitingDesc.textContent = `Вопрос передан ${targetName}. Ожидайте...`;
+                const targetName = payload.toPlayerName || 'игроку';
+                setWaitingTexts('🐱 Кот в мешке', `Отвечает ${targetName}. Вы ждёте.`);
+                showScreen('waiting');
+            }
+        });
+
+        netClient.on('auction_leader_set', (payload) => {
+            state.currentCost = payload.bet || state.currentCost;
+            if (state.selectedRole === 'host') {
+                state.liveBets = state.liveBets || {};
+                state.hostLeaderId = payload.leaderPlayerId;
+                renderHostSpecialPanel();
+                showToast(`Лидер торгов: ${payload.leaderPlayerName} (${payload.bet})`, 'info');
+                return;
+            }
+            const isLeader = state.selfPlayer && payload.leaderPlayerId === state.selfPlayer.id;
+            state.betSubmitted = true;
+            if (isLeader) {
+                state.mustAnswer = true;
+                state.mustAnswerText = 'Вы выиграли торги — отвечать обязательно';
+                haptic('buzz_won');
+                setWaitingTexts('🏆 Вы выиграли торги!', `Ваша ставка: ${payload.bet}. Вы обязаны ответить — приготовьтесь.`);
+            } else {
+                setWaitingTexts('Торги завершены', `Отвечает ${payload.leaderPlayerName} (ставка ${payload.bet}). Вы ждёте.`);
+            }
+            showScreen('waiting');
+        });
+
+        netClient.on('auction_bet_made', (payload) => {
+            if (state.selectedRole !== 'host') return;
+            state.liveBets = state.liveBets || {};
+            state.liveBets[payload.playerId] = Number(payload.amount) || 0;
+            state.betPlaced = state.betPlaced || {};
+            state.betPlaced[payload.playerId] = true;
+            renderHostSpecialPanel();
+        });
+
+        netClient.on('player_passed', (payload) => {
+            const isMe = state.selfPlayer && payload.playerId === state.selfPlayer.id;
+            if (state.selectedRole === 'host') {
+                showToast(`${payload.playerName} — пас`, 'info');
+                return;
+            }
+            if (isMe) {
+                state.isPassed = true;
+                updatePassControls();
+                setWaitingTexts('Вы спасовали', 'Вы не отвечаете на этот вопрос. Ждите следующего.');
                 showScreen('waiting');
             }
         });
 
         netClient.on('question_closed', () => {
             stopAnswerTimer();
+            state.mustAnswer = false;
+            state.isPassed = false;
+            state.betSubmitted = false;
             state.activeQuestion = null;
             state.activeThemeName = null;
             state.activeAnsweringPlayer = null;
             if (state.selectedRole === 'host') {
-                updateHostScreen('BOARD');
+                // keep ROUND_END / GAME_OVER: they carry the "next round" / "stats" buttons
+                const keep = (state.roomState === 'ROUND_END' || state.roomState === 'GAME_OVER');
+                updateHostScreen(keep ? state.roomState : 'BOARD');
             } else {
                 showScreen('waiting');
             }
@@ -1492,6 +1855,7 @@
         state.activeQuestion = null;
         state.activeAnsweringPlayer = null;
         state.isPaused = false;
+        state.roomState = 'LOBBY';
         state.boardData = null;
         state.hostCustomN = 100;
         state.auctionBiddingPlayers = [];
@@ -1714,6 +2078,15 @@
         }
 
         // Role Selector buttons (TASK-03)
+                if (elements.btnHostRestartLobby) {
+            elements.btnHostRestartLobby.addEventListener('click', () => {
+                if (!netClient) return;
+                netClient.resetToLobby();
+                haptic('success');
+                showToast('🔄 Возврат в лобби...', 'info');
+            });
+        }
+
         if (elements.btnRolePlayer) {
             elements.btnRolePlayer.addEventListener('click', () => selectRole('player'));
         }
@@ -1831,22 +2204,27 @@
             if (netClient) {
                 netClient.submitAnswer(text);
             }
-            showToast('Ответ отправлен ведущему!', 'success');
             haptic('success');
             stopAnswerTimer();
-            showScreen('buzzer');
+            if (state.questionType === 'auction' || state.questionType === 'auction_all') {
+                setWaitingTexts('Ответ отправлен', 'Ведущий проверит ответы и начислит или спишет ставку.');
+                showScreen('waiting');
+            } else {
+                showToast('Ответ отправлен ведущему!', 'success');
+                showScreen('buzzer');
+            }
         });
 
         // Auction Steppers & Quick Bets
         elements.btnBetMinus.addEventListener('click', () => {
             const current = parseInt(elements.betInput.value, 10) || 100;
             const min = parseInt(elements.betInput.min, 10) || 100;
-            elements.betInput.value = Math.max(min, current - 100);
+            elements.betInput.value = clampBet(current - 100);
         });
 
         elements.btnBetPlus.addEventListener('click', () => {
             const current = parseInt(elements.betInput.value, 10) || 100;
-            elements.betInput.value = current + 100;
+            elements.betInput.value = clampBet(current + 100);
         });
 
         document.querySelectorAll('.btn-quick-bet[data-add]').forEach((btn) => {
@@ -1857,41 +2235,29 @@
             });
         });
 
-        netClient.on('game_paused', (payload) => {
-            state.isPaused = payload.isPaused;
-            if (state.selectedRole === 'host') {
-                updateHostScreen(state.roomState);
-            }
-            const pauseBanner = elements.mobilePauseBanner;
-            if (pauseBanner) {
-                if (payload.isPaused) {
-                    pauseBanner.classList.remove('hidden');
-                    if (elements.mobilePauseText) {
-                        elements.mobilePauseText.textContent = payload.reason === 'disconnect'
-                            ? `⏸️ Игра на паузе: игрок ${payload.disconnectedPlayerName || ''} отключился`
-                            : '⏸️ Игра на паузе';
-                    }
-                } else {
-                    pauseBanner.classList.add('hidden');
-                }
-            }
-            showToast(payload.isPaused ? 'Игра на паузе' : 'Игра возобновлена', 'info');
-        });
+
 
         elements.btnVaBank.addEventListener('click', () => {
-            const balance = (state.selfPlayer && state.selfPlayer.score) || 0;
-            elements.betInput.value = Math.max(balance, state.currentCost);
-            showToast('Ставка ВА-БАНК установлена!', 'info');
+            elements.betInput.value = clampBet(state.betMax || 0);
+            showToast('Ва-банк: вся сумма на ставке', 'info');
+        });
+
+        elements.betInput.addEventListener('change', () => {
+            elements.betInput.value = clampBet(elements.betInput.value);
         });
 
         elements.auctionForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const amount = parseInt(elements.betInput.value, 10) || state.currentCost;
+            const amount = clampBet(elements.betInput.value);
+            elements.betInput.value = amount;
             if (netClient) {
                 netClient.auctionBet(amount);
             }
-            showToast(`Ставка ${amount} очков подтверждена!`, 'success');
+            state.betSubmitted = true;
             haptic('success');
+            setWaitingTexts('Ставка принята', state.questionType === 'auction_leader'
+                ? `Ваша ставка: ${amount}. Ждём остальных — отвечает самая высокая.`
+                : `Ваша ставка: ${amount}. Если ведущий откроет вопрос — вы обязаны ответить.`);
             showScreen('waiting');
         });
 
@@ -1899,9 +2265,26 @@
             if (netClient) {
                 netClient.auctionBet(0);
             }
-            showToast('Вы спасовали на аукционе', 'info');
+            state.betSubmitted = true;
+            setWaitingTexts('Вы спасовали', 'Вы не участвуете в этом аукционе. Ждите следующего вопроса.');
             showScreen('waiting');
         });
+
+        // Pass on a regular question: two taps (second one confirms)
+        if (elements.btnPassQuestion) {
+            elements.btnPassQuestion.addEventListener('click', () => {
+                if (!netClient) return;
+                if (!elements.btnPassQuestion.classList.contains('confirm')) {
+                    elements.btnPassQuestion.classList.add('confirm');
+                    elements.btnPassQuestion.textContent = 'Точно спасовать? Нажмите ещё раз';
+                    haptic('buzz_press');
+                    state.passConfirmTimer = setTimeout(resetPassConfirm, 3000);
+                    return;
+                }
+                resetPassConfirm();
+                netClient.passQuestion();
+            });
+        }
 
         // Cat Confirmation Click
         elements.btnConfirmCat.addEventListener('click', () => {

@@ -193,8 +193,16 @@
                         <div class="buzzer-wave"></div>
                     </button>
 
-                    <div class="buzzer-footer-info" id="buzzer-footer-info">
-                        Нажимайте, как только ведущий откроет кнопку!
+                    <div class="buzzer-bottom">
+                        <div class="buzzer-footer-info" id="buzzer-footer-info">
+                            Нажмите, как только кнопка откроется
+                        </div>
+
+                        <div class="buzzer-obligation hidden" id="buzzer-obligation"></div>
+
+                        <button type="button" class="btn-pass-question hidden" id="btn-pass-question">
+                            Пас — не отвечаю
+                        </button>
                     </div>
                 </div>
             </section>
@@ -252,6 +260,8 @@
                         <h2 class="screen-title">Сделайте вашу ставку</h2>
                     </div>
 
+                    <p class="auction-rule" id="auction-rule">Поставьте очки или спасуйте.</p>
+
                     <div class="auction-info-row">
                         <div class="info-pill">
                             <span class="pill-label">Номинал</span>
@@ -260,6 +270,10 @@
                         <div class="info-pill">
                             <span class="pill-label">Ваш баланс</span>
                             <span class="pill-value" id="auction-balance">0</span>
+                        </div>
+                        <div class="info-pill">
+                            <span class="pill-label">Можно поставить</span>
+                            <span class="pill-value" id="auction-range">100</span>
                         </div>
                     </div>
 
@@ -313,18 +327,25 @@
             </section>
 
             <!-- ЭКРАН 7: Персональный пульт Ведущего с ответами и управлением игрой (TASK-04) -->
-            <section class="screen" id="screen-host">
+            <section class="screen" id="screen-host" data-phase="lobby">
                 <div class="host-container">
                     <!-- Заголовок пульта ведущего с бейджем статуса -->
                     <div class="host-header-card">
                         <div class="host-badge-row">
-                            <span class="host-role-badge">🎙️ Пульт Ведущего</span>
+                            <span class="host-role-badge">🎙️ Пульт</span>
                             <span class="host-state-badge" id="host-state-badge">Ожидание</span>
                         </div>
                         <div class="host-meta-row">
                             <span class="host-pack-info" id="host-theme-badge">Тема: —</span>
                             <span class="host-cost-info" id="host-cost-badge">100 очков</span>
                         </div>
+                    </div>
+
+                    <!-- Старт игры из лобби -->
+                    <div class="host-lobby-action" id="host-lobby-action">
+                        <button type="button" class="btn btn-primary btn-block btn-lg" id="btn-host-start-game">
+                            🚀 НАЧАТЬ ИГРУ
+                        </button>
                     </div>
 
                     <!-- Панель сетки вопросов для выбора ведущим с телефона -->
@@ -375,6 +396,16 @@
                         </div>
                     </div>
 
+                    <!-- Особый вопрос: ведущий назначает отвечающего / закрывает ставки -->
+                    <div class="host-special-panel hidden" id="host-special-panel">
+                        <div class="host-special-title" id="host-special-title">Особый вопрос</div>
+                        <div class="host-special-desc" id="host-special-desc"></div>
+                        <div class="host-special-list" id="host-special-list"></div>
+                        <button type="button" class="btn btn-primary btn-block btn-lg hidden" id="btn-host-special-action">
+                            Принять ставки и открыть вопрос
+                        </button>
+                    </div>
+
                     <!-- Панель ответов команд на общем аукционе (Requirement 3) -->
                     <div class="host-auction-panel hidden" id="host-auction-panel">
                         <div class="host-auction-header">
@@ -390,53 +421,35 @@
                         </div>
                     </div>
 
-                    <!-- Пульт кнопок управления игрой на телефоне -->
-                    <div class="host-controls-panel">
-                        <div class="host-controls-title">🎮 Управление игрой</div>
-
-                        <!-- Группа 1: Быстрое судейство ответа (Зачесть, Отклонить без вычета, Отклонить с вычетом) -->
-                        <div class="host-btn-row judging-row judging-grid-3">
+                    <!-- Нижняя панель действий (всегда под большим пальцем). Состав зависит от фазы: data-phase -->
+                    <div class="host-dock" id="host-dock">
+                        <!-- Судейство: появляется, когда отвечает игрок -->
+                        <div class="host-judging">
                             <button type="button" class="btn btn-judge-accept" id="btn-host-judge-correct" disabled>
                                 <span class="btn-icon">✅</span>
                                 <span class="btn-text" id="btn-host-judge-correct-text">Зачесть (+100)</span>
                             </button>
-                            <button type="button" class="btn btn-judge-reject" id="btn-host-judge-wrong" disabled>
-                                <span class="btn-icon">❌</span>
-                                <span class="btn-text" id="btn-host-judge-wrong-text">Отклонить (без вычета)</span>
-                            </button>
-                            <button type="button" class="btn btn-judge-reject-penalty" id="btn-host-judge-wrong-penalty" disabled>
-                                <span class="btn-icon">⚠️</span>
-                                <span class="btn-text" id="btn-host-judge-wrong-penalty-text">Отклонить с вычетом (-100)</span>
-                            </button>
+                            <div class="host-judging-minor">
+                                <button type="button" class="btn btn-judge-reject" id="btn-host-judge-wrong" disabled>
+                                    <span class="btn-icon">❌</span>
+                                    <span class="btn-text" id="btn-host-judge-wrong-text">Не засчитать</span>
+                                </button>
+                                <button type="button" class="btn btn-judge-reject-penalty" id="btn-host-judge-wrong-penalty" disabled>
+                                    <span class="btn-icon">⚠️</span>
+                                    <span class="btn-text" id="btn-host-judge-wrong-penalty-text">Штраф (-100)</span>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Группа 2: Управление игрой (Пауза, Передать ход, Пропустить раунд, Прибавить всем очки) -->
-                        <div class="host-btn-row flow-extra-row">
+                        <!-- Ход вопроса: пауза, ответ на ТВ, к табло -->
+                        <div class="host-flow-row">
                             <button type="button" class="btn btn-host-secondary" id="btn-host-pause">
                                 <span class="btn-icon" id="host-pause-icon">⏸️</span>
                                 <span class="btn-text" id="host-pause-text">Пауза</span>
                             </button>
-                            <button type="button" class="btn btn-host-secondary" id="btn-host-pass-turn">
-                                <span class="btn-icon">🔄</span>
-                                <span class="btn-text">Передать ход</span>
-                            </button>
-                        </div>
-                        <div class="host-btn-row flow-extra-row">
-                            <button type="button" class="btn btn-host-secondary" id="btn-host-skip-round">
-                                <span class="btn-icon">⏭️</span>
-                                <span class="btn-text">Пропустить раунд</span>
-                            </button>
-                            <button type="button" class="btn btn-host-secondary" id="btn-host-add-all-scores">
-                                <span class="btn-icon">⭐</span>
-                                <span class="btn-text">Прибавить всем очки</span>
-                            </button>
-                        </div>
-
-                        <!-- Группа 3: Управление экраном ТВ и ходом игры -->
-                        <div class="host-btn-row flow-row">
                             <button type="button" class="btn btn-host-action" id="btn-host-show-answer">
                                 <span class="btn-icon">👁️</span>
-                                <span class="btn-text">Показать ответ на ТВ</span>
+                                <span class="btn-text">Ответ на ТВ</span>
                             </button>
                             <button type="button" class="btn btn-host-action" id="btn-host-close-question">
                                 <span class="btn-icon">➡️</span>
@@ -444,8 +457,6 @@
                             </button>
                         </div>
 
-                        <!-- Кнопка старта игры из лобби -->
-                        
                         <!-- Кнопка перехода к следующему раунду для ведущего -->
                         <div class="host-round-end-action hidden" id="host-round-end-action">
                             <button type="button" class="btn btn-primary btn-block btn-lg" id="btn-host-next-round">
@@ -453,19 +464,35 @@
                             </button>
                         </div>
 
-                        <!-- Кнопка показа статистики после завершения игры для ведущего -->
+                        <!-- После завершения игры: статистика / новая игра -->
                         <div class="host-game-over-action hidden" id="host-game-over-action">
                             <button type="button" class="btn btn-warning btn-block btn-lg" id="btn-host-show-stats">
                                 📊 ПОКАЗАТЬ СТАТИСТИКУ
                             </button>
-                        </div>
-
-                        <div class="host-lobby-action" id="host-lobby-action">
-                            <button type="button" class="btn btn-primary btn-block btn-lg" id="btn-host-start-game">
-                                🚀 НАЧАТЬ ИГРУ
+                            <button type="button" class="btn btn-primary btn-block btn-lg" id="btn-host-restart-lobby">
+                                🔄 ВЕРНУТЬСЯ В ЛОББИ (НОВАЯ ИГРА)
                             </button>
                         </div>
                     </div>
+
+                    <!-- Редкие действия спрятаны, чтобы не мешать -->
+                    <details class="host-more" id="host-more">
+                        <summary>⚙️ Ещё: ход, раунд, очки всем</summary>
+                        <div class="host-more-grid">
+                            <button type="button" class="btn btn-host-secondary" id="btn-host-pass-turn">
+                                <span class="btn-icon">🔄</span>
+                                <span class="btn-text">Передать ход</span>
+                            </button>
+                            <button type="button" class="btn btn-host-secondary" id="btn-host-skip-round">
+                                <span class="btn-icon">⏭️</span>
+                                <span class="btn-text">Пропустить раунд</span>
+                            </button>
+                            <button type="button" class="btn btn-host-secondary host-more-wide" id="btn-host-add-all-scores">
+                                <span class="btn-icon">⭐</span>
+                                <span class="btn-text">Прибавить всем очки</span>
+                            </button>
+                        </div>
+                    </details>
 
                     <!-- Список игроков с быстрой корректировкой счёта -->
                     <div class="host-players-panel">
@@ -508,10 +535,6 @@
     </div>
 
     <!-- Клиентские скрипты протокола и сетевого взаимодействия -->
-    <script src="../js/net/Protocol.js"></script>
-    <script src="../js/net/NetworkClient.js"></script>
-    <script src="mobile.js"></script>
-
     <!-- Модальное окно: Добавить очки всем командам -->
     <div class="modal hidden" id="modal-host-all-scores">
         <div class="modal-backdrop" id="modal-all-scores-backdrop"></div>
@@ -538,5 +561,9 @@
             </div>
         </div>
     </div>
+
+    <script src="../js/net/Protocol.js"></script>
+    <script src="../js/net/NetworkClient.js"></script>
+    <script src="mobile.js"></script>
 </body>
 </html>

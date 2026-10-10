@@ -2141,3 +2141,267 @@ body.light-theme .role-btn.selected {
     box-shadow: 0 0 15px rgba(245, 158, 11, 0.4) !important;
     border: 2px dashed var(--accent-gold);
 }
+
+/* Host: question is over, the next step is "К табло" */
+@keyframes host-attention-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55); }
+    50% { box-shadow: 0 0 0 8px rgba(251, 191, 36, 0); }
+}
+
+#btn-host-close-question.attention:not(:disabled) {
+    border-color: var(--accent-gold, #fbbf24);
+    animation: host-attention-pulse 1.4s ease-in-out infinite;
+}
+
+.host-controls-panel button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* =========================================================================
+   Host remote — redesign (thumb-friendly dock, phases, compact lists)
+   ========================================================================= */
+#screen-host { scroll-padding-bottom: 180px; }
+
+.host-container { gap: 10px; padding-bottom: 12px; }
+
+/* Compact header stays visible while scrolling */
+.host-header-card {
+    position: sticky;
+    top: -12px;
+    z-index: 30;
+    padding: 8px 12px;
+    gap: 4px;
+    margin-top: -12px;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+.host-badge-row { gap: 8px; }
+.host-meta-row { font-size: 12px; }
+.host-pack-info { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 8px; }
+.host-state-badge { white-space: nowrap; }
+
+.host-lobby-action { margin-top: 0; }
+.host-lobby-action .btn { min-height: 56px; font-size: 17px; }
+
+/* Question card: bigger text, answer is the star */
+.host-question-text { font-size: 17px; line-height: 1.45; }
+.host-secret-box .secret-answer-text { font-size: 22px; line-height: 1.25; }
+.host-answering-correct-box { display: none; } /* the answer is already shown in the card above */
+
+/* ---- Dock: pinned to the bottom of the screen ---- */
+.host-dock {
+    position: sticky;
+    bottom: -12px;
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0 -12px -12px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.host-judging { display: flex; flex-direction: column; gap: 8px; }
+.host-judging .btn-judge-accept { width: 100%; min-height: 58px; font-size: 18px; }
+.host-judging-minor { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.host-judging-minor .btn { min-height: 48px; font-size: 14px; }
+
+.host-flow-row { display: grid; grid-template-columns: 1fr 1.25fr 1.25fr; gap: 8px; }
+.host-flow-row .btn { min-height: 48px; padding: 8px 6px; font-size: 13px; flex-direction: column; gap: 2px; line-height: 1.15; }
+.host-flow-row .btn-icon { font-size: 18px; }
+
+.host-round-end-action .btn,
+.host-game-over-action .btn { min-height: 56px; font-size: 15px; }
+.host-game-over-action { display: flex; flex-direction: column; gap: 8px; }
+
+/* Phases: show only what makes sense right now */
+#screen-host .host-dock { display: none; }
+#screen-host[data-phase="question"] .host-dock,
+#screen-host[data-phase="finished"] .host-dock,
+#screen-host[data-phase="answering"] .host-dock,
+#screen-host[data-phase="round_end"] .host-dock,
+#screen-host[data-phase="game_over"] .host-dock { display: flex; }
+
+#screen-host .host-judging { display: none; }
+#screen-host[data-phase="answering"] .host-judging { display: flex; }
+
+#screen-host[data-phase="round_end"] .host-flow-row,
+#screen-host[data-phase="game_over"] .host-flow-row { display: none; }
+
+#screen-host[data-phase="lobby"] .host-more,
+#screen-host[data-phase="game_over"] .host-more { display: none; }
+#screen-host[data-phase="lobby"] .host-question-card,
+#screen-host[data-phase="board"] .host-question-card { display: none; }
+
+/* ---- Secondary actions ---- */
+.host-more {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+.host-more > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.host-more > summary::-webkit-details-marker { display: none; }
+.host-more[open] > summary { color: var(--text-primary); border-bottom: 1px solid var(--border-color); }
+.host-more-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
+.host-more-wide { grid-column: 1 / -1; }
+.host-more-grid .btn { min-height: 48px; }
+
+/* ---- Players: name + score on top, controls underneath ---- */
+.host-player-row { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
+.host-player-row.offline { opacity: 0.55; }
+.host-player-row.offline .host-player-name::after { content: ' · не в сети'; font-weight: 500; font-size: 11px; color: var(--text-muted); }
+.host-player-info { justify-content: flex-start; }
+.host-player-info .host-player-score { margin-left: auto; font-size: 20px; min-width: 0; }
+.host-player-avatar { font-size: 20px; }
+.host-player-actions { justify-content: flex-start; gap: 8px; }
+.host-player-actions .score-step-btn { min-height: 40px; min-width: 56px; font-size: 14px; border-radius: 8px; }
+.host-score-n-wrap { margin-left: auto; }
+.score-n-input { height: 40px; width: 64px; font-size: 14px; }
+
+/* Done-question hint */
+#btn-host-close-question.attention:not(:disabled) { background: rgba(245, 158, 11, 0.22); }
+
+/* Light theme */
+body.light-theme .host-dock { background: color-mix(in srgb, #ffffff 92%, transparent); box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.12); }
+
+/* Small phones */
+@media (max-width: 360px) {
+    .host-flow-row .btn-text { font-size: 12px; }
+    .host-question-text { font-size: 16px; }
+}
+
+/* Dock always sits at the very bottom of the viewport (flex order + sticky) */
+.host-container { min-height: 100%; }
+.host-dock { order: 99; margin-top: auto; }
+#screen-host[data-phase="lobby"] .score-step-btn.minus-cost,
+#screen-host[data-phase="lobby"] .score-step-btn.plus-cost { display: none; }
+#screen-host[data-phase="game_over"] .host-question-card,
+#screen-host[data-phase="round_end"] .host-question-card { display: none; }
+body.light-theme .host-secret-box .secret-answer-text,
+body.light-theme .host-auction-secret-card .secret-answer-text { color: #14532d; }
+body.light-theme .host-question-text { color: #0f172a; }
+
+/* =========================================================================
+   Host: special question panel (cat in the bag / auctions)
+   ========================================================================= */
+.host-special-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--accent-gold, #f59e0b);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.host-special-title { font-size: 17px; font-weight: 800; color: var(--accent-gold, #f59e0b); }
+.host-special-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+.host-special-list { display: flex; flex-direction: column; gap: 8px; }
+.host-special-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.03);
+}
+.host-special-item.offline { opacity: 0.5; }
+.host-special-avatar { font-size: 22px; }
+.host-special-name { font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.host-special-score { font-size: 13px; color: var(--text-muted); }
+.host-special-bet { min-width: 56px; text-align: right; font-weight: 800; font-size: 16px; color: var(--text-primary); }
+.host-special-bet.top { color: var(--accent-gold, #f59e0b); }
+.host-special-bet.pass { color: var(--text-muted); font-weight: 600; font-size: 13px; }
+.host-special-pick {
+    min-height: 44px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+}
+.host-special-pick:disabled { opacity: 0.35; cursor: not-allowed; }
+#screen-host .host-special-panel { display: none; }
+#screen-host[data-phase="special"] .host-special-panel { display: flex; }
+#screen-host[data-phase="special"] .host-dock { display: flex; }
+#screen-host[data-phase="special"] .host-judging { display: none; }
+body.light-theme .host-special-title { color: #b45309; }
+
+/* =========================================================================
+   Player phone — redesign
+   ========================================================================= */
+.buzzer-bottom {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 0 4px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+.buzzer-bottom .buzzer-footer-info { text-align: center; }
+.giant-buzzer-btn.state-ready ~ .buzzer-bottom .buzzer-footer-info,
+.buzzer-container:has(.giant-buzzer-btn.state-ready) .buzzer-footer-info { display: none; }
+
+.buzzer-obligation {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.55);
+    color: var(--accent-gold, #f59e0b);
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.btn-pass-question {
+    min-height: 50px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.btn-pass-question:active { transform: scale(0.98); }
+.btn-pass-question.confirm {
+    border-color: #f87171;
+    color: #f87171;
+    background: rgba(248, 81, 73, 0.12);
+    font-weight: 700;
+}
+
+.auction-rule {
+    margin: 0 0 4px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.4;
+}
+body.light-theme .buzzer-obligation { color: #b45309; background: rgba(245, 158, 11, 0.16); }
+body.light-theme .btn-pass-question.confirm { color: #b91c1c; border-color: #b91c1c; }
+
+/* Auction answers: the correct answer is already in the question card above */
+.host-auction-secret-card { display: none; }
+.host-auction-panel { padding: 12px; }
+
+/* Player: auction screen */
+.auction-form { display: flex; flex-direction: column; gap: 12px; }
+#btn-pass-bet { min-height: 50px; font-weight: 700; }
