@@ -346,6 +346,11 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_ACTIVATE_BUZZER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
+            // The room opens the buzzer itself when reading time ends; a late duplicate from the PC
+            // screen is harmless while the buzzer is open, but must not reset a buzz race in progress.
+            const canActivate = ['QUESTION_READING', 'CAT_CHOOSING', 'AUCTION_BETTING', 'BUZZ_ACTIVE']
+                .includes(room.stateMachine.state);
+            if (!canActivate) return;
             room.activateBuzzer(payload.allowedPlayerIds);
             break;
         }
@@ -353,7 +358,13 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_START_AUCTION_ANSWER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
-            room.startAuctionAnswer(payload.biddingPlayerIds);
+            const auctionRes = room.startAuctionAnswer(payload.biddingPlayerIds);
+            if (auctionRes && !auctionRes.success) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_ACTION,
+                    message: auctionRes.message || 'Не удалось начать приём ответов'
+                }));
+            }
             break;
         }
 
@@ -367,14 +378,26 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_SET_CAT_TARGET: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
-            room.setCatTarget(payload.targetPlayerId);
+            const catRes = room.setCatTarget(payload.targetPlayerId);
+            if (catRes && !catRes.success) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: catRes.message || 'Игрок не найден'
+                }));
+            }
             break;
         }
 
         case MSG_TYPES.HOST_SET_AUCTION_LEADER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
-            room.setAuctionLeader(payload.leaderPlayerId, payload.maxBet);
+            const leaderRes = room.setAuctionLeader(payload.leaderPlayerId, payload.maxBet);
+            if (leaderRes && !leaderRes.success) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: leaderRes.message || 'Игрок не найден'
+                }));
+            }
             break;
         }
 
@@ -440,6 +463,14 @@ function handleClientMessage(ws, message) {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
             room.broadcastToAll(MSG_TYPES.SHOW_STATS, {});
+            break;
+        }
+
+        case MSG_TYPES.HOST_RESET_TO_LOBBY:
+        case 'HOST_RESET_TO_LOBBY': {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            room.resetToLobby();
             break;
         }
 
@@ -542,6 +573,19 @@ function handleClientMessage(ws, message) {
                 }));
             }
             room.handleAuctionBet(ws.playerId, amount);
+            break;
+        }
+
+        case MSG_TYPES.PLAYER_PASS: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.playerId) return;
+            const res = room.handlePass(ws.playerId);
+            if (res && !res.success) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: res.error || ERROR_CODES.INVALID_ACTION,
+                    message: res.message
+                }));
+            }
             break;
         }
 
