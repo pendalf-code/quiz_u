@@ -34,7 +34,7 @@ describe('Answering Side Modal, Frozen Timer, Exit to Menu & Auto-pause Test Sui
         assert.ok(indexHtml.includes('id="answering-player-modal"'), '#answering-player-modal exists beside question window');
 
         // Modal contents
-        assert.ok(indexHtml.includes('id="answering-player-num"'), '#answering-player-num displays "Отвечает игрок #N"');
+        assert.ok(indexHtml.includes('id="answering-player-num"'), '#answering-player-num displays "Отвечает игрок"');
         assert.ok(indexHtml.includes('id="answering-modal-avatar"'), '#answering-modal-avatar displays player avatar');
         assert.ok(indexHtml.includes('id="answering-modal-name"'), '#answering-modal-name displays player name');
         assert.ok(indexHtml.includes('id="answering-ring-progress"'), 'Circular progress ring exists in answering modal');

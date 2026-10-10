@@ -1138,6 +1138,10 @@ describe('LAN Mode Containerized Integration Test Suite (Testcontainers-style)',
         container.sendMessage(hostWs, MSG_TYPES.HOST_SELECT_QUESTION, { themeIdx: 0, questionIdx: 0 });
         await container.waitForMessage(p1Ws, MSG_TYPES.QUESTION_ACTIVE);
 
+        // Bets are limited by the player's score: give both players enough points
+        container.sendMessage(hostWs, MSG_TYPES.HOST_UPDATE_ALL_SCORES, { delta: 1000 });
+        await new Promise(r => setTimeout(r, 50));
+
         // P1 bets 400
         const bet1Promise = container.waitForMessage(desktopWs, MSG_TYPES.AUCTION_BET_MADE);
         container.sendMessage(p1Ws, MSG_TYPES.PLAYER_AUCTION_BET, { amount: 400 });
@@ -1779,6 +1783,10 @@ describe('LAN Mode Containerized Integration Test Suite (Testcontainers-style)',
         container.sendMessage(hostWs, MSG_TYPES.HOST_SELECT_QUESTION, { themeIdx: 0, questionIdx: 0 });
         await container.waitForMessage(players[0].ws, MSG_TYPES.QUESTION_ACTIVE);
 
+        // Bets are limited by the player's score: give everybody enough points
+        container.sendMessage(hostWs, MSG_TYPES.HOST_UPDATE_ALL_SCORES, { delta: 1000 });
+        await new Promise(r => setTimeout(r, 50));
+
         // Bidding war: P1 bids 300, P2 raises to 400, P3 raises to 500, P4 passes (0)
         container.sendMessage(players[0].ws, MSG_TYPES.PLAYER_AUCTION_BET, { amount: 300 });
         await container.waitForMessage(desktopWs, MSG_TYPES.AUCTION_BET_MADE);
@@ -1816,7 +1824,7 @@ describe('LAN Mode Containerized Integration Test Suite (Testcontainers-style)',
         const p3ScorePromise = container.waitForMessage(players[2].ws, MSG_TYPES.SCORE_UPDATED);
         container.sendMessage(hostWs, MSG_TYPES.HOST_JUDGE_ANSWER, { isCorrect: true });
         const p3Score = await p3ScorePromise;
-        assert.equal(p3Score.payload.newScore, 500);
+        assert.equal(p3Score.payload.newScore, 1500);
     });
 
     test('3P+ Flow 36: Host remote control buttons - Show Answer, Close Question, Pause, Unpause, Pass Turn', async () => {
