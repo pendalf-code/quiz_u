@@ -1,4 +1,4 @@
-const { test, describe } = require('node:test');
+const {test, describe} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -21,7 +21,7 @@ describe('Host Lobby & Network Client Integration Tests', () => {
 
         // TASK-07: LAN game
         assert.ok(
-            htmlContent.includes('openOnlineLobby()') && htmlContent.includes('LAN-игра'),
+            htmlContent.includes('openOnlineLobby()') && htmlContent.includes('LAN игра'),
             'TASK-07: LAN-game button must be present in sub-menu-main'
         );
 
@@ -102,28 +102,28 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         assert.ok(cssContent.includes('.badge-warning'), '.badge-warning CSS must exist');
         assert.ok(cssContent.includes('.btn-toggle-local-host'), '.btn-toggle-local-host CSS must exist');
 
-        const { ERROR_CODES, MSG_TYPES } = require('../js/net/Protocol.js');
+        const {ERROR_CODES, MSG_TYPES} = require('../js/net/Protocol.js');
         assert.equal(ERROR_CODES.NOT_ENOUGH_PLAYERS, 'NOT_ENOUGH_PLAYERS', 'NOT_ENOUGH_PLAYERS error code must exist');
         assert.equal(ERROR_CODES.HOST_REQUIRED, 'HOST_REQUIRED', 'HOST_REQUIRED error code must exist');
         assert.equal(MSG_TYPES.HOST_SET_LOCAL_HOST, 'HOST_SET_LOCAL_HOST', 'HOST_SET_LOCAL_HOST message type must exist');
 
         const NetworkClient = require('../js/net/NetworkClient.js');
-        const client = new NetworkClient({ url: 'ws://127.0.0.1:8080', isHost: true });
+        const client = new NetworkClient({url: 'ws://127.0.0.1:8080', isHost: true});
         assert.equal(typeof client.setLocalHost, 'function', 'client.setLocalHost method must exist');
     });
 
     test('Network Protocol and NetworkClient modules instantiate correctly', () => {
-        const { MSG_TYPES, ERROR_CODES, createMessage, parseMessage } = require('../js/net/Protocol.js');
+        const {MSG_TYPES, ERROR_CODES, createMessage, parseMessage} = require('../js/net/Protocol.js');
         assert.ok(MSG_TYPES.HOST_CREATE_ROOM, 'HOST_CREATE_ROOM message type must exist');
         assert.ok(MSG_TYPES.BUZZ_LOCKED, 'BUZZ_LOCKED message type must exist');
 
-        const testMsg = createMessage(MSG_TYPES.HOST_CREATE_ROOM, { foo: 'bar' });
+        const testMsg = createMessage(MSG_TYPES.HOST_CREATE_ROOM, {foo: 'bar'});
         const parsed = parseMessage(testMsg);
         assert.equal(parsed.type, MSG_TYPES.HOST_CREATE_ROOM);
         assert.equal(parsed.payload.foo, 'bar');
 
         const NetworkClient = require('../js/net/NetworkClient.js');
-        const client = new NetworkClient({ url: 'ws://127.0.0.1:8080', isHost: true });
+        const client = new NetworkClient({url: 'ws://127.0.0.1:8080', isHost: true});
         assert.equal(typeof client.createRoom, 'function');
         assert.equal(typeof client.setPack, 'function');
         assert.equal(typeof client.startGame, 'function');
@@ -153,13 +153,13 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         assert.ok(htmlContent.includes('id="btn-save-lobby-settings"'), '#btn-save-lobby-settings must exist');
 
         // Protocol message types
-        const { MSG_TYPES } = require('../js/net/Protocol.js');
+        const {MSG_TYPES} = require('../js/net/Protocol.js');
         assert.equal(MSG_TYPES.HOST_UPDATE_ROOM_SETTINGS, 'HOST_UPDATE_ROOM_SETTINGS');
         assert.equal(MSG_TYPES.ROOM_SETTINGS_UPDATED, 'ROOM_SETTINGS_UPDATED');
 
         // NetworkClient method
         const NetworkClient = require('../js/net/NetworkClient.js');
-        const client = new NetworkClient({ url: 'ws://127.0.0.1:8080', isHost: true });
+        const client = new NetworkClient({url: 'ws://127.0.0.1:8080', isHost: true});
         assert.equal(typeof client.updateRoomSettings, 'function', 'updateRoomSettings method must exist on NetworkClient');
     });
 
@@ -256,7 +256,7 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         assert.ok(cssContent.includes('.btn-kick-host'), '.btn-kick-host CSS must exist');
 
         const NetworkClient = require('../js/net/NetworkClient.js');
-        const client = new NetworkClient({ url: 'ws://127.0.0.1:8080', isHost: true });
+        const client = new NetworkClient({url: 'ws://127.0.0.1:8080', isHost: true});
 
         // 1. Enable local host on PC
         client.setLocalHost(true);
@@ -269,7 +269,7 @@ describe('Host Lobby & Network Client Integration Tests', () => {
         client._syncPlayersFromState({
             hasHost: true,
             isHostOnPC: true,
-            host: { id: 'host_pc', name: 'Ведущий (ПК)', role: 'host', isConnected: true },
+            host: {id: 'host_pc', name: 'Ведущий (ПК)', role: 'host', isConnected: true},
             players: []
         });
         assert.equal(client.hasHost, true);
