@@ -14,7 +14,8 @@
     "cap:copy": "cap copy",
     "build:mobile": "cap sync android",
     "optimize:media": "node scripts/optimize_media.js",
-    "test:load": "node server/load_test/simulate_load.js"
+    "test:load": "node server/load_test/simulate_load.js",
+    "demo:lan": "node tools/lan_demo.js"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
