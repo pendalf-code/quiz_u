@@ -390,8 +390,13 @@ describe('Mobile Client (PWA / Buzzer / Touch UX) Test Suite', () => {
         const betP1 = await hostWait(MSG_TYPES.AUCTION_BET_MADE);
         assert.equal(betP1.payload.amount, 300);
 
-        // 11. Cat transfer test
+        // 11. Cat transfer test: only the host assigns the cat
         player1Ws.send(createMessage(MSG_TYPES.PLAYER_CAT_TRANSFER, {
+            targetPlayerId: p2Id
+        }));
+        const catDenied = await p1Wait(MSG_TYPES.ERROR);
+        assert.equal(catDenied.payload.code, ERROR_CODES.NOT_AUTHORIZED);
+        mobileHostWs.send(createMessage(MSG_TYPES.HOST_SET_CAT_TARGET, {
             targetPlayerId: p2Id
         }));
         const catTransfer = await hostWait(MSG_TYPES.CAT_TRANSFERRED);

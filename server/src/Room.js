@@ -341,7 +341,11 @@ class Room {
                 if (wasKicked) {
                     player.sessionToken = null;
                 }
-                this.buzzedPlayers.delete(id);
+                // Nobody else may take over a cat / auction-leader question: the answer waits for the player's
+                // return (the game is paused meanwhile, the answer timer is frozen)
+                const holdsQuestion = !wasKicked && this.activeBuzzerPlayerId === id
+                    && (this.catTargetPlayerId === id || this.auctionLeaderPlayerId === id);
+                if (!holdsQuestion) this.buzzedPlayers.delete(id);
 
                 if (playerWs && playerWs.readyState === 1) {
                     const kickPayload = {
@@ -382,7 +386,7 @@ class Room {
                     this.pauseForDisconnect(id, player.name);
                 }
 
-                if (this.activeBuzzerPlayerId === id) {
+                if (this.activeBuzzerPlayerId === id && !holdsQuestion) {
                     if (this.answerTimer) {
                         clearTimeout(this.answerTimer);
                         this.answerTimer = null;
@@ -1055,7 +1059,7 @@ class Room {
             const player = this.players.get(playerId);
             const betVal = this.getAuctionBet(playerId);
 
-            this.broadcastToAll(MSG_TYPES.ANSWER_SUBMITTED, {
+            this.sendToHost(MSG_TYPES.ANSWER_SUBMITTED, {
                 playerId,
                 playerName: player ? player.name : '',
                 avatar: player ? player.avatar : '👤',
@@ -1067,7 +1071,7 @@ class Room {
         }
 
         const player = this.players.get(playerId);
-        this.broadcastToAll(MSG_TYPES.ANSWER_SUBMITTED, {
+        this.sendToHost(MSG_TYPES.ANSWER_SUBMITTED, {
             playerId,
             playerName: player ? player.name : '',
             avatar: player ? player.avatar : '👤',
@@ -1149,10 +1153,6 @@ class Room {
             playerName: player.name,
             amount: val
         });
-    }
-
-    handleCatTransfer(fromPlayerId, toPlayerId) {
-        return this.setCatTarget(toPlayerId, fromPlayerId);
     }
 
         handleThinkingTimeout() {
@@ -1540,6 +1540,26 @@ class Room {
         this.broadcastRoomState();
     }
 
+    /**
+     * Seconds left in the running typing / answering window (auction answers or a buzzed player), null otherwise.
+     */
+    getAnswerSecondsLeft() {
+        const state = this.stateMachine.state;
+        const now = Date.now();
+        if (state === 'AUCTION_ANSWERING') {
+            if (this.auctionAnswersLocked) return 0;
+            const rem = this.remainingThinkingTime || 0;
+            return this.thinkingTimerStartedAt ? Math.max(0, Math.round(rem - (now - this.thinkingTimerStartedAt) / 1000)) : Math.round(rem);
+        }
+        if (state === 'ANSWERING') {
+            if (this.answerTimer && this.answerTimerStartedAt) {
+                return Math.max(0, Math.round((this.answerTimerDuration || 0) - (now - this.answerTimerStartedAt) / 1000));
+            }
+            return Math.round(this.remainingAnswerTime || 0);
+        }
+        return null;
+    }
+
     getStateSnapshot(forPlayer = false) {
         let questionData = null;
         if (this.currentQuestion) {
@@ -1597,6 +1617,11 @@ class Room {
             passedPlayerIds: Array.from(this.passedPlayers),
             catTargetPlayerId: this.catTargetPlayerId,
             auctionLeaderPlayerId: this.auctionLeaderPlayerId,
+            biddingPlayerIds: Array.from(this.biddingPlayerIds || []),
+            auctionAnsweredIds: Array.from(this.auctionAnswers.keys()),
+            auctionAnswersLocked: this.auctionAnswersLocked,
+            answerSecondsLeft: this.getAnswerSecondsLeft(),
+            ...(forPlayer ? {} : { auctionAnswers: Object.fromEntries(Array.from(this.auctionAnswers.entries()).map(([id, a]) => [id, a.answerText])) }),
             auctionBets: Object.fromEntries(Array.from(this.auctionBets.entries()).map(([id, b]) => [id, (b && typeof b === 'object') ? (b.isPassed ? 0 : b.val) : Number(b) || 0])),
             buzzerOpenFor: (this.stateMachine.state === 'BUZZ_ACTIVE' && Array.isArray(this.allowedBuzzerPlayerIds))
                 ? this.allowedBuzzerPlayerIds.filter(id => !this.buzzedPlayers.has(id) && !this.passedPlayers.has(id))

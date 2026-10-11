@@ -592,13 +592,11 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.PLAYER_CAT_TRANSFER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.playerId) return;
-            if (!payload.targetPlayerId) {
-                return ws.send(createMessage(MSG_TYPES.ERROR, {
-                    code: ERROR_CODES.INVALID_PAYLOAD,
-                    message: 'Не указан целевой игрок'
-                }));
-            }
-            room.handleCatTransfer(ws.playerId, payload.targetPlayerId);
+            // The cat is passed aloud; only the host taps the chosen player (HOST_SET_CAT_TARGET)
+            ws.send(createMessage(MSG_TYPES.ERROR, {
+                code: ERROR_CODES.NOT_AUTHORIZED,
+                message: 'Кота в мешке назначает ведущий'
+            }));
             break;
         }
 

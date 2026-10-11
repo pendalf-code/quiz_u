@@ -201,3 +201,117 @@ test('Regular question: players may pass', async (t) => {
         room.destroy();
     });
 });
+
+test('Typed answers are private: only the host (PC + phone) receives the text', async (t) => {
+    await t.test('auction answers do not reach the other players', () => {
+        const { room, hostWs, aWs, bWs, a, b } = setup('auction');
+        room.handleAuctionBet(a.id, 700);
+        room.handleAuctionBet(b.id, 400);
+        room.startAuctionAnswer();
+        room.handleAnswerSubmit(a.id, 'секретный ответ Алисы');
+        assert.ok(hostWs.messages.some(m => m.type === MSG_TYPES.ANSWER_SUBMITTED && m.payload.answerText === 'секретный ответ Алисы'));
+        assert.ok(!bWs.messages.some(m => m.type === MSG_TYPES.ANSWER_SUBMITTED), 'rival must not read the answer while typing');
+        assert.ok(!aWs.messages.some(m => m.type === MSG_TYPES.ANSWER_SUBMITTED));
+        room.destroy();
+    });
+
+    await t.test('the answer of a buzzed player stays between him and the host', () => {
+        const { room, hostWs, bWs, a } = setup(undefined);
+        room.handleBuzz(a.id);
+        room.handleAnswerSubmit(a.id, 'мой ответ');
+        assert.ok(hostWs.messages.some(m => m.type === MSG_TYPES.ANSWER_SUBMITTED));
+        assert.ok(!bWs.messages.some(m => m.type === MSG_TYPES.ANSWER_SUBMITTED));
+        room.destroy();
+    });
+});
+
+test('Snapshot restores the typing screen after a phone reload', async (t) => {
+    await t.test('auction answering: bidders, who has answered, seconds left; typed text only for the host', () => {
+        const { room, a, b } = setup('auction');
+        room.handleAuctionBet(a.id, 700);
+        room.handleAuctionBet(b.id, 400);
+        room.startAuctionAnswer();
+        room.handleAnswerSubmit(a.id, 'ответ А');
+        const forPlayer = room.getStateSnapshot(true);
+        assert.equal(forPlayer.state, 'AUCTION_ANSWERING');
+        assert.deepEqual(forPlayer.biddingPlayerIds.slice().sort(), [a.id, b.id].sort());
+        assert.deepEqual(forPlayer.auctionAnsweredIds, [a.id]);
+        assert.equal(forPlayer.auctionAnswersLocked, false);
+        assert.ok(forPlayer.answerSecondsLeft >= 28 && forPlayer.answerSecondsLeft <= 30, `left: ${forPlayer.answerSecondsLeft}`);
+        assert.equal(forPlayer.auctionAnswers, undefined, 'typed answers must not reach players');
+        assert.equal(room.getStateSnapshot(false).auctionAnswers[a.id], 'ответ А');
+        room.handleAuctionAnswerTimeout();
+        const locked = room.getStateSnapshot(true);
+        assert.equal(locked.auctionAnswersLocked, true);
+        assert.equal(locked.answerSecondsLeft, 0);
+        room.destroy();
+    });
+
+    await t.test('buzzed player: seconds left of his answer; frozen while the game is paused', () => {
+        const { room, a } = setup(undefined, { answerTime: 8 });
+        assert.equal(room.getStateSnapshot(true).answerSecondsLeft, null);
+        room.handleBuzz(a.id);
+        const snap = room.getStateSnapshot(true);
+        assert.equal(snap.state, 'ANSWERING');
+        assert.equal(snap.activeBuzzerPlayerId, a.id);
+        assert.ok(snap.answerSecondsLeft >= 7 && snap.answerSecondsLeft <= 8, `left: ${snap.answerSecondsLeft}`);
+        room.setPaused(true, 'disconnect');
+        assert.ok(room.getStateSnapshot(true).answerSecondsLeft >= 7);
+        room.destroy();
+    });
+});
+
+test('A dropped cat target / auction leader keeps the question until he is back', async (t) => {
+    await t.test('cat: the answer waits for the return, the timer resumes, a wrong answer ends the question', () => {
+        const { room, bWs, b } = setup('cat');
+        room.setCatTarget(b.id);
+        room.handleBuzz(b.id);
+        room.removePlayer(bWs); // phone dropped while answering
+        assert.equal(room.isPaused, true);
+        assert.equal(room.stateMachine.state, 'ANSWERING', 'the question must not burn');
+        assert.equal(room.activeBuzzerPlayerId, b.id);
+        assert.equal(room.getStateSnapshot(true).activeBuzzerPlayerId, b.id);
+
+        const back = room.addPlayer('Боб', '🐼', mockWs(), b.sessionToken);
+        assert.equal(back.isReconnect, true);
+        assert.equal(room.isPaused, false);
+        assert.ok(room.answerTimer, 'answer timer runs again after the return');
+        assert.equal(room.getStateSnapshot(true).state, 'ANSWERING');
+
+        room.judgeAnswer(false, true);
+        assert.equal(room.stateMachine.state, 'BOARD', 'no second try for the same cat target');
+        room.destroy();
+    });
+
+    await t.test('auction leader: the same', () => {
+        const { room, aWs, a } = setup('auction_leader');
+        room.handleAuctionBet(a.id, 500);
+        room.setAuctionLeader(a.id);
+        room.handleBuzz(a.id);
+        room.removePlayer(aWs);
+        assert.equal(room.stateMachine.state, 'ANSWERING');
+        room.addPlayer('Алиса', '🦊', mockWs(), a.sessionToken);
+        assert.equal(room.isPaused, false);
+        room.judgeAnswer(true);
+        assert.equal(a.score, 1500);
+        room.destroy();
+    });
+
+    await t.test('a kicked cat target does not block the question', () => {
+        const { room, b } = setup('cat');
+        room.setCatTarget(b.id);
+        room.handleBuzz(b.id);
+        room.removePlayer(b.id);
+        assert.equal(room.stateMachine.state, 'BOARD');
+        room.destroy();
+    });
+
+    await t.test('a regular question is still released to the others', () => {
+        const { room, aWs, a } = setup(undefined);
+        room.handleBuzz(a.id);
+        room.removePlayer(aWs);
+        assert.equal(room.stateMachine.state, 'BUZZ_ACTIVE');
+        assert.equal(room.activeBuzzerPlayerId, null);
+        room.destroy();
+    });
+});

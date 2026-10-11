@@ -4967,6 +4967,9 @@ function startOnlineGame(fromServer = false) {
     }
 
     finalizeGameStartWithFirstTurn(0);
+    // The special-question types (cat / auctions) are assigned just above, after the pack was first sent:
+    // the server must know them too, otherwise a phone host opens every question as a plain one (BUG-50)
+    if (hostNetworkClient.isConnected) hostNetworkClient.setPack(gameData);
 }
 
 function judgeOnlineAnswer(isCorrect) {

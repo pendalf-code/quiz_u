@@ -1238,6 +1238,17 @@
                     state.activeThemeName = payload.themeName || state.activeThemeName;
                     state.currentCost = payload.currentCost || state.currentCost;
                 }
+                if (payload.state === 'AUCTION_ANSWERING') {
+                    // Reload in the middle of an auction: bring the answers panel back with what the teams already typed
+                    state.auctionBiddingPlayers = payload.biddingPlayerIds || [];
+                    state.auctionBets = Object.assign({}, payload.auctionBets);
+                    state.auctionSubmittedAnswers = Object.assign({}, payload.auctionAnswers);
+                    if (elements.hostAuctionPanel) elements.hostAuctionPanel.classList.remove('hidden');
+                    if (elements.hostAuctionSecretAnswer) {
+                        elements.hostAuctionSecretAnswer.textContent = (state.activeQuestion && (state.activeQuestion.a || state.activeQuestion.answer)) || '—';
+                    }
+                    renderHostAuctionList();
+                }
                 showScreen('host');
                 updateHostScreen(payload.state, payload);
                 renderHostPlayersList(payload.players);
@@ -1315,6 +1326,51 @@
                     setWaitingTexts('🐱 Кот в мешке', 'Ведущий выбирает, кто будет отвечать на этот вопрос...');
                     showScreen('waiting');
                     break;
+
+                // Reload / reconnect while answers are being typed: the typing screen must come back
+                case 'AUCTION_ANSWERING': {
+                    const selfId = state.selfPlayer && state.selfPlayer.id;
+                    const bidding = Array.isArray(payload.biddingPlayerIds) ? payload.biddingPlayerIds : [];
+                    const answered = Array.isArray(payload.auctionAnsweredIds) && payload.auctionAnsweredIds.includes(selfId);
+                    state.questionType = (payload.currentQuestion && payload.currentQuestion.type) || state.questionType;
+                    if (selfId && bidding.includes(selfId) && !answered && !payload.auctionAnswersLocked) {
+                        const myBet = (payload.auctionBets && payload.auctionBets[selfId]) || state.currentCost;
+                        if (elements.answerCostHint) {
+                            elements.answerCostHint.textContent = `Аукцион: ваша ставка ${myBet}. Отвечать обязательно`;
+                        }
+                        if (elements.answerInput) elements.answerInput.value = '';
+                        showScreen('answer');
+                        startAnswerTimer(Math.max(1, payload.answerSecondsLeft || 1));
+                    } else if (selfId && bidding.includes(selfId)) {
+                        stopAnswerTimer();
+                        setWaitingTexts('Ответ отправлен', 'Ведущий проверит ответы и начислит или спишет ставку.');
+                        showScreen('waiting');
+                    } else {
+                        stopAnswerTimer();
+                        setWaitingTexts('🔥 Общий аукцион', 'Вы спасовали на аукционе. Ожидание ответов соперников...');
+                        showScreen('waiting');
+                    }
+                    break;
+                }
+
+                case 'ANSWERING': {
+                    const selfId = state.selfPlayer && state.selfPlayer.id;
+                    if (selfId && payload.activeBuzzerPlayerId === selfId) {
+                        if (elements.answerCostHint) {
+                            elements.answerCostHint.textContent = `Ставка: ${payload.currentCost || state.currentCost} очков`;
+                        }
+                        if (elements.answerInput) elements.answerInput.value = '';
+                        setBuzzerState('self');
+                        showScreen('answer');
+                        startAnswerTimer(Math.max(1, payload.answerSecondsLeft || 1));
+                    } else {
+                        stopAnswerTimer();
+                        const answering = (payload.players || []).find(p => p.id === payload.activeBuzzerPlayerId);
+                        setBuzzerState('other', { playerName: answering ? answering.name : '' });
+                        showScreen('buzzer');
+                    }
+                    break;
+                }
             }
         });
 

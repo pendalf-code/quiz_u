@@ -137,3 +137,22 @@ test('Answering card shows no "#N" - the player name is right below', () => {
     assert.ok(!/Отвечает игрок #/.test(game));
     assert.ok(!/Отвечает игрок #/.test(html));
 });
+
+test('LAN: a reloaded phone gets its typing screen back', () => {
+    const mobile = read('mobile', 'mobile.js');
+    const game = read('js', 'game.js');
+    const stateSwitch = mobile.slice(mobile.indexOf("netClient.on('room_state'"), mobile.indexOf("netClient.on('question_active'"));
+    assert.ok(stateSwitch.includes("case 'AUCTION_ANSWERING':"), 'room_state must restore the auction typing screen');
+    assert.ok(stateSwitch.includes("case 'ANSWERING':"), 'room_state must restore the answer screen of a buzzed player');
+    assert.ok(stateSwitch.includes('answerSecondsLeft'), 'the timer continues with the remaining seconds');
+    assert.ok(stateSwitch.includes('auctionAnswers'), 'host phone restores typed answers');
+    assert.ok(game.includes('hostNetworkClient.startGame()'));
+});
+
+test('LAN: the server learns the special-question types the PC assigns at game start (BUG-50)', () => {
+    const game = read('js', 'game.js');
+    const body = game.slice(game.indexOf('function startOnlineGame(fromServer = false)'), game.indexOf('function judgeOnlineAnswer'));
+    const finalize = body.indexOf('finalizeGameStartWithFirstTurn(0)');
+    const resend = body.indexOf('hostNetworkClient.setPack(gameData)', finalize);
+    assert.ok(finalize > 0 && resend > finalize, 'pack must be re-sent after resetQuestionsProgress() assigned cat/auction types');
+});

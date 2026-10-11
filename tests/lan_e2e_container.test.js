@@ -1085,9 +1085,13 @@ describe('LAN Mode Containerized Integration Test Suite (Testcontainers-style)',
         container.sendMessage(hostWs, MSG_TYPES.HOST_SELECT_QUESTION, { themeIdx: 0, questionIdx: 0 });
         await container.waitForMessage(p1Ws, MSG_TYPES.QUESTION_ACTIVE);
 
-        // P1 transfers Cat in the Bag to P2
-        const catTransferPromise = container.waitForMessage(desktopWs, MSG_TYPES.CAT_TRANSFERRED);
+        // A player cannot hand the cat over himself: the host taps the player he named aloud
+        const p1TransferErrPromise = container.waitForMessage(p1Ws, MSG_TYPES.ERROR);
         container.sendMessage(p1Ws, MSG_TYPES.PLAYER_CAT_TRANSFER, { targetPlayerId: p2Id });
+        assert.equal((await p1TransferErrPromise).payload.code, ERROR_CODES.NOT_AUTHORIZED);
+
+        const catTransferPromise = container.waitForMessage(desktopWs, MSG_TYPES.CAT_TRANSFERRED);
+        container.sendMessage(hostWs, MSG_TYPES.HOST_SET_CAT_TARGET, { targetPlayerId: p2Id });
         const catTransferred = await catTransferPromise;
         assert.equal(catTransferred.payload.toPlayerId, p2Id);
 
@@ -1729,9 +1733,9 @@ describe('LAN Mode Containerized Integration Test Suite (Testcontainers-style)',
         container.sendMessage(hostWs, MSG_TYPES.HOST_SELECT_QUESTION, { themeIdx: 0, questionIdx: 0 });
         await container.waitForMessage(players[0].ws, MSG_TYPES.QUESTION_ACTIVE);
 
-        // P1 has 3 opponents: P2, P3, P4. P1 transfers to P3 (index 2)!
+        // P1 names P3 aloud, the host taps P3
         const catTransferPromise = container.waitForMessage(desktopWs, MSG_TYPES.CAT_TRANSFERRED);
-        container.sendMessage(players[0].ws, MSG_TYPES.PLAYER_CAT_TRANSFER, { targetPlayerId: players[2].id });
+        container.sendMessage(hostWs, MSG_TYPES.HOST_SET_CAT_TARGET, { targetPlayerId: players[2].id });
         const catTransferred = await catTransferPromise;
         assert.equal(catTransferred.payload.toPlayerId, players[2].id);
 
