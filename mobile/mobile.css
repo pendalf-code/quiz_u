@@ -2405,3 +2405,43 @@ body.light-theme .btn-pass-question.confirm { color: #b91c1c; border-color: #b91
 /* Player: auction screen */
 .auction-form { display: flex; flex-direction: column; gap: 12px; }
 #btn-pass-bet { min-height: 50px; font-weight: 700; }
+
+/* ================= Header: status · room · player · buttons ================= */
+.mobile-header { height: 60px; padding: 0 12px; gap: 10px; background: linear-gradient(180deg, var(--bg-card), var(--bg-secondary)); }
+.header-left { flex-shrink: 0; gap: 10px; }
+.header-right { flex-shrink: 0; gap: 6px; }
+.header-center { min-width: 0; justify-content: flex-end; }
+.conn-indicator { padding: 5px 9px; border-radius: var(--radius-full); background: var(--bg-secondary); border: 1px solid var(--border-color); font-weight: 600; }
+.status-dot { width: 9px; height: 9px; flex-shrink: 0; }
+.room-badge { flex-direction: column; align-items: flex-start; gap: 0; padding: 3px 10px; line-height: 1.15; border-radius: 10px; }
+.room-label { font-size: 9px; letter-spacing: 0.6px; }
+.room-code { font-size: 14px; }
+.player-mini-badge { min-width: 0; max-width: 100%; padding: 3px 12px 3px 4px; gap: 8px; border-color: var(--border-highlight); background: var(--bg-secondary); }
+.player-mini-badge .player-avatar { width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; border-radius: 50%; background: var(--bg-hover); }
+.player-mini-badge .player-details { min-width: 0; line-height: 1.2; }
+.player-mini-badge .player-name { font-size: 13px; }
+.player-mini-badge .player-score { font-size: 11px; }
+.player-mini-badge.is-host .player-score { color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.5px; font-size: 10px; }
+.player-mini-badge.is-host { border-color: var(--accent-blue); }
+.icon-btn { width: 34px; height: 34px; flex-shrink: 0; font-size: 15px; }
+@media (max-width: 420px) {
+    /* a healthy connection needs no text: the pulsing dot is enough, the room for the player badge matters more */
+    .conn-indicator:has(.status-dot.connected) .status-text { display: none; }
+    .conn-indicator:has(.status-dot.connected) { padding: 8px; }
+}
+
+/* ================= Host: score buttons of a player ================= */
+.host-player-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; justify-content: stretch; }
+.host-player-actions .score-step-btn { min-width: 0; min-height: 42px; width: 100%; border-radius: 10px; font-size: 15px; letter-spacing: 0.2px; }
+.host-player-actions .score-step-btn:active { transform: scale(0.97); }
+.host-score-n-wrap {
+    grid-column: 1 / -1; margin-left: 0;
+    display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 6px; align-items: stretch;
+    padding: 6px; border: 1px dashed var(--border-color); border-radius: 12px; background: rgba(255, 255, 255, 0.02);
+}
+.host-score-n-wrap .score-n-input { order: 2; width: 100%; min-width: 0; height: 40px; font-size: 16px; border-radius: 8px; }
+.host-score-n-wrap .score-step-btn.minus { order: 1; background: rgba(248, 81, 73, 0.12); border-color: rgba(248, 81, 73, 0.45); }
+.host-score-n-wrap .score-step-btn.plus { order: 3; background: rgba(46, 160, 67, 0.14); border-color: rgba(46, 160, 67, 0.5); }
+body.light-theme .score-step-btn.plus-cost, body.light-theme .host-score-n-wrap .score-step-btn.plus { color: #15803d; }
+body.light-theme .score-step-btn.minus-cost, body.light-theme .host-score-n-wrap .score-step-btn.minus { color: #b91c1c; }
+body.light-theme .host-score-n-wrap { background: rgba(0, 0, 0, 0.02); }

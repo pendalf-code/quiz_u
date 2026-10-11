@@ -333,9 +333,9 @@
         const isHost = (player.role === 'host' || state.selectedRole === 'host');
         elements.headerAvatar.textContent = player.avatar || (isHost ? '🎙️' : '🐱');
 
-        const roleSuffix = isHost ? ' (Ведущий)' : '';
-        elements.headerName.textContent = (player.name || 'Игрок') + roleSuffix;
-        elements.headerScore.textContent = isHost ? '🎙️ Пульт' : `${player.score || 0} очков`;
+        elements.headerName.textContent = player.name || 'Игрок';
+        elements.headerScore.textContent = isHost ? 'Пульт' : `${player.score || 0} очков`;
+        elements.headerPlayerBadge.classList.toggle('is-host', isHost);
         elements.headerPlayerBadge.classList.remove('hidden');
 
         if (elements.waitingScore) {

@@ -4025,7 +4025,7 @@ function updateLocalGameSetupState() {
 function openOnlineLobby() {
     isOnlineGame = true;
     syncHostChrome();
-    if (gameData && gameData.length > 0) window.isPackSelected = true;
+    // the pack counts as chosen only after the host picked it in the catalog or loaded his own (not just because a saved one exists)
     showSubScreen('sub-menu-online-lobby');
     updateLobbyPackDisplay();
     updateLobbySettingsChips();
