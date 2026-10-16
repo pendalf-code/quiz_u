@@ -1,57 +1,59 @@
-# Бриф для исполнителя (Haiku)
+# Worker brief (Haiku)
 
-Координатор (Opus) заполняет шаблон перед запуском `haiku-worker` (`.claude/agents/haiku-worker.md`). Один бриф — одна атомарная задача, один будущий коммит. Ревью — по [REVIEW_CHECKLIST.md](REVIEW_CHECKLIST.md).
+The coordinator (Opus) fills in this template before launching `haiku-worker` (`.claude/agents/haiku-worker.md`). One brief = one atomic task = one future commit. Review follows [REVIEW_CHECKLIST.md](REVIEW_CHECKLIST.md).
 
-## Схема оркестрации
+Agent-facing material (briefs, prompts, reports, REWORK notes) is in English to save tokens. User chat, `docs/TASKS.md`, `docs/ROADMAP.md` and UI stay in Russian.
 
-1. **Разбор.** Opus берёт задачу из [TASKS.md](../TASKS.md) и при необходимости запускает `haiku-scout`, чтобы собрать `file:line`. Затем режет задачу на брифы.
-2. **Нарезка.** У каждого брифа свой непересекающийся набор файлов. `js/game.js`, `server/src/Room.js` и `mobile/mobile.js` одновременно правит только один исполнитель.
-3. **Запуск.** Независимые брифы запускаются параллельно, каждый в своём worktree (`isolation: "worktree"`). Зависимые брифы — последовательно.
-4. **Ревью.** Opus проверяет дифф и отчёт по чеклисту. Вердикт: `APPROVE`, `REWORK` (нумерованные замечания) или `REJECT`.
-5. **Доработка.** Не больше 2 итераций `REWORK` на бриф. Дальше Opus доделывает сам или переписывает бриф.
-6. **Интеграция.** Opus сливает одобренные изменения в рабочую ветку от `feature/online-multiplayer`. Затем гоняет оба набора тестов, обновляет `docs/TASKS.md` и коммитит (Conventional Commits).
-7. **Пуш** — только после явного одобрения пользователя и саммари по `CLAUDE.md`.
+## Orchestration flow
 
-### Что не отдавать Haiku
+1. **Analysis.** Opus takes a task from [TASKS.md](../TASKS.md). If needed, it runs `haiku-scout` to collect `file:line`. Then it slices the task into briefs.
+2. **Slicing.** Each brief gets its own disjoint set of files. Only one worker at a time edits `js/game.js`, `server/src/Room.js` or `mobile/mobile.js`.
+3. **Launch.** Independent briefs run in parallel, each in its own worktree (`isolation: "worktree"`). Dependent briefs run in sequence.
+4. **Review.** Opus checks the diff and the report against the checklist. Verdict: `APPROVE`, `REWORK` (numbered notes) or `REJECT`.
+5. **Rework.** At most 2 `REWORK` rounds per brief. After that Opus finishes the task itself or rewrites the brief.
+6. **Integration.** Opus merges approved changes into a working branch off `feature/online-multiplayer`. Then it runs both test suites, updates `docs/TASKS.md` and commits (Conventional Commits).
+7. **Push** only after explicit user approval and a summary as `CLAUDE.md` requires.
 
-- Архитектурные решения: новые протоколы, новые фазы `GameStateMachine`, изменения инвариантов.
-- Задачи без проверяемого критерия готовности.
-- Правки, затрагивающие больше ~3 файлов или больше одного «тяжёлого» файла (`game.js`, `Room.js`, `mobile.js`).
-- Безопасность и санитизация данных для игроков (`sanitizeQuestionForPlayer`). Такие правки Opus делает сам или ревьюит построчно.
+### Do not hand to Haiku
+
+- Architecture decisions: new protocols, new `GameStateMachine` phases, invariant changes.
+- Tasks without a verifiable done criterion.
+- Changes touching more than ~3 files or more than one "heavy" file (`game.js`, `Room.js`, `mobile.js`).
+- Security and player-data sanitization (`sanitizeQuestionForPlayer`). Opus does these itself or reviews them line by line.
 
 ---
 
-## Шаблон
+## Template
 
 ```markdown
-### ID: BUG-xx / TASK-xx (часть N из M)
+### ID: BUG-xx / TASK-xx (part N of M)
 
-**Цель:** одно предложение — что должно стать правдой после правки.
+**Goal:** one sentence: what must be true after the change.
 
-**Контекст:**
-- Сейчас: <наблюдаемое поведение / причина, если известна>
-- Ключевые места: `путь:строка` — <что там> (из отчёта haiku-scout)
+**Context:**
+- Now: <observed behavior / cause, if known>
+- Key places: `path:line` — <what is there> (from the haiku-scout report)
 
-**Можно менять:**
-- `путь/файл1`
-- `путь/файл2`
+**May edit:**
+- `path/file1`
+- `path/file2`
 
-**Только читать:**
-- `путь/файл3` — <зачем>
+**Read only:**
+- `path/file3` — <why>
 
-**Задетые инварианты CLAUDE.md:** <номера и суть, например «1 — очки только с сервера», «8 — case в _handleMessage»> | нет
+**CLAUDE.md invariants involved:** <numbers and gist, e.g. "1 — scores only from the server", "8 — case in _handleMessage"> | none
 
-**Критерии готовности:**
-- [ ] <проверяемое условие 1>
-- [ ] <проверяемое условие 2>
-- [ ] Новый/обновлённый тест: `tests/...` или `server/tests/...` — <что проверяет>
+**Done criteria:**
+- [ ] <verifiable condition 1>
+- [ ] <verifiable condition 2>
+- [ ] New/updated test: `tests/...` or `server/tests/...` — <what it checks>
 
-**Тесты к запуску:**
-- `npm.cmd test` (корень)
-- `npm.cmd test` (в `server/`)
+**Tests to run:**
+- `npm.cmd test` (root)
+- `npm.cmd test` (in `server/`)
 
-**Вне рамок (не делать):**
-- <попутные рефакторинги, соседние баги, правки docs — их делает координатор>
+**Out of scope (do not do):**
+- <drive-by refactors, neighboring bugs, docs edits — the coordinator handles those>
 
-**Формат отчёта:** как в `.claude/agents/haiku-worker.md`.
+**Report format:** as in `.claude/agents/haiku-worker.md`.
 ```

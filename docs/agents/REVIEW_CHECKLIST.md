@@ -1,46 +1,46 @@
-# Чеклист ревью координатора (Opus)
+# Coordinator review checklist (Opus)
 
-По этому чеклисту Opus проверяет каждый результат `haiku-worker` по брифу из [BRIEF_TEMPLATE.md](BRIEF_TEMPLATE.md). Общий регламент ревью — [REVIEW_GUIDE.md](../REVIEW_GUIDE.md).
+Opus checks every `haiku-worker` result against this list, using the brief from [BRIEF_TEMPLATE.md](BRIEF_TEMPLATE.md). General review rules: [REVIEW_GUIDE.md](../REVIEW_GUIDE.md).
 
-Отчёту исполнителя не доверять на слово: смотреть дифф и самому перезапускать тесты.
+Do not take the worker's report on trust: read the diff and rerun the tests yourself.
 
-## 1. Рамки
+## 1. Scope
 
-- [ ] `git diff --stat` содержит только файлы из «Можно менять». Чужой файл — `REWORK` или `REJECT`.
-- [ ] Нет попутных рефакторингов, переименований и переформатирования.
-- [ ] Нет коммитов, смены ветки и правок `main`/`dev`.
-- [ ] CRLF сохранены. Нет мусора: логов, `node_modules`, `.idea`, временных файлов.
+- [ ] `git diff --stat` lists only files from "May edit". A foreign file means `REWORK` or `REJECT`.
+- [ ] No drive-by refactors, renames or reformatting.
+- [ ] No commits, branch switches or edits to `main`/`dev`.
+- [ ] CRLF kept. No junk: logs, `node_modules`, `.idea`, temp files.
 
-## 2. Критерии брифа
+## 2. Brief criteria
 
-- [ ] Выполнен каждый пункт «Критерии готовности».
-- [ ] Тест проверяет поведение, а не только наличие строки. Для `server/` нужен настоящий unit- или WS-тест.
-- [ ] Тест падает без правки: мысленно или реально откатить фикс.
+- [ ] Every "Done criteria" item is met.
+- [ ] The test checks behavior, not just the presence of a string. For `server/` a real unit or WS test is required.
+- [ ] The test fails without the fix: reason it through or actually revert the fix.
 
-## 3. Инварианты `CLAUDE.md`
+## 3. `CLAUDE.md` invariants
 
-- [ ] **0.** ПК-экран не владеет состоянием. `isGameStarted` ставится до обращения к серверу.
-- [ ] **1.** Очки меняет только сервер. ПК зеркалит `score_updated`, ручные +/- идут через `HOST_UPDATE_SCORE`.
-- [ ] **2.** Новый таймер учитывает `isPaused` и возобновляется в `setPaused`.
-- [ ] **3.** Переоткрытие баззера идёт через `getEligibleBuzzerIds()`.
-- [ ] **4.** Новое клиентское состояние попадает в `getStateSnapshot`, и экран восстанавливается после реконнекта.
-- [ ] **5.** Офлайн-игра работает без сервера. Новый UI проверен в тёмной и светлой (`body.light-theme`) темах.
-- [ ] **6.** `clearTimeout`/`clearInterval` вызывается перед новым таймером, серверные таймеры — `unref()`.
-- [ ] **7.** `if (el)`, `try/catch` вокруг `localStorage`/`JSON.parse`/Audio, `const`/`let`, `===`, нет `var`.
-- [ ] **8.** Новое серверное сообщение есть в обоих `MSG_TYPES` (`js/net/Protocol.js`, `server/src/protocol.js`) и в `case` в `NetworkClient._handleMessage`.
-- [ ] Ответы `a`/`a_img` не уходят игрокам (`PackParser.sanitizeQuestionForPlayer`). Приватные данные (тексты ответов аукциона) идут только ПК и ведущему.
-- [ ] Модалки в `mobile/index.html` стоят до `<script>` (BUG-40).
-- [ ] Нет бандлеров, TS и фреймворков. Пути только относительные.
+- [ ] **0.** The PC screen does not own game state. `isGameStarted` is set before talking to the server.
+- [ ] **1.** Only the server changes scores. The PC mirrors `score_updated`; manual +/- go through `HOST_UPDATE_SCORE`.
+- [ ] **2.** A new timer respects `isPaused` and resumes in `setPaused`.
+- [ ] **3.** Reopening the buzzer goes through `getEligibleBuzzerIds()`.
+- [ ] **4.** New client state lands in `getStateSnapshot`; the screen recovers after reconnect.
+- [ ] **5.** Offline play works without the server. New UI checked in dark and light (`body.light-theme`) themes.
+- [ ] **6.** `clearTimeout`/`clearInterval` before a new timer; server timers call `unref()`.
+- [ ] **7.** `if (el)`, `try/catch` around `localStorage`/`JSON.parse`/Audio, `const`/`let`, `===`, no `var`.
+- [ ] **8.** A new server message is in both `MSG_TYPES` (`js/net/Protocol.js`, `server/src/protocol.js`) and has a `case` in `NetworkClient._handleMessage`.
+- [ ] Answers `a`/`a_img` never reach players (`PackParser.sanitizeQuestionForPlayer`). Private data (auction answer texts) goes only to the PC and the host.
+- [ ] Modals in `mobile/index.html` sit before `<script>` (BUG-40).
+- [ ] No bundlers, TS or frameworks. Relative paths only.
 
-## 4. Типовые ошибки Haiku
+## 4. Typical Haiku mistakes
 
-- [ ] Исправлен симптом, а не причина: например, гонка «вылечена» через `setTimeout`.
-- [ ] Логика продублирована вместо вызова существующей функции.
-- [ ] Ведущим считается только ПК (`hostWs`) или только телефон (`hostPlayer`). Проверить оба: `sendToHost`.
-- [ ] Ветка состояния не покрыта: `AUCTION_ANSWERING`, `ANSWERING`, `CAT_CHOOSING`, пауза, реконнект посреди вопроса.
-- [ ] Статический тест в `tests/` «починен» правкой ожидаемой строки без причины.
+- [ ] Symptom fixed instead of cause, e.g. a race "cured" with `setTimeout`.
+- [ ] Logic duplicated instead of calling an existing function.
+- [ ] Only the PC (`hostWs`) or only the phone (`hostPlayer`) treated as host. Check both: `sendToHost`.
+- [ ] A state branch not covered: `AUCTION_ANSWERING`, `ANSWERING`, `CAT_CHOOSING`, pause, reconnect mid-question.
+- [ ] A static test in `tests/` "fixed" by editing the expected string without reason.
 
-## 5. Тесты (Opus запускает сам)
+## 5. Tests (Opus runs them itself)
 
 ```
 npm.cmd test
@@ -50,19 +50,19 @@ npm.cmd test
 cd server; npm.cmd test
 ```
 
-- [ ] Оба набора зелёные. Числа сверены с отчётом исполнителя.
-- [ ] Для изменений в LAN-потоке при необходимости прогнать `npm run demo:lan` и/или ручной сценарий из `CLAUDE.md`.
+- [ ] Both suites green. Numbers match the worker's report.
+- [ ] For LAN flow changes, run `npm run demo:lan` and/or the manual scenario from `CLAUDE.md` if needed.
 
-## 6. Вердикт
+## 6. Verdict
 
 ```
 VERDICT: APPROVE | REWORK | REJECT
 TASK: <ID>
 NOTES:
-1. путь:строка — проблема. Что сделать.
+1. path:line — problem. What to do.
 2. ...
 ```
 
-- **APPROVE** — Opus интегрирует, обновляет `docs/TASKS.md` и коммитит.
-- **REWORK** — замечания возвращаются тому же исполнителю через `SendMessage`, контекст сохраняется. Не больше 2 итераций, дальше доделывает Opus.
-- **REJECT** — подход неверный. Opus переписывает бриф: уже, с уточнённым контекстом. Или делает задачу сам.
+- **APPROVE**: Opus integrates, updates `docs/TASKS.md` and commits.
+- **REWORK**: notes go back to the same worker via `SendMessage`, keeping its context. At most 2 rounds, then Opus finishes it.
+- **REJECT**: wrong approach. Opus rewrites the brief, narrower and with better context, or does the task itself.
