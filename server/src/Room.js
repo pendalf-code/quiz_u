@@ -31,6 +31,8 @@ class Room {
             penaltyFixedAmount: options.penaltyFixedAmount !== undefined ? Math.max(0, parseInt(options.penaltyFixedAmount, 10)) : 100,
             ...options
         };
+        // Who picks the next question: 'rotation' (in turn, the default) | 'winner' (whoever answered right)
+        this.options.turnOrderMode = Room.normalizeTurnOrderMode(options.turnOrderMode);
 
         // Determine if local PC is treated as host
         this.isHostOnPC = options.isHostOnPC !== undefined
@@ -66,6 +68,10 @@ class Room {
         this.isFinalQuestion = false;
         this.finalBetLimits = {}; // playerId -> { min, max }
         this.finalVerdicts = new Map(); // playerId -> boolean
+
+        // Turn: the player choosing the next question; the first player credited for the open question
+        this.turnPlayerId = null;
+        this.questionWinnerId = null;
 
         this.answerTimer = null;
         this.thinkingTimer = null;
@@ -390,6 +396,7 @@ class Room {
 
                 if (wasKicked) {
                     this.disconnectedPlayerIds.delete(id);
+                    if (this.turnPlayerId === id) this.setTurnPlayer(this.getNextTurnPlayerId(id));
                 } else {
                     this.pauseForDisconnect(id, player.name);
                 }
@@ -505,6 +512,9 @@ class Room {
             const val = parseInt(newOptions.penaltyFixedAmount, 10);
             if (!isNaN(val) && val >= 0) this.options.penaltyFixedAmount = val;
         }
+        if (newOptions.turnOrderMode !== undefined) {
+            this.options.turnOrderMode = Room.normalizeTurnOrderMode(newOptions.turnOrderMode);
+        }
         if (newOptions.maxPlayers !== undefined) {
             const val = parseInt(newOptions.maxPlayers, 10);
             if (!isNaN(val) && val >= 2) this.options.maxPlayers = val;
@@ -575,6 +585,10 @@ class Room {
             this.currentThemeIndex = null;
             this.currentQuestion = null;
             this._resetQuestionsUsed();
+            this.turnPlayerId = null;
+        }
+        if (!this.turnPlayerId || !this.players.has(this.turnPlayerId)) {
+            this.setTurnPlayer(this.getNextTurnPlayerId(null), false);
         }
         this.stateMachine.showBoard();
         this.broadcastRoomState();
@@ -606,6 +620,8 @@ class Room {
         this.auctionAnswers.clear();
         this.biddingPlayerIds = [];
         this.resetFinalState();
+        this.turnPlayerId = null;
+        this.questionWinnerId = null;
         const wasPaused = this.isPaused;
         this.isPaused = false;
         this.pauseReason = null;
@@ -667,6 +683,7 @@ class Room {
         this.biddingPlayerIds = [];
         this.auctionAnswersLocked = false;
         this.resetFinalState();
+        this.questionWinnerId = null;
 
         // Final round: no buzzer, bets + typed answers (reuses the auction states)
         if (resolvedQuestion && this.isFinalRoundIndex()) {
@@ -1361,6 +1378,9 @@ class Room {
             } catch {
                 this.stateMachine.state = 'BOARD';
             }
+            if (this.options.turnOrderMode === 'rotation') {
+                this.setTurnPlayer(this.getNextTurnPlayerId(this.turnPlayerId));
+            }
             this.broadcastToAll(MSG_TYPES.ROUND_CHANGED, {
                 roundIndex: this.currentRoundIndex,
                 roundName: this.currentPack[this.currentRoundIndex]?.roundName || ('????? ' + (this.currentRoundIndex + 1))
@@ -1610,7 +1630,73 @@ class Room {
     passTurn() {
         this.touch();
         if (!this.isGameRunning()) return;
-        this.broadcastToAll(MSG_TYPES.TURN_PASSED, {});
+        this.setTurnPlayer(this.getNextTurnPlayerId(this.turnPlayerId));
+        this.broadcastToAll(MSG_TYPES.TURN_PASSED, { turnPlayerId: this.turnPlayerId });
+    }
+
+    /**
+     * Host picked who chooses the next question (turn modal on the PC).
+     */
+    setTurn(playerId) {
+        this.touch();
+        const player = this.players.get(playerId);
+        if (!player || player.role === 'host') return { success: false, message: 'Игрок не найден' };
+        this.setTurnPlayer(playerId);
+        return { success: true };
+    }
+
+    /**
+     * Players in join order who can take the turn: connected ones first; if nobody is connected, everybody.
+     */
+    getTurnCandidates() {
+        const all = Array.from(this.players.values()).filter(p => p.role !== 'host' && (p.isConnected || p.sessionToken));
+        const connected = all.filter(p => p.isConnected);
+        return (connected.length > 0 ? connected : all).map(p => p.id);
+    }
+
+    /** The player after `fromId` in join order (wraps around); the first one when `fromId` is unknown. */
+    getNextTurnPlayerId(fromId) {
+        const order = Array.from(this.players.values()).filter(p => p.role !== 'host').map(p => p.id);
+        const candidates = this.getTurnCandidates();
+        if (candidates.length === 0) return null;
+        const start = order.indexOf(fromId);
+        if (start === -1) return candidates[0];
+        for (let i = 1; i <= order.length; i++) {
+            const id = order[(start + i) % order.length];
+            if (candidates.includes(id)) return id;
+        }
+        return candidates[0];
+    }
+
+    setTurnPlayer(playerId, broadcast = true) {
+        const changed = this.turnPlayerId !== playerId;
+        this.turnPlayerId = playerId || null;
+        if (broadcast) {
+            const player = playerId ? this.players.get(playerId) : null;
+            this.broadcastToAll(MSG_TYPES.TURN_CHANGED, {
+                turnPlayerId: this.turnPlayerId,
+                turnPlayerName: player ? player.name : '',
+                mode: this.options.turnOrderMode,
+                changed
+            });
+        }
+    }
+
+    /** First player credited with points for the open question (judged right, auction / final win) */
+    noteCorrectAnswer(playerId) {
+        if (!this.questionWinnerId && this.players.has(playerId)) this.questionWinnerId = playerId;
+    }
+
+    /**
+     * A question was played: 'rotation' passes the turn to the next player; 'winner' gives it to the
+     * first player who answered right, and if nobody did the current chooser keeps it.
+     */
+    advanceTurnAfterQuestion() {
+        const next = this.options.turnOrderMode === 'winner'
+            ? (this.questionWinnerId || this.turnPlayerId || this.getNextTurnPlayerId(null))
+            : this.getNextTurnPlayerId(this.turnPlayerId);
+        this.questionWinnerId = null;
+        this.setTurnPlayer(next);
     }
 
     updateAllScores(delta) {
@@ -1663,6 +1749,7 @@ class Room {
         if (player) {
             const numDelta = Number(delta) || 0;
             player.score += numDelta;
+            if (numDelta > 0 && this.currentQuestion) this.noteCorrectAnswer(playerId);
             this.broadcastToAll(MSG_TYPES.SCORE_UPDATED, {
                 playerId,
                 playerName: player.name,
@@ -1694,6 +1781,8 @@ class Room {
         this.auctionAnswersLocked = false;
         this.passedPlayers.clear();
         const wasFinal = this.isFinalQuestion;
+        // The final has no "next question"; a repeated finish (host closes an answered question) does nothing
+        if (this.currentQuestion && !wasFinal) this.advanceTurnAfterQuestion();
         this.resetFinalState();
         this.currentQuestion = null;
 
@@ -1815,6 +1904,8 @@ class Room {
                 ? {}
                 : Object.fromEntries(Array.from(this.auctionBets.entries()).map(([id, b]) => [id, (b && typeof b === 'object') ? (b.isPassed ? 0 : b.val) : Number(b) || 0])),
             isFinalRound: this.isFinalRoundIndex(),
+            turnPlayerId: this.turnPlayerId,
+            turnOrderMode: this.options.turnOrderMode,
             ...this.getFinalPayload(),
             finalBetPlacedIds: this.isFinalQuestion ? Array.from(this.auctionBets.keys()) : [],
             finalVerdicts: Object.fromEntries(this.finalVerdicts),
@@ -1837,5 +1928,6 @@ class Room {
 
 Room.AUCTION_ANSWER_SECONDS = AUCTION_ANSWER_SECONDS;
 Room.FINAL_ANSWER_SECONDS = FINAL_ANSWER_SECONDS;
+Room.normalizeTurnOrderMode = (mode) => (mode === 'winner' ? 'winner' : 'rotation');
 
 module.exports = Room;

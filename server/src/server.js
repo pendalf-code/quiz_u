@@ -449,6 +449,19 @@ function handleClientMessage(ws, message) {
             break;
         }
 
+        case MSG_TYPES.HOST_SET_TURN: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            const turnRes = room.setTurn(payload.playerId);
+            if (turnRes && !turnRes.success) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: turnRes.message
+                }));
+            }
+            break;
+        }
+
         case MSG_TYPES.HOST_UPDATE_ALL_SCORES: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;

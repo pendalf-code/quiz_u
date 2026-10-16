@@ -34,6 +34,8 @@ const DEFAULT_MSG_TYPES = {
     HOST_SET_AUCTION_BETS: 'HOST_SET_AUCTION_BETS',
     HOST_START_AUCTION_ANSWER: 'HOST_START_AUCTION_ANSWER',
     HOST_JUDGE_FINAL: 'HOST_JUDGE_FINAL',
+    HOST_SET_TURN: 'HOST_SET_TURN',
+    HOST_PASS_TURN: 'HOST_PASS_TURN',
     PLAYER_JOIN: 'PLAYER_JOIN',
     PLAYER_BUZZ: 'PLAYER_BUZZ',
     PLAYER_SUBMIT_ANSWER: 'PLAYER_SUBMIT_ANSWER',
@@ -59,6 +61,8 @@ const DEFAULT_MSG_TYPES = {
     PLAYER_PASSED: 'PLAYER_PASSED',
     ANSWER_TIMEOUT: 'ANSWER_TIMEOUT',
     ROUND_CHANGED: 'ROUND_CHANGED',
+    TURN_PASSED: 'TURN_PASSED',
+    TURN_CHANGED: 'TURN_CHANGED',
     GAME_FINISHED: 'GAME_FINISHED',
     SCORE_UPDATED: 'SCORE_UPDATED',
     JUDGE_RESULT: 'JUDGE_RESULT',
@@ -399,6 +403,11 @@ class NetworkClient {
                 this.emit('turn_passed', payload);
                 break;
 
+            case MSG.TURN_CHANGED:
+                if (this.lastState && payload) this.lastState.turnPlayerId = payload.turnPlayerId;
+                this.emit('turn_changed', payload);
+                break;
+
             case MSG.GAME_FINISHED:
                 this.emit('game_finished', payload);
                 break;
@@ -571,6 +580,10 @@ class NetworkClient {
 
     passTurn() {
         return this.send(MSG.HOST_PASS_TURN, {});
+    }
+
+    setTurn(playerId) {
+        return this.send(MSG.HOST_SET_TURN, { playerId });
     }
 
     updateAllScores(delta) {
