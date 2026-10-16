@@ -5293,8 +5293,10 @@ body.light-theme .katex {
 
 .readiness-chip {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
+    min-width: 0;
     font-size: 14px;
     font-weight: 700;
 }
@@ -5304,9 +5306,12 @@ body.light-theme .katex {
 }
 
 .readiness-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    /* inline-block: a long host name wraps as text, the emoji stays on the first line */
+    display: inline-block;
+    min-width: 0;
+    max-width: 100%;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
     padding: 6px 14px;
     border-radius: 20px;
     font-size: 13px;
@@ -5380,7 +5385,9 @@ body.light-theme .katex {
     align-items: center;
     gap: 4px;
     transition: all 0.2s ease;
-    margin-left: 6px;
+    margin-left: auto;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-kick-host:hover {
