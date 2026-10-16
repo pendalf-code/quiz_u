@@ -4681,7 +4681,9 @@ function initHostNetwork(overrideUrl = null) {
                 }
             } else if (isGameStarted) {
                 const questionModal = document.getElementById('question-modal');
-                const questionOpen = questionModal && questionModal.classList.contains('active') && questionModal.style.display !== 'none';
+                // The final screen counts as an open question: `question_closed` shows the winners after it
+                const questionOpen = (questionModal && questionModal.classList.contains('active') && questionModal.style.display !== 'none')
+                    || Boolean(window.FinalRound && window.FinalRound.isActive());
                 if (!questionOpen) handleOnlineRoundTransition();
             }
             if (payload.state === 'BOARD' && !isGameStarted) {

@@ -483,9 +483,13 @@
                     : 'Сделавший ставку обязан ответить текстом — на ответ 30 секунд. Ошибка стоит вам ставки. Не уверены — пас.');
         }
         if (elements.btnPassBet) elements.btnPassBet.classList.toggle('hidden', Boolean(finalLimit));
+        const badge = document.querySelector('#screen-auction .auction-badge');
+        if (badge) badge.textContent = finalLimit ? '🏆 ФИНАЛ' : '🔥 АУКЦИОН';
         if (elements.betInput) {
             elements.betInput.min = minBet;
             elements.betInput.max = maxBet;
+            // Any whole bet is valid (va-bank of 750, a final bet of 37): step 100 made the form refuse to submit
+            elements.betInput.step = '1';
             elements.betInput.value = finalLimit ? maxBet : minBet;
         }
         showScreen('auction');
@@ -1413,10 +1417,27 @@
                     const bidding = Array.isArray(payload.biddingPlayerIds) ? payload.biddingPlayerIds : [];
                     const answered = Array.isArray(payload.auctionAnsweredIds) && payload.auctionAnsweredIds.includes(selfId);
                     state.questionType = (payload.currentQuestion && payload.currentQuestion.type) || state.questionType;
+                    const myVerdict = payload.isFinal && payload.finalVerdicts && selfId ? payload.finalVerdicts[selfId] : undefined;
+                    if (payload.isFinal && selfId && bidding.includes(selfId) && (answered || payload.auctionAnswersLocked)) {
+                        // Final: the room_state after every verdict must not wipe the player's own result
+                        stopAnswerTimer();
+                        const myBet = (payload.auctionBets && payload.auctionBets[selfId]) || 0;
+                        if (myVerdict === true || myVerdict === false) {
+                            setWaitingTexts(myVerdict ? '🎉 Верно!' : '❌ Неверно', `${myVerdict ? '+' : '−'}${myBet} очков. Итоги — на большом экране.`);
+                        } else if (payload.auctionAnswersLocked) {
+                            setWaitingTexts('🏆 Ответы закрыты', 'Ведущий проверяет ответы финала...');
+                        } else {
+                            setWaitingTexts('🏆 Ответ отправлен', 'Ждём остальных. Ведущий проверит ответы финала.');
+                        }
+                        showScreen('waiting');
+                        break;
+                    }
                     if (selfId && bidding.includes(selfId) && !answered && !payload.auctionAnswersLocked) {
                         const myBet = (payload.auctionBets && payload.auctionBets[selfId]) || state.currentCost;
                         if (elements.answerCostHint) {
-                            elements.answerCostHint.textContent = `Аукцион: ваша ставка ${myBet}. Отвечать обязательно`;
+                            elements.answerCostHint.textContent = payload.isFinal
+                                ? `🏆 Финал: ваша ставка ${myBet}. Вопрос — на большом экране`
+                                : `Аукцион: ваша ставка ${myBet}. Отвечать обязательно`;
                         }
                         if (elements.answerInput) elements.answerInput.value = '';
                         showScreen('answer');
@@ -1424,6 +1445,10 @@
                     } else if (selfId && bidding.includes(selfId)) {
                         stopAnswerTimer();
                         setWaitingTexts('Ответ отправлен', 'Ведущий проверит ответы и начислит или спишет ставку.');
+                        showScreen('waiting');
+                    } else if (payload.isFinal) {
+                        stopAnswerTimer();
+                        setWaitingTexts('🏆 Финал', 'Вы не участвуете в финале. Следите за большим экраном!');
                         showScreen('waiting');
                     } else {
                         stopAnswerTimer();
