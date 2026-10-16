@@ -298,9 +298,15 @@
         }
     }
 
-    function playerRowHtml(team, idx, key) {
-        const isFinalist = Boolean(st.limits[key]);
-        const lim = st.limits[key];
+    function previewLimits() {
+        const round = currentRound();
+        const q = round && round.themes && round.themes[0] && round.themes[0].questions && round.themes[0].questions[0];
+        return computeLocalLimits(q && q.cost);
+    }
+
+    function playerRowHtml(team, idx, key, limits) {
+        const isFinalist = Boolean(limits[key]);
+        const lim = limits[key];
         const verdict = st.verdicts[key];
         const avatar = team.avatar ? `<span class="final-player-avatar">${esc(team.avatar)}</span>` : `<span class="final-player-avatar">${idx + 1}</span>`;
         let middle = '';
@@ -378,7 +384,9 @@
         // Keep a typed bet while the list re-renders (LAN events, score updates)
         const focused = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('final-bet-input')
             ? document.activeElement.dataset.key : null;
-        box.innerHTML = list.map(item => playerRowHtml(item.team, item.idx, item.key)).join('');
+        // Before the theme is picked show who will play by the same rule the server uses
+        const limits = st.stage === 'intro' ? previewLimits() : st.limits;
+        box.innerHTML = list.map(item => playerRowHtml(item.team, item.idx, item.key, limits)).join('');
 
         box.querySelectorAll('.final-bet-input').forEach(input => {
             input.addEventListener('input', () => {
