@@ -126,6 +126,39 @@
         },
 
         /**
+         * Финальный раунд в формате «один вопрос на тему»: явный флаг `isFinal` или последний раунд
+         * со словом «финал»/«final» в названии. В каждой теме ровно один вопрос (обычно тема одна).
+         * Раунд вроде «Война Бесконечности и Финал» в середине пака финалом не считается.
+         * @param {Object} round
+         * @param {number} roundIdx
+         * @param {number} totalRounds
+         * @returns {boolean}
+         */
+        isFinalRound: function (round, roundIdx, totalRounds) {
+            if (!round || !Array.isArray(round.themes) || round.themes.length === 0) return false;
+            const singleQuestionThemes = round.themes.every(th => th && Array.isArray(th.questions) && th.questions.length === 1);
+            if (!singleQuestionThemes) return false;
+            if (round.isFinal === true) return true;
+            const isLast = typeof roundIdx === 'number' && typeof totalRounds === 'number' && roundIdx === totalRounds - 1;
+            const name = String(round.roundName || '').toLowerCase();
+            return isLast && (name.includes('финал') || name.includes('final'));
+        },
+
+        /**
+         * Вопрос финала, пока идут ставки: игрок видит только тему и номинал, без текста и медиа.
+         * @param {Object} question
+         * @returns {Object}
+         */
+        sanitizeFinalQuestionForBetting: function (question) {
+            if (!question) return null;
+            return {
+                cost: question.cost !== undefined ? question.cost : question.price,
+                type: 'final',
+                theme: question.theme || question.themeName || ''
+            };
+        },
+
+        /**
          * Античит-фильтрация одиночного активного вопроса.
          * @param {Object} question
          * @returns {Object}

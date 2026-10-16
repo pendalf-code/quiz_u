@@ -33,6 +33,7 @@ const DEFAULT_MSG_TYPES = {
     HOST_SET_AUCTION_LEADER: 'HOST_SET_AUCTION_LEADER',
     HOST_SET_AUCTION_BETS: 'HOST_SET_AUCTION_BETS',
     HOST_START_AUCTION_ANSWER: 'HOST_START_AUCTION_ANSWER',
+    HOST_JUDGE_FINAL: 'HOST_JUDGE_FINAL',
     PLAYER_JOIN: 'PLAYER_JOIN',
     PLAYER_BUZZ: 'PLAYER_BUZZ',
     PLAYER_SUBMIT_ANSWER: 'PLAYER_SUBMIT_ANSWER',
@@ -54,6 +55,7 @@ const DEFAULT_MSG_TYPES = {
     AUCTION_ANSWER_START: 'AUCTION_ANSWER_START',
     CAT_TRANSFERRED: 'CAT_TRANSFERRED',
     AUCTION_LEADER_SET: 'AUCTION_LEADER_SET',
+    FINAL_JUDGED: 'FINAL_JUDGED',
     PLAYER_PASSED: 'PLAYER_PASSED',
     ANSWER_TIMEOUT: 'ANSWER_TIMEOUT',
     ROUND_CHANGED: 'ROUND_CHANGED',
@@ -334,6 +336,10 @@ class NetworkClient {
                 this.emit('auction_leader_set', payload);
                 break;
 
+            case MSG.FINAL_JUDGED:
+                this.emit('final_judged', payload);
+                break;
+
             case MSG.PLAYER_PASSED:
                 this.emit('player_passed', payload);
                 break;
@@ -533,6 +539,10 @@ class NetworkClient {
 
     setCatTarget(targetPlayerId) {
         return this.send(MSG.HOST_SET_CAT_TARGET, { targetPlayerId });
+    }
+
+    judgeFinal(playerId, isCorrect) {
+        return this.send(MSG.HOST_JUDGE_FINAL, { playerId, isCorrect: Boolean(isCorrect) });
     }
 
     setAuctionLeader(leaderPlayerId, maxBet) {
