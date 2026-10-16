@@ -1269,6 +1269,7 @@ function startTimerAfterVideo() {
 }
 
 function hideGameLayout() {
+    if (window.FinalRound) window.FinalRound.hide();
     ['game-board', 'game-header-block', 'main-teams-panel', 'teams-block-title', 'teams-block-wrapper'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -2122,6 +2123,16 @@ function initBoard() {
             }
         });
     }
+
+    // Final round (one question per theme): its own screen instead of a board with one cell (TASK-47)
+    if (window.FinalRound && typeof PackParser !== 'undefined' && PackParser.isFinalRound(round, currentRoundIndex, gameData.length)) {
+        if (board) board.style.display = 'none';
+        // LAN: the final is over (server GAME_OVER), the winners screen is up: do not bring the final back
+        if (isOnlineGame && lastServerRoomState === 'GAME_OVER') return;
+        window.FinalRound.showForRound(currentRoundIndex);
+        return;
+    }
+    if (window.FinalRound) window.FinalRound.hide();
 
     round.themes.forEach((theme, themeIdx) => {
         const row = document.createElement('div');
@@ -3259,6 +3270,7 @@ function changeTeamScore(teamIdx, amount, syncToServer = true) {
     updateTeamsPanel();
     renderModalTeamsList();
     saveGameState();
+    if (window.FinalRound) window.FinalRound.refresh();
 }
 
 function skipRound() {
@@ -4426,10 +4438,18 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('auction_answer_start', (payload) => {
+            if (payload && payload.isFinal && window.FinalRound) {
+                window.FinalRound.onAnswersStart(payload);
+                return;
+            }
             onlineAuctionAnswersStarted(payload);
         });
 
         hostNetworkClient.on('auction_bet_made', (payload) => {
+            if (payload && payload.isFinal && window.FinalRound) {
+                window.FinalRound.onBet(payload);
+                return;
+            }
             const teamIdx = teams.findIndex(t => t.id === payload.playerId);
             if (teamIdx !== -1) {
                 const card = document.getElementById(`auction-card-team-${teamIdx}`);
@@ -4442,7 +4462,20 @@ function initHostNetwork(overrideUrl = null) {
             }
         });
 
-        hostNetworkClient.on('answer_timeout', () => {
+        // Final: typed answers reach only the PC and the phone host
+        hostNetworkClient.on('answer_submitted', (payload) => {
+            if (payload && payload.isFinal && window.FinalRound) window.FinalRound.onAnswerSubmitted(payload);
+        });
+
+        hostNetworkClient.on('final_judged', (payload) => {
+            if (window.FinalRound) window.FinalRound.onJudged(payload);
+        });
+
+        hostNetworkClient.on('answer_timeout', (payload) => {
+            if (payload && payload.isFinal && window.FinalRound) {
+                window.FinalRound.onAnswersLocked(payload);
+                return;
+            }
             activeOnlineBuzzer = null;
             stopOnlineAnswerCountdown();
             const answeringModal = document.getElementById('answering-player-modal');
@@ -4543,10 +4576,15 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('show_answer', () => {
+            if (window.FinalRound && window.FinalRound.isActive()) {
+                window.FinalRound.onShowAnswer();
+                return;
+            }
             showAnswer();
         });
 
         hostNetworkClient.on('game_paused', (payload) => {
+            if (window.FinalRound) window.FinalRound.onPause(payload && payload.isPaused);
             const banner = document.getElementById('disconnect-pause-banner');
             const desc = document.getElementById('disconnect-pause-desc');
             if (payload.isPaused) {
@@ -4564,6 +4602,12 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('question_closed', () => {
+            if (window.FinalRound && window.FinalRound.isActive()) {
+                // After the final the server is in GAME_OVER: show the winners
+                window.FinalRound.hide();
+                handleOnlineRoundTransition();
+                return;
+            }
             stopTimer();
             stopOnlineAnswerCountdown();
             stopQuestionAudio();
@@ -4582,6 +4626,10 @@ function initHostNetwork(overrideUrl = null) {
         hostNetworkClient.on('question_active', (payload) => {
             if (!isGameStarted && typeof startOnlineGame === 'function') {
                 startOnlineGame(true);
+            }
+            if (payload && payload.questionType === 'final' && window.FinalRound) {
+                window.FinalRound.onQuestionActive(payload);
+                return;
             }
             const modal = document.getElementById('question-modal');
             const isModalActive = modal && modal.classList.contains('active') && modal.style.display !== 'none';

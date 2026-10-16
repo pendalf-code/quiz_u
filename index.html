@@ -923,6 +923,38 @@
 
         <div class="jeopardy-table" id="game-board" style="display: none;"></div>
 
+        <!-- Финальный раунд: отдельный экран вместо табло с одной ячейкой (TASK-47, js/final_round.js) -->
+        <section aria-live="polite" class="final-screen" data-stage="intro" hidden id="final-screen">
+            <header class="final-header">
+                <div aria-hidden="true" class="final-crown">🏆</div>
+                <h2 class="final-title">Финал</h2>
+                <div class="final-round-name" id="final-round-name"></div>
+            </header>
+            <div class="final-themes" id="final-themes"></div>
+            <div class="final-theme-banner" id="final-theme-banner">
+                <span class="final-theme-label">Тема финала</span>
+                <span class="final-theme-name" id="final-theme-name"></span>
+            </div>
+            <div class="final-stage-row">
+                <div class="final-question" id="final-question"></div>
+                <div class="final-timer" id="final-timer">
+                    <svg aria-hidden="true" class="final-timer-svg" viewBox="0 0 100 100">
+                        <circle class="final-timer-bg" cx="50" cy="50" r="45"></circle>
+                        <circle class="final-timer-ring" cx="50" cy="50" id="final-timer-ring" r="45"></circle>
+                    </svg>
+                    <span class="final-timer-num" id="final-timer-num">60</span>
+                </div>
+            </div>
+            <div class="final-answer" hidden id="final-answer">
+                <span class="final-answer-label">Правильный ответ</span>
+                <div class="final-answer-text" id="final-answer-text"></div>
+                <img alt="Иллюстрация ответа" class="final-answer-img" hidden id="final-answer-img" src="">
+            </div>
+            <div class="final-status" id="final-status"></div>
+            <div class="final-players" id="final-players"></div>
+            <div class="final-actions" id="final-actions"></div>
+        </section>
+
         <div id="teams-block-wrapper" style="display: none; width: 100%; margin-top: 40px; text-align: center;">
             <h2 id="teams-block-title"
                 style="display: none; color: var(--gold-accent); font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);">
@@ -1585,5 +1617,6 @@
 <script src="js/desktop/SteamIntegration.js"></script>
 <script src="js/desktop/GamepadManager.js"></script>
 <script src="js/game.js"></script>
+<script src="js/final_round.js"></script>
 </body>
 </html>
