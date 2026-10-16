@@ -508,6 +508,21 @@
                         </div>
 
                         <div class="settings-group-box">
+                            <label class="settings-group-title">👉 Очерёдность хода</label>
+                        
+                            <div class="settings-row-box">
+                                <div class="setting-info">
+                                    <label class="settings-label" for="setting-turn-order">Кто выбирает следующий вопрос</label>
+                                    <div class="settings-subtext">«Ходит ответивший верно»: если никто не ответил, ход остаётся у того, кто выбирал</div>
+                                </div>
+                                <select class="catalog-sort-dropdown setting-dropdown-field" id="setting-turn-order">
+                                    <option value="rotation">По очереди</option>
+                                    <option value="winner">Ходит ответивший верно</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-group-box">
                             <label class="settings-group-title">🎲 Особые типы вопросов в игре</label>
 
                             <div class="settings-row-box">
@@ -796,6 +811,13 @@
                                         <span class="lobby-setting-label">Штраф за ошибку</span>
                                     </div>
                                     <span class="lobby-setting-value" id="chip-penalty">Номинал</span>
+                                </div>
+                                <div class="lobby-setting-row">
+                                    <div class="lobby-setting-left">
+                                        <span class="lobby-setting-icon">👉</span>
+                                        <span class="lobby-setting-label">Очерёдность хода</span>
+                                    </div>
+                                    <span class="lobby-setting-value" id="chip-turn-order">По очереди</span>
                                 </div>
                             </div>
                         </div>
@@ -1299,6 +1321,21 @@
                                value="5">
                         <span class="setting-unit">сек</span>
                     </div>
+                </div>
+            </div>
+
+            <div class="settings-group-box">
+                <label class="settings-group-title">👉 Очерёдность хода</label>
+
+                <div class="settings-row-box">
+                    <div class="setting-info">
+                        <label class="settings-label" for="lobby-setting-turn-order">Кто выбирает следующий вопрос</label>
+                        <div class="settings-subtext">«Ходит ответивший верно»: если никто не ответил, ход остаётся у того, кто выбирал</div>
+                    </div>
+                    <select class="catalog-sort-dropdown setting-dropdown-field" id="lobby-setting-turn-order">
+                        <option value="rotation">По очереди</option>
+                        <option value="winner">Ходит ответивший верно</option>
+                    </select>
                 </div>
             </div>
 

@@ -516,6 +516,23 @@
         openAuctionScreen(state.currentCost);
     }
 
+    // Turn (TASK-48): who picks the next question, for the board waiting screen and the host remote
+    function getTurnPlayerName() {
+        const id = state.turnPlayerId;
+        if (!id) return '';
+        const p = ((netClient ? netClient.getPlayersList() : []) || []).find(x => x.id === id);
+        return p ? p.name : '';
+    }
+
+    function getBoardWaitingTexts() {
+        const selfId = state.selfPlayer && state.selfPlayer.id;
+        if (selfId && state.turnPlayerId === selfId) {
+            return ['👉 Ваш ход!', 'Выберите вопрос на табло и назовите его ведущему.'];
+        }
+        const name = getTurnPlayerName();
+        return ['Внимание на экран!', name ? `Вопрос выбирает: ${name}` : 'Ведущий выбирает вопрос на табло...'];
+    }
+
     function clampBet(value) {
         const v = parseInt(value, 10);
         const min = state.betMin || state.currentCost || 100;
@@ -883,7 +900,9 @@
     function renderHostBoardGrid(boardData) {
         if (!elements.hostBoardGrid || !boardData) return;
         if (elements.hostBoardRound) {
-            elements.hostBoardRound.textContent = boardData.roundName || `Раунд ${(boardData.roundIndex || 0) + 1}`;
+            const turnName = getTurnPlayerName();
+            elements.hostBoardRound.textContent = (boardData.roundName || `Раунд ${(boardData.roundIndex || 0) + 1}`)
+                + (turnName ? ` · выбирает: ${turnName}` : '');
         }
         elements.hostBoardGrid.innerHTML = '';
         const themes = boardData.themes || [];
@@ -1293,6 +1312,9 @@
             }
 
             // Handle Host Role Screen View
+            if (payload.turnPlayerId !== undefined) state.turnPlayerId = payload.turnPlayerId;
+            if (payload.state) state.roomState = payload.state;
+
             if (payload.isFinal) {
                 state.finalBetLimits = payload.finalBetLimits || null;
                 state.finalVerdicts = Object.assign({}, payload.finalVerdicts || {});
@@ -1344,7 +1366,7 @@
 
                 case 'BOARD':
                     stopAnswerTimer();
-                    setWaitingTexts('Внимание на экран!', 'Ведущий выбирает вопрос на табло...');
+                    setWaitingTexts(...getBoardWaitingTexts());
                     showScreen('waiting');
                     break;
 
@@ -1904,6 +1926,21 @@
 
         netClient.on('turn_passed', () => {
             showToast('🔄 Ход передан следующей команде', 'info');
+        });
+
+        netClient.on('turn_changed', (payload) => {
+            if (!payload) return;
+            state.turnPlayerId = payload.turnPlayerId || null;
+            if (state.selectedRole === 'host') {
+                if (state.boardData) renderHostBoardGrid(state.boardData);
+                return;
+            }
+            const selfId = state.selfPlayer && state.selfPlayer.id;
+            if (payload.changed && selfId && payload.turnPlayerId === selfId) {
+                haptic('success');
+                showToast('👉 Ваш ход — выбирайте вопрос!', 'success');
+            }
+            if (state.roomState === 'BOARD' && state.currentScreen === 'waiting') setWaitingTexts(...getBoardWaitingTexts());
         });
 
         netClient.on('round_skipped', (payload) => {
