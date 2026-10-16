@@ -108,7 +108,7 @@
                     question: question,
                     turnTeamId: this.activeTeamId
                 });
-            } else if (qType === 'auction' || qType === 'auction_all' || qType === 'auction_leader') {
+            } else if (qType === 'auction' || qType === 'auction_all' || qType === 'auction_leader' || qType === 'final') {
                 this._transitionTo(GameStates.AUCTION_BETTING, {
                     question: question,
                     subType: qType,

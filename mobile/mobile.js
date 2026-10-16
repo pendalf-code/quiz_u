@@ -464,25 +464,73 @@
     function openAuctionScreen(cost) {
         const nominal = Number(cost) || state.currentCost || 100;
         const balance = (state.selfPlayer && Number(state.selfPlayer.score)) || 0;
-        const maxBet = Math.max(nominal, balance);
-        state.betMin = nominal;
+        // Final: the server froze the limits (1..score, or the nominal when nobody is positive)
+        const finalLimit = getOwnFinalLimit();
+        const minBet = finalLimit ? finalLimit.min : nominal;
+        const maxBet = finalLimit ? finalLimit.max : Math.max(nominal, balance);
+        state.betMin = minBet;
         state.betMax = maxBet;
         state.betSubmitted = false;
         state.currentCost = nominal;
         if (elements.auctionNominal) elements.auctionNominal.textContent = nominal;
         if (elements.auctionBalance) elements.auctionBalance.textContent = balance;
-        if (elements.auctionRange) elements.auctionRange.textContent = nominal === maxBet ? `${nominal}` : `${nominal} – ${maxBet}`;
+        if (elements.auctionRange) elements.auctionRange.textContent = minBet === maxBet ? `${minBet}` : `${minBet} – ${maxBet}`;
         if (elements.auctionRule) {
-            elements.auctionRule.textContent = state.questionType === 'auction_leader'
-                ? 'Побеждает самая высокая ставка — только победитель отвечает на вопрос.'
-                : 'Сделавший ставку обязан ответить текстом — на ответ 30 секунд. Ошибка стоит вам ставки. Не уверены — пас.';
+            elements.auctionRule.textContent = finalLimit
+                ? `Финал${state.activeThemeName ? ` «${state.activeThemeName}»` : ''}: ставка тайная. Вопрос покажут после ставок, ответ пишете текстом. Верно — ставка прибавится, неверно — вычтется.`
+                : (state.questionType === 'auction_leader'
+                    ? 'Побеждает самая высокая ставка — только победитель отвечает на вопрос.'
+                    : 'Сделавший ставку обязан ответить текстом — на ответ 30 секунд. Ошибка стоит вам ставки. Не уверены — пас.');
         }
+        if (elements.btnPassBet) elements.btnPassBet.classList.toggle('hidden', Boolean(finalLimit));
+        const badge = document.querySelector('#screen-auction .auction-badge');
+        if (badge) badge.textContent = finalLimit ? '🏆 ФИНАЛ' : '🔥 АУКЦИОН';
         if (elements.betInput) {
-            elements.betInput.min = nominal;
+            elements.betInput.min = minBet;
             elements.betInput.max = maxBet;
-            elements.betInput.value = nominal;
+            // Any whole bet is valid (va-bank of 750, a final bet of 37): step 100 made the form refuse to submit
+            elements.betInput.step = '1';
+            elements.betInput.value = finalLimit ? maxBet : minBet;
         }
         showScreen('auction');
+    }
+
+    function getOwnFinalLimit() {
+        if (state.questionType !== 'final' || !state.finalBetLimits) return null;
+        const selfId = state.selfPlayer && state.selfPlayer.id;
+        return (selfId && state.finalBetLimits[selfId]) || null;
+    }
+
+    // Final round, player side: bet screen, or a spectator note for players without points
+    function showFinalBetting(alreadyBet) {
+        if (alreadyBet) {
+            setWaitingTexts('🏆 Ставка принята', 'Ждём остальных. Вопрос появится на большом экране.');
+            showScreen('waiting');
+            return;
+        }
+        if (!getOwnFinalLimit()) {
+            setWaitingTexts('🏆 Финал', 'В финале играют только участники с положительным счётом. Следите за большим экраном!');
+            showScreen('waiting');
+            return;
+        }
+        openAuctionScreen(state.currentCost);
+    }
+
+    // Turn (TASK-48): who picks the next question, for the board waiting screen and the host remote
+    function getTurnPlayerName() {
+        const id = state.turnPlayerId;
+        if (!id) return '';
+        const p = ((netClient ? netClient.getPlayersList() : []) || []).find(x => x.id === id);
+        return p ? p.name : '';
+    }
+
+    function getBoardWaitingTexts() {
+        const selfId = state.selfPlayer && state.selfPlayer.id;
+        if (selfId && state.turnPlayerId === selfId) {
+            return ['👉 Ваш ход!', 'Выберите вопрос на табло и назовите его ведущему.'];
+        }
+        const name = getTurnPlayerName();
+        return ['Внимание на экран!', name ? `Вопрос выбирает: ${name}` : 'Ведущий выбирает вопрос на табло...'];
     }
 
     function clampBet(value) {
@@ -788,14 +836,16 @@
 
         const isCat = (type === 'cat' || type === 'secret');
         if (elements.hostSpecialTitle) {
-            elements.hostSpecialTitle.textContent = isCat ? '🐱 Кот в мешке' : (type === 'auction_leader' ? '🔨 Аукцион за право ответа' : '💰 Вопрос со ставками');
+            elements.hostSpecialTitle.textContent = isCat ? '🐱 Кот в мешке' : (type === 'auction_leader' ? '🔨 Аукцион за право ответа' : (type === 'final' ? '🏆 Финал: ставки' : '💰 Вопрос со ставками'));
         }
         if (elements.hostSpecialDesc) {
             elements.hostSpecialDesc.textContent = isCat
                 ? `Назначьте команду, которая обязана ответить (${cost} очков).`
                 : (type === 'auction_leader'
                     ? 'Игроки ставят с телефонов. Назначьте лидера — отвечает только он, цена вопроса = его ставка.'
-                    : 'Игроки ставят с телефонов. Все, кто поставил, обязаны ответить текстом — вы увидите ответы и оцените каждый.');
+                    : (type === 'final'
+                        ? 'Ставят игроки с положительным счётом (тайно, от 1 до своего счёта). Затем откройте вопрос — ответы придут текстом, оцените каждый.'
+                        : 'Игроки ставят с телефонов. Все, кто поставил, обязаны ответить текстом — вы увидите ответы и оцените каждый.'));
         }
         if (!list) return;
 
@@ -806,6 +856,7 @@
             const bet = bets[p.id] || 0;
             let betLabel = '';
             if (!isCat) betLabel = placed[p.id] ? (bet > 0 ? `${bet}` : 'ПАС') : 'думает…';
+            if (type === 'final' && state.finalBetLimits && !state.finalBetLimits[p.id]) betLabel = 'нет очков';
             const isTop = !isCat && bet > 0 && bet === maxBet;
             row.innerHTML = `
                 <span class="host-special-avatar">${p.avatar || '🐱'}</span>
@@ -849,7 +900,9 @@
     function renderHostBoardGrid(boardData) {
         if (!elements.hostBoardGrid || !boardData) return;
         if (elements.hostBoardRound) {
-            elements.hostBoardRound.textContent = boardData.roundName || `Раунд ${(boardData.roundIndex || 0) + 1}`;
+            const turnName = getTurnPlayerName();
+            elements.hostBoardRound.textContent = (boardData.roundName || `Раунд ${(boardData.roundIndex || 0) + 1}`)
+                + (turnName ? ` · выбирает: ${turnName}` : '');
         }
         elements.hostBoardGrid.innerHTML = '';
         const themes = boardData.themes || [];
@@ -993,6 +1046,10 @@
             const bet = bets[pid] || state.currentCost;
             const ans = answers[pid];
 
+            if (state.questionType === 'final') {
+                elements.hostAuctionList.appendChild(renderHostFinalCard(p, pid, bet, ans));
+                return;
+            }
             const card = document.createElement('div');
             card.className = `host-auction-card${ans ? ' answered' : ''}`;
             card.id = `host-auction-card-${pid}`;
@@ -1032,6 +1089,38 @@
         if (elements.hostAuctionCount) {
             elements.hostAuctionCount.textContent = `${answeredCount} / ${biddingIds.length} ответов`;
         }
+    }
+
+    // Final: each answer is judged once on the server (HOST_JUDGE_FINAL); buttons wait for the input lock
+    function renderHostFinalCard(p, pid, bet, ans) {
+        const verdicts = state.finalVerdicts || {};
+        const verdict = verdicts[pid];
+        const card = document.createElement('div');
+        card.className = `host-auction-card host-final-card${ans ? ' answered' : ''}${verdict === true ? ' correct' : ''}${verdict === false ? ' wrong' : ''}`;
+        let actions = '';
+        if (verdict === true) actions = `<span class="host-final-verdict correct">✅ Верно, +${bet}</span>`;
+        else if (verdict === false) actions = `<span class="host-final-verdict wrong">❌ Неверно, −${bet}</span>`;
+        else actions = `<button type="button" class="host-auction-btn-plus" ${state.finalLocked ? '' : 'disabled'}>✅ Верно +${bet}</button>
+                <button type="button" class="host-auction-btn-minus" ${state.finalLocked ? '' : 'disabled'}>❌ Неверно −${bet}</button>`;
+        card.innerHTML = `
+            <div class="host-auction-card-head">
+                <span class="host-auction-card-team">${p.avatar || '⭐'} ${escapeHtml(p.name)}</span>
+                <span class="host-auction-card-bet">Ставка: ${bet}</span>
+            </div>
+            <div class="host-auction-card-ans">${ans ? `✍️ ${escapeHtml(ans)}` : (state.finalLocked ? '— нет ответа —' : '⏳ Пишет ответ...')}</div>
+            <div class="host-auction-card-actions">${actions}</div>
+        `;
+        const plus = card.querySelector('.host-auction-btn-plus');
+        const minus = card.querySelector('.host-auction-btn-minus');
+        if (plus) plus.addEventListener('click', () => {
+            if (netClient) netClient.judgeFinal(pid, true);
+            haptic('buzz_press');
+        });
+        if (minus) minus.addEventListener('click', () => {
+            if (netClient) netClient.judgeFinal(pid, false);
+            haptic('buzz_press');
+        });
+        return card;
     }
 
     // =========================================================================
@@ -1223,6 +1312,15 @@
             }
 
             // Handle Host Role Screen View
+            if (payload.turnPlayerId !== undefined) state.turnPlayerId = payload.turnPlayerId;
+            if (payload.state) state.roomState = payload.state;
+
+            if (payload.isFinal) {
+                state.finalBetLimits = payload.finalBetLimits || null;
+                state.finalVerdicts = Object.assign({}, payload.finalVerdicts || {});
+                state.finalLocked = Boolean(payload.auctionAnswersLocked);
+            }
+
             if (state.selectedRole === 'host') {
                 if (payload.auctionBets) {
                     state.liveBets = Object.assign({}, payload.auctionBets);
@@ -1268,7 +1366,7 @@
 
                 case 'BOARD':
                     stopAnswerTimer();
-                    setWaitingTexts('Внимание на экран!', 'Ведущий выбирает вопрос на табло...');
+                    setWaitingTexts(...getBoardWaitingTexts());
                     showScreen('waiting');
                     break;
 
@@ -1316,6 +1414,14 @@
 
                 case 'AUCTION_BETTING':
                     state.questionType = (payload.currentQuestion && payload.currentQuestion.type) || state.questionType;
+                    if (payload.isFinal) {
+                        const selfId = state.selfPlayer && state.selfPlayer.id;
+                        state.activeThemeName = payload.themeName || state.activeThemeName;
+                        state.currentCost = payload.currentCost || state.currentCost;
+                        const alreadyBet = Boolean(selfId && (payload.finalBetPlacedIds || []).includes(selfId));
+                        if (alreadyBet || state.currentScreen !== 'auction') showFinalBetting(alreadyBet);
+                        break;
+                    }
                     if (!state.betSubmitted && state.currentScreen !== 'auction') {
                         state.currentCost = payload.currentCost || state.currentCost;
                         openAuctionScreen(payload.currentCost);
@@ -1333,10 +1439,27 @@
                     const bidding = Array.isArray(payload.biddingPlayerIds) ? payload.biddingPlayerIds : [];
                     const answered = Array.isArray(payload.auctionAnsweredIds) && payload.auctionAnsweredIds.includes(selfId);
                     state.questionType = (payload.currentQuestion && payload.currentQuestion.type) || state.questionType;
+                    const myVerdict = payload.isFinal && payload.finalVerdicts && selfId ? payload.finalVerdicts[selfId] : undefined;
+                    if (payload.isFinal && selfId && bidding.includes(selfId) && (answered || payload.auctionAnswersLocked)) {
+                        // Final: the room_state after every verdict must not wipe the player's own result
+                        stopAnswerTimer();
+                        const myBet = (payload.auctionBets && payload.auctionBets[selfId]) || 0;
+                        if (myVerdict === true || myVerdict === false) {
+                            setWaitingTexts(myVerdict ? '🎉 Верно!' : '❌ Неверно', `${myVerdict ? '+' : '−'}${myBet} очков. Итоги — на большом экране.`);
+                        } else if (payload.auctionAnswersLocked) {
+                            setWaitingTexts('🏆 Ответы закрыты', 'Ведущий проверяет ответы финала...');
+                        } else {
+                            setWaitingTexts('🏆 Ответ отправлен', 'Ждём остальных. Ведущий проверит ответы финала.');
+                        }
+                        showScreen('waiting');
+                        break;
+                    }
                     if (selfId && bidding.includes(selfId) && !answered && !payload.auctionAnswersLocked) {
                         const myBet = (payload.auctionBets && payload.auctionBets[selfId]) || state.currentCost;
                         if (elements.answerCostHint) {
-                            elements.answerCostHint.textContent = `Аукцион: ваша ставка ${myBet}. Отвечать обязательно`;
+                            elements.answerCostHint.textContent = payload.isFinal
+                                ? `🏆 Финал: ваша ставка ${myBet}. Вопрос — на большом экране`
+                                : `Аукцион: ваша ставка ${myBet}. Отвечать обязательно`;
                         }
                         if (elements.answerInput) elements.answerInput.value = '';
                         showScreen('answer');
@@ -1344,6 +1467,10 @@
                     } else if (selfId && bidding.includes(selfId)) {
                         stopAnswerTimer();
                         setWaitingTexts('Ответ отправлен', 'Ведущий проверит ответы и начислит или спишет ставку.');
+                        showScreen('waiting');
+                    } else if (payload.isFinal) {
+                        stopAnswerTimer();
+                        setWaitingTexts('🏆 Финал', 'Вы не участвуете в финале. Следите за большим экраном!');
                         showScreen('waiting');
                     } else {
                         stopAnswerTimer();
@@ -1386,6 +1513,9 @@
             state.auctionSubmittedAnswers = {};
             state.liveBets = {};
             state.questionType = payload.questionType || (payload.question && payload.question.type) || 'normal';
+            state.finalBetLimits = payload.isFinal ? (payload.finalBetLimits || {}) : null;
+            state.finalVerdicts = {};
+            state.finalLocked = false;
 
             if (elements.hostAuctionPanel) elements.hostAuctionPanel.classList.add('hidden');
             if (elements.buzzerBtn) elements.buzzerBtn.style.display = '';
@@ -1409,6 +1539,10 @@
             if (payload.state === 'CAT_CHOOSING') {
                 setWaitingTexts('🐱 Кот в мешке', 'Ведущий выбирает, кто будет отвечать на этот вопрос...');
                 showScreen('waiting');
+                return;
+            }
+            if (payload.state === 'AUCTION_BETTING' && state.questionType === 'final') {
+                showFinalBetting(false);
                 return;
             }
             if (payload.state === 'AUCTION_BETTING') {
@@ -1494,7 +1628,9 @@
                 // Bidding team must type answer instead of buzzer!
                 const myBet = (state.auctionBets && state.auctionBets[state.selfPlayer.id]) || state.currentCost;
                 if (elements.answerCostHint) {
-                    elements.answerCostHint.textContent = `Аукцион: ваша ставка ${myBet}. Отвечать обязательно`;
+                    elements.answerCostHint.textContent = payload.isFinal
+                        ? `🏆 Финал: ваша ставка ${myBet}. Вопрос — на большом экране`
+                        : `Аукцион: ваша ставка ${myBet}. Отвечать обязательно`;
                 }
                 if (elements.answerInput) {
                     elements.answerInput.value = '';
@@ -1505,8 +1641,12 @@
                 haptic('buzz_press');
             } else {
                 // Passed team does not answer
-                if (elements.waitingTitle) elements.waitingTitle.textContent = '🔥 Общий аукцион';
-                if (elements.waitingDesc) elements.waitingDesc.textContent = 'Вы спасовали на аукционе. Ожидание ответов соперников...';
+                if (payload.isFinal) {
+                    setWaitingTexts('🏆 Финал', 'Вы не участвуете в финале. Следите за большим экраном!');
+                } else {
+                    if (elements.waitingTitle) elements.waitingTitle.textContent = '🔥 Общий аукцион';
+                    if (elements.waitingDesc) elements.waitingDesc.textContent = 'Вы спасовали на аукционе. Ожидание ответов соперников...';
+                }
                 showScreen('waiting');
             }
         });
@@ -1563,8 +1703,36 @@
             showScreen('buzzer');
         });
 
-        netClient.on('answer_timeout', () => {
+        netClient.on('final_judged', (payload) => {
+            if (!payload) return;
+            if (state.selectedRole === 'host') {
+                state.finalVerdicts = state.finalVerdicts || {};
+                state.finalVerdicts[payload.playerId] = Boolean(payload.isCorrect);
+                renderHostAuctionList();
+                return;
+            }
+            const isMe = state.selfPlayer && payload.playerId === state.selfPlayer.id;
+            if (!isMe) return;
+            haptic(payload.isCorrect ? 'success' : 'error');
+            const delta = Number(payload.delta) || 0;
+            setWaitingTexts(payload.isCorrect ? '🎉 Верно!' : '❌ Неверно', `${delta > 0 ? '+' : ''}${delta} очков. Итоги — на большом экране.`);
+            showScreen('waiting');
+        });
+
+        netClient.on('answer_timeout', (payload) => {
             stopAnswerTimer();
+            if (payload && payload.isFinal) {
+                // Final: input closed (time is up or everybody answered), the host judges now
+                if (state.selectedRole === 'host') {
+                    state.finalLocked = true;
+                    renderHostAuctionList();
+                    showToast(payload.reason === 'all_answered' ? 'Все ответы получены — оцените их' : 'Время вышло — оцените ответы', 'info');
+                    return;
+                }
+                setWaitingTexts('🏆 Ответы закрыты', 'Ведущий проверяет ответы финала...');
+                showScreen('waiting');
+                return;
+            }
             haptic('error');
 
             if (state.selectedRole === 'host') {
@@ -1758,6 +1926,21 @@
 
         netClient.on('turn_passed', () => {
             showToast('🔄 Ход передан следующей команде', 'info');
+        });
+
+        netClient.on('turn_changed', (payload) => {
+            if (!payload) return;
+            state.turnPlayerId = payload.turnPlayerId || null;
+            if (state.selectedRole === 'host') {
+                if (state.boardData) renderHostBoardGrid(state.boardData);
+                return;
+            }
+            const selfId = state.selfPlayer && state.selfPlayer.id;
+            if (payload.changed && selfId && payload.turnPlayerId === selfId) {
+                haptic('success');
+                showToast('👉 Ваш ход — выбирайте вопрос!', 'success');
+            }
+            if (state.roomState === 'BOARD' && state.currentScreen === 'waiting') setWaitingTexts(...getBoardWaitingTexts());
         });
 
         netClient.on('round_skipped', (payload) => {
@@ -2262,7 +2445,10 @@
             }
             haptic('success');
             stopAnswerTimer();
-            if (state.questionType === 'auction' || state.questionType === 'auction_all') {
+            if (state.questionType === 'final') {
+                setWaitingTexts('🏆 Ответ отправлен', 'Ждём остальных. Ведущий проверит ответы финала.');
+                showScreen('waiting');
+            } else if (state.questionType === 'auction' || state.questionType === 'auction_all') {
                 setWaitingTexts('Ответ отправлен', 'Ведущий проверит ответы и начислит или спишет ставку.');
                 showScreen('waiting');
             } else {
@@ -2311,7 +2497,9 @@
             }
             state.betSubmitted = true;
             haptic('success');
-            setWaitingTexts('Ставка принята', state.questionType === 'auction_leader'
+            setWaitingTexts('Ставка принята', state.questionType === 'final'
+                ? `Ваша ставка: ${amount}. Вопрос откроется на большом экране — ответ напишете здесь.`
+                : state.questionType === 'auction_leader'
                 ? `Ваша ставка: ${amount}. Ждём остальных — отвечает самая высокая.`
                 : `Ваша ставка: ${amount}. Если ведущий откроет вопрос — вы обязаны ответить.`);
             showScreen('waiting');

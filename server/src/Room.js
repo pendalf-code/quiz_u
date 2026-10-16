@@ -12,6 +12,8 @@ const PackParser = require('../../js/core/PackParser');
 
 // Typed answers of an "auction for everyone" always get the same fixed window
 const AUCTION_ANSWER_SECONDS = 30;
+// Final round: everyone who placed a bet types the answer within this window
+const FINAL_ANSWER_SECONDS = 60;
 
 class Room {
     constructor(code, hostWs, options = {}) {
@@ -29,6 +31,8 @@ class Room {
             penaltyFixedAmount: options.penaltyFixedAmount !== undefined ? Math.max(0, parseInt(options.penaltyFixedAmount, 10)) : 100,
             ...options
         };
+        // Who picks the next question: 'rotation' (in turn, the default) | 'winner' (whoever answered right)
+        this.options.turnOrderMode = Room.normalizeTurnOrderMode(options.turnOrderMode);
 
         // Determine if local PC is treated as host
         this.isHostOnPC = options.isHostOnPC !== undefined
@@ -60,6 +64,14 @@ class Room {
         this.auctionAnswers = new Map(); // playerId -> { answerText, timestamp }
         this.biddingPlayerIds = [];
         this.auctionAnswersLocked = false;
+        // Final round (questionType 'final'): bet limits frozen when the question opens, host verdicts
+        this.isFinalQuestion = false;
+        this.finalBetLimits = {}; // playerId -> { min, max }
+        this.finalVerdicts = new Map(); // playerId -> boolean
+
+        // Turn: the player choosing the next question; the first player credited for the open question
+        this.turnPlayerId = null;
+        this.questionWinnerId = null;
 
         this.answerTimer = null;
         this.thinkingTimer = null;
@@ -130,6 +142,8 @@ class Room {
             if (player.ws && player.ws.readyState === 1) {
                 player.ws.send(createMessage(MSG_TYPES.ROOM_STATE, {
                     ...playerSnapshot,
+                    // Final bets are secret: a player sees only their own amount
+                    ...(this.isFinalQuestion ? { auctionBets: this.getOwnFinalBet(player.id) } : {}),
                     self: this.sanitizePlayer(player),
                     sessionToken: player.sessionToken,
                     role: player.role || 'player'
@@ -382,6 +396,7 @@ class Room {
 
                 if (wasKicked) {
                     this.disconnectedPlayerIds.delete(id);
+                    if (this.turnPlayerId === id) this.setTurnPlayer(this.getNextTurnPlayerId(id));
                 } else {
                     this.pauseForDisconnect(id, player.name);
                 }
@@ -497,6 +512,9 @@ class Room {
             const val = parseInt(newOptions.penaltyFixedAmount, 10);
             if (!isNaN(val) && val >= 0) this.options.penaltyFixedAmount = val;
         }
+        if (newOptions.turnOrderMode !== undefined) {
+            this.options.turnOrderMode = Room.normalizeTurnOrderMode(newOptions.turnOrderMode);
+        }
         if (newOptions.maxPlayers !== undefined) {
             const val = parseInt(newOptions.maxPlayers, 10);
             if (!isNaN(val) && val >= 2) this.options.maxPlayers = val;
@@ -567,6 +585,10 @@ class Room {
             this.currentThemeIndex = null;
             this.currentQuestion = null;
             this._resetQuestionsUsed();
+            this.turnPlayerId = null;
+        }
+        if (!this.turnPlayerId || !this.players.has(this.turnPlayerId)) {
+            this.setTurnPlayer(this.getNextTurnPlayerId(null), false);
         }
         this.stateMachine.showBoard();
         this.broadcastRoomState();
@@ -597,6 +619,9 @@ class Room {
         this.auctionBets.clear();
         this.auctionAnswers.clear();
         this.biddingPlayerIds = [];
+        this.resetFinalState();
+        this.turnPlayerId = null;
+        this.questionWinnerId = null;
         const wasPaused = this.isPaused;
         this.isPaused = false;
         this.pauseReason = null;
@@ -657,6 +682,15 @@ class Room {
         this.auctionAnswers.clear();
         this.biddingPlayerIds = [];
         this.auctionAnswersLocked = false;
+        this.resetFinalState();
+        this.questionWinnerId = null;
+
+        // Final round: no buzzer, bets + typed answers (reuses the auction states)
+        if (resolvedQuestion && this.isFinalRoundIndex()) {
+            resolvedQuestion.type = 'final';
+            this.isFinalQuestion = true;
+            this.finalBetLimits = this.computeFinalBetLimits();
+        }
 
         const qType = (resolvedQuestion && resolvedQuestion.type) ? resolvedQuestion.type : 'normal';
 
@@ -669,7 +703,7 @@ class Room {
             console.warn('[Room] stateMachine.startQuestion fallback:', err.message);
             this.stateMachine.state = (qType === 'cat' || qType === 'secret')
                 ? 'CAT_CHOOSING'
-                : ((qType === 'auction' || qType === 'auction_all' || qType === 'auction_leader')
+                : ((qType === 'auction' || qType === 'auction_all' || qType === 'auction_leader' || qType === 'final')
                     ? 'AUCTION_BETTING'
                     : 'QUESTION_READING');
         }
@@ -684,11 +718,15 @@ class Room {
             cost: this.currentCost,
             readingTime: this.options.readingTime,
             thinkingTime: this.options.thinkingTime,
+            ...this.getFinalPayload(),
             question: this.currentQuestion // Host gets full question with 'a', 'comment', etc.
         });
 
         // Anti-Cheat: sanitize question before sending to players!
-        const sanitizedQuestion = PackParser.sanitizeQuestionForPlayer(this.currentQuestion);
+        // Final: during the bets players see only the theme, the text comes with AUCTION_ANSWER_START
+        const sanitizedQuestion = this.isFinalQuestion
+            ? PackParser.sanitizeFinalQuestionForBetting(this.currentQuestion)
+            : PackParser.sanitizeQuestionForPlayer(this.currentQuestion);
         this.broadcastToPlayers(MSG_TYPES.QUESTION_ACTIVE, {
             themeIdx,
             questionIdx,
@@ -698,6 +736,7 @@ class Room {
             cost: this.currentCost,
             readingTime: this.options.readingTime,
             thinkingTime: this.options.thinkingTime,
+            ...this.getFinalPayload(),
             question: sanitizedQuestion // Players get NO 'a' or 'a_img'
         });
 
@@ -719,7 +758,48 @@ class Room {
     }
 
     isSpecialType(qType) {
-        return ['cat', 'secret', 'auction', 'auction_all', 'auction_leader'].includes(qType);
+        return ['cat', 'secret', 'auction', 'auction_all', 'auction_leader', 'final'].includes(qType);
+    }
+
+    /**
+     * Is the round a final in the "one question per theme" format (see PackParser.isFinalRound)?
+     */
+    isFinalRoundIndex(roundIdx = this.currentRoundIndex) {
+        if (!Array.isArray(this.currentPack)) return false;
+        return PackParser.isFinalRound(this.currentPack[roundIdx], roundIdx, this.currentPack.length);
+    }
+
+    resetFinalState() {
+        this.isFinalQuestion = false;
+        this.finalBetLimits = {};
+        this.finalVerdicts = new Map();
+    }
+
+    /**
+     * Who may bet in the final and how much: players with a positive score bet 1..score.
+     * If nobody has a positive score, everybody plays for the nominal (min = max = cost).
+     */
+    computeFinalBetLimits() {
+        const all = Array.from(this.players.values()).filter(p => p.role !== 'host');
+        const positive = all.filter(p => (Number(p.score) || 0) > 0);
+        const limits = {};
+        if (positive.length > 0) {
+            positive.forEach(p => { limits[p.id] = { min: 1, max: Number(p.score) }; });
+        } else {
+            const nominal = Math.max(1, Number(this.currentCost) || 100);
+            all.forEach(p => { limits[p.id] = { min: nominal, max: nominal }; });
+        }
+        return limits;
+    }
+
+    getFinalPayload() {
+        if (!this.isFinalQuestion) return {};
+        return {
+            isFinal: true,
+            finalBetLimits: this.finalBetLimits,
+            finalEligibleIds: Object.keys(this.finalBetLimits),
+            finalAnswerSeconds: FINAL_ANSWER_SECONDS
+        };
     }
 
     /**
@@ -827,7 +907,11 @@ class Room {
         }
         this.remainingReadingTime = 0;
 
-        let allowed = Array.isArray(biddingPlayerIds) ? biddingPlayerIds.filter(id => this.players.has(id)) : null;
+        if (this.isFinalQuestion && this.stateMachine.state !== 'AUCTION_BETTING') {
+            return { success: false, message: 'Ставки финала уже закрыты' };
+        }
+        // Final: only the players who really placed a bet answer, whatever the client sent
+        let allowed = (Array.isArray(biddingPlayerIds) && !this.isFinalQuestion) ? biddingPlayerIds.filter(id => this.players.has(id)) : null;
         if (!allowed || allowed.length === 0) {
             if (this.auctionBets && this.auctionBets.size > 0) {
                 allowed = Array.from(this.auctionBets.entries())
@@ -837,10 +921,12 @@ class Room {
                         return val > 0 && !passed && this.players.has(id);
                     })
                     .map(([id]) => id);
-            } else {
+            } else if (!this.isFinalQuestion) {
                 allowed = Array.from(this.players.values())
                     .filter(p => p.isConnected && p.role !== 'host')
                     .map(p => p.id);
+            } else {
+                allowed = [];
             }
         }
         if (allowed.length === 0) {
@@ -857,8 +943,8 @@ class Room {
             betsObj[id] = (typeof b === 'object' && b !== null) ? b.val : Number(b);
         }
 
-        const answerTime = AUCTION_ANSWER_SECONDS;
-        this.broadcastToAll(MSG_TYPES.AUCTION_ANSWER_START, {
+        const answerTime = this.isFinalQuestion ? FINAL_ANSWER_SECONDS : AUCTION_ANSWER_SECONDS;
+        const startPayload = {
             themeIdx: this.currentThemeIndex,
             questionIdx: this.currentQuestionIndex,
             cost: this.currentCost,
@@ -866,7 +952,18 @@ class Room {
             answerTime,
             biddingPlayerIds: this.biddingPlayerIds,
             bets: betsObj
-        });
+        };
+        if (this.isFinalQuestion) {
+            // The final question text is revealed only now; the answer still never goes to players
+            this.sendToHost(MSG_TYPES.AUCTION_ANSWER_START, { ...startPayload, isFinal: true, question: this.currentQuestion });
+            this.broadcastToPlayers(MSG_TYPES.AUCTION_ANSWER_START, {
+                ...startPayload,
+                isFinal: true,
+                question: PackParser.sanitizeQuestionForPlayer(this.currentQuestion)
+            });
+        } else {
+            this.broadcastToAll(MSG_TYPES.AUCTION_ANSWER_START, startPayload);
+        }
 
         // Typing window: after it ends answers are locked, the host still judges what came in
         this.remainingThinkingTime = answerTime;
@@ -889,7 +986,80 @@ class Room {
         this.remainingThinkingTime = 0;
         if (this.stateMachine.state !== 'AUCTION_ANSWERING') return;
         this.auctionAnswersLocked = true;
-        this.broadcastToAll(MSG_TYPES.ANSWER_TIMEOUT, { message: 'Время на ответ истекло!', isAuction: true });
+        this.broadcastToAll(MSG_TYPES.ANSWER_TIMEOUT, {
+            message: 'Время на ответ истекло!',
+            isAuction: true,
+            ...(this.isFinalQuestion ? { isFinal: true, reason: 'timeout' } : {})
+        });
+    }
+
+    /**
+     * Final: every bidder sent an answer - stop the typing window early.
+     */
+    lockFinalAnswersIfComplete() {
+        if (!this.isFinalQuestion || this.auctionAnswersLocked) return;
+        const pending = (this.biddingPlayerIds || []).filter(id => !this.auctionAnswers.has(id));
+        if (pending.length > 0) return;
+        if (this.thinkingTimer) {
+            clearTimeout(this.thinkingTimer);
+            this.thinkingTimer = null;
+        }
+        this.thinkingTimerStartedAt = null;
+        this.remainingThinkingTime = 0;
+        this.auctionAnswersLocked = true;
+        this.broadcastToAll(MSG_TYPES.ANSWER_TIMEOUT, {
+            message: 'Все ответы получены',
+            isAuction: true,
+            isFinal: true,
+            reason: 'all_answered'
+        });
+    }
+
+    /**
+     * Final: the host judges one bidder's typed answer once; the bet is added or taken away.
+     * When every bidder is judged the correct answer is shown to everybody; the host then closes
+     * the question (HOST_CLOSE_QUESTION) and the server ends the game.
+     */
+    judgeFinalAnswer(playerId, isCorrect) {
+        this.touch();
+        if (!this.isFinalQuestion || this.stateMachine.state !== 'AUCTION_ANSWERING') {
+            return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Сейчас нет ответов финала для проверки' };
+        }
+        if (!this.auctionAnswersLocked) {
+            return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Дождитесь окончания приёма ответов' };
+        }
+        if (!(this.biddingPlayerIds || []).includes(playerId)) {
+            return { success: false, error: ERROR_CODES.INVALID_PAYLOAD, message: 'Этот игрок не участвует в финале' };
+        }
+        if (this.finalVerdicts.has(playerId)) {
+            return { success: false, already: true, error: ERROR_CODES.INVALID_ACTION, message: 'Ответ уже оценён' };
+        }
+        const player = this.players.get(playerId);
+        const bet = this.getAuctionBet(playerId);
+        const correct = Boolean(isCorrect);
+        const delta = correct ? bet : -bet;
+        this.finalVerdicts.set(playerId, correct);
+        this.updatePlayerScore(playerId, delta);
+
+        const allJudged = this.biddingPlayerIds.every(id => this.finalVerdicts.has(id));
+        const answer = this.auctionAnswers.get(playerId);
+        const verdict = {
+            playerId,
+            playerName: player ? player.name : '',
+            isCorrect: correct,
+            bet,
+            delta,
+            newScore: player ? player.score : 0,
+            judgedCount: this.finalVerdicts.size,
+            total: this.biddingPlayerIds.length,
+            allJudged
+        };
+        // Answer texts are private: only the PC screen and the phone host see them
+        this.sendToHost(MSG_TYPES.FINAL_JUDGED, { ...verdict, answerText: answer ? answer.answerText : '' });
+        this.broadcastToPlayers(MSG_TYPES.FINAL_JUDGED, verdict);
+        if (allJudged) this.showAnswer();
+        this.broadcastRoomState();
+        return { success: true, ...verdict };
     }
 
     /**
@@ -1036,6 +1206,9 @@ class Room {
     handleAnswerSubmit(playerId, rawAnswerText) {
         this.touch();
         const answerText = String(rawAnswerText ?? '').slice(0, 300);
+        if (this.isFinalQuestion && this.stateMachine.state !== 'AUCTION_ANSWERING') {
+            return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Приём ответов финала ещё не начался' };
+        }
         const isAuctionAnswering = (this.stateMachine.state === 'AUCTION_ANSWERING' ||
             (this.currentQuestion && (this.currentQuestion.type === 'auction' || this.currentQuestion.type === 'auction_all')));
 
@@ -1062,8 +1235,10 @@ class Room {
                 avatar: player ? player.avatar : '👤',
                 answerText,
                 bet: betVal,
-                isAuction: true
+                isAuction: true,
+                ...(this.isFinalQuestion ? { isFinal: true } : {})
             });
+            this.lockFinalAnswersIfComplete();
             return { success: true, isAuction: true };
         }
 
@@ -1131,6 +1306,7 @@ class Room {
         if (!player) return;
         const inBetting = this.stateMachine.state === 'AUCTION_BETTING';
         const qType = (this.currentQuestion && this.currentQuestion.type) || 'normal';
+        if (this.isFinalQuestion) return this.handleFinalBet(player, amount, inBetting);
         if (!inBetting && ['auction', 'auction_all', 'auction_leader'].includes(qType)) return; // bets are closed
 
         let val = Math.round(Number(amount) || 0);
@@ -1152,7 +1328,25 @@ class Room {
         });
     }
 
-        handleThinkingTimeout() {
+    /**
+     * Final bet: only eligible players, clamped to the frozen limits, no pass. The amount is secret:
+     * the host sees it, the other players only learn that a bet was placed.
+     */
+    handleFinalBet(player, amount, inBetting) {
+        if (!inBetting) return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'Ставки финала закрыты' };
+        const limits = this.finalBetLimits[player.id];
+        if (!limits) {
+            return { success: false, error: ERROR_CODES.INVALID_ACTION, message: 'В финале ставят только игроки с положительным счётом' };
+        }
+        let val = Math.round(Number(amount) || 0);
+        val = Math.min(Math.max(val, limits.min), limits.max);
+        this.auctionBets.set(player.id, { val, isPassed: false });
+        this.sendToHost(MSG_TYPES.AUCTION_BET_MADE, { playerId: player.id, playerName: player.name, amount: val, isFinal: true });
+        this.broadcastToPlayers(MSG_TYPES.AUCTION_BET_MADE, { playerId: player.id, playerName: player.name, placed: true, isFinal: true });
+        return { success: true, amount: val };
+    }
+
+    handleThinkingTimeout() {
         this.touch();
         if (this.thinkingTimer) {
             clearTimeout(this.thinkingTimer);
@@ -1183,6 +1377,9 @@ class Room {
                 this.stateMachine.showBoard(this.currentRoundIndex, this.currentPack.length);
             } catch {
                 this.stateMachine.state = 'BOARD';
+            }
+            if (this.options.turnOrderMode === 'rotation') {
+                this.setTurnPlayer(this.getNextTurnPlayerId(this.turnPlayerId));
             }
             this.broadcastToAll(MSG_TYPES.ROUND_CHANGED, {
                 roundIndex: this.currentRoundIndex,
@@ -1230,6 +1427,10 @@ class Room {
             this.answerTimer = null;
         }
 
+        if (this.isFinalQuestion) {
+            // Final answers are judged row by row (HOST_JUDGE_FINAL), never "the first bidder"
+            return { success: false, message: 'Ответы финала оцениваются по одному' };
+        }
         let answeringPlayerId = this.activeBuzzerPlayerId;
         if (!answeringPlayerId && (this.stateMachine.state === 'AUCTION_ANSWERING' || (this.currentQuestion && (this.currentQuestion.type === 'auction' || this.currentQuestion.type === 'auction_all')))) {
             if (this.biddingPlayerIds && this.biddingPlayerIds.length > 0) {
@@ -1429,7 +1630,73 @@ class Room {
     passTurn() {
         this.touch();
         if (!this.isGameRunning()) return;
-        this.broadcastToAll(MSG_TYPES.TURN_PASSED, {});
+        this.setTurnPlayer(this.getNextTurnPlayerId(this.turnPlayerId));
+        this.broadcastToAll(MSG_TYPES.TURN_PASSED, { turnPlayerId: this.turnPlayerId });
+    }
+
+    /**
+     * Host picked who chooses the next question (turn modal on the PC).
+     */
+    setTurn(playerId) {
+        this.touch();
+        const player = this.players.get(playerId);
+        if (!player || player.role === 'host') return { success: false, message: 'Игрок не найден' };
+        this.setTurnPlayer(playerId);
+        return { success: true };
+    }
+
+    /**
+     * Players in join order who can take the turn: connected ones first; if nobody is connected, everybody.
+     */
+    getTurnCandidates() {
+        const all = Array.from(this.players.values()).filter(p => p.role !== 'host' && (p.isConnected || p.sessionToken));
+        const connected = all.filter(p => p.isConnected);
+        return (connected.length > 0 ? connected : all).map(p => p.id);
+    }
+
+    /** The player after `fromId` in join order (wraps around); the first one when `fromId` is unknown. */
+    getNextTurnPlayerId(fromId) {
+        const order = Array.from(this.players.values()).filter(p => p.role !== 'host').map(p => p.id);
+        const candidates = this.getTurnCandidates();
+        if (candidates.length === 0) return null;
+        const start = order.indexOf(fromId);
+        if (start === -1) return candidates[0];
+        for (let i = 1; i <= order.length; i++) {
+            const id = order[(start + i) % order.length];
+            if (candidates.includes(id)) return id;
+        }
+        return candidates[0];
+    }
+
+    setTurnPlayer(playerId, broadcast = true) {
+        const changed = this.turnPlayerId !== playerId;
+        this.turnPlayerId = playerId || null;
+        if (broadcast) {
+            const player = playerId ? this.players.get(playerId) : null;
+            this.broadcastToAll(MSG_TYPES.TURN_CHANGED, {
+                turnPlayerId: this.turnPlayerId,
+                turnPlayerName: player ? player.name : '',
+                mode: this.options.turnOrderMode,
+                changed
+            });
+        }
+    }
+
+    /** First player credited with points for the open question (judged right, auction / final win) */
+    noteCorrectAnswer(playerId) {
+        if (!this.questionWinnerId && this.players.has(playerId)) this.questionWinnerId = playerId;
+    }
+
+    /**
+     * A question was played: 'rotation' passes the turn to the next player; 'winner' gives it to the
+     * first player who answered right, and if nobody did the current chooser keeps it.
+     */
+    advanceTurnAfterQuestion() {
+        const next = this.options.turnOrderMode === 'winner'
+            ? (this.questionWinnerId || this.turnPlayerId || this.getNextTurnPlayerId(null))
+            : this.getNextTurnPlayerId(this.turnPlayerId);
+        this.questionWinnerId = null;
+        this.setTurnPlayer(next);
     }
 
     updateAllScores(delta) {
@@ -1482,6 +1749,7 @@ class Room {
         if (player) {
             const numDelta = Number(delta) || 0;
             player.score += numDelta;
+            if (numDelta > 0 && this.currentQuestion) this.noteCorrectAnswer(playerId);
             this.broadcastToAll(MSG_TYPES.SCORE_UPDATED, {
                 playerId,
                 playerName: player.name,
@@ -1512,6 +1780,10 @@ class Room {
         this.biddingPlayerIds = [];
         this.auctionAnswersLocked = false;
         this.passedPlayers.clear();
+        const wasFinal = this.isFinalQuestion;
+        // The final has no "next question"; a repeated finish (host closes an answered question) does nothing
+        if (this.currentQuestion && !wasFinal) this.advanceTurnAfterQuestion();
+        this.resetFinalState();
         this.currentQuestion = null;
 
         let allUsed = false;
@@ -1520,7 +1792,10 @@ class Room {
             allUsed = (currentRound.themes || []).every(th => (th.questions || []).every(q => q.used));
         }
 
-        if (allUsed) {
+        if (wasFinal && this.isFinalRoundIndex()) {
+            // The final is a single question (the other final themes are dropped): the game is over
+            this.stateMachine.state = 'GAME_OVER';
+        } else if (allUsed) {
             if (this.currentRoundIndex + 1 >= (this.currentPack ? this.currentPack.length : 1)) {
                 this.stateMachine.state = 'GAME_OVER';
             } else {
@@ -1557,11 +1832,17 @@ class Room {
         return null;
     }
 
+    getOwnFinalBet(playerId) {
+        const b = this.auctionBets.get(playerId);
+        return b ? { [playerId]: (b && typeof b === 'object') ? b.val : Number(b) || 0 } : {};
+    }
+
     getStateSnapshot(forPlayer = false) {
         let questionData = null;
         if (this.currentQuestion) {
-            questionData = forPlayer 
-                ? PackParser.sanitizeQuestionForPlayer(this.currentQuestion)
+            const hideFinalText = this.isFinalQuestion && this.stateMachine.state === 'AUCTION_BETTING';
+            questionData = forPlayer
+                ? (hideFinalText ? PackParser.sanitizeFinalQuestionForBetting(this.currentQuestion) : PackParser.sanitizeQuestionForPlayer(this.currentQuestion))
                 : this.currentQuestion;
         }
 
@@ -1619,7 +1900,15 @@ class Room {
             auctionAnswersLocked: this.auctionAnswersLocked,
             answerSecondsLeft: this.getAnswerSecondsLeft(),
             ...(forPlayer ? {} : { auctionAnswers: Object.fromEntries(Array.from(this.auctionAnswers.entries()).map(([id, a]) => [id, a.answerText])) }),
-            auctionBets: Object.fromEntries(Array.from(this.auctionBets.entries()).map(([id, b]) => [id, (b && typeof b === 'object') ? (b.isPassed ? 0 : b.val) : Number(b) || 0])),
+            auctionBets: (forPlayer && this.isFinalQuestion)
+                ? {}
+                : Object.fromEntries(Array.from(this.auctionBets.entries()).map(([id, b]) => [id, (b && typeof b === 'object') ? (b.isPassed ? 0 : b.val) : Number(b) || 0])),
+            isFinalRound: this.isFinalRoundIndex(),
+            turnPlayerId: this.turnPlayerId,
+            turnOrderMode: this.options.turnOrderMode,
+            ...this.getFinalPayload(),
+            finalBetPlacedIds: this.isFinalQuestion ? Array.from(this.auctionBets.keys()) : [],
+            finalVerdicts: Object.fromEntries(this.finalVerdicts),
             buzzerOpenFor: (this.stateMachine.state === 'BUZZ_ACTIVE' && Array.isArray(this.allowedBuzzerPlayerIds))
                 ? this.allowedBuzzerPlayerIds.filter(id => !this.buzzedPlayers.has(id) && !this.passedPlayers.has(id))
                 : null,
@@ -1638,5 +1927,7 @@ class Room {
 }
 
 Room.AUCTION_ANSWER_SECONDS = AUCTION_ANSWER_SECONDS;
+Room.FINAL_ANSWER_SECONDS = FINAL_ANSWER_SECONDS;
+Room.normalizeTurnOrderMode = (mode) => (mode === 'winner' ? 'winner' : 'rotation');
 
 module.exports = Room;

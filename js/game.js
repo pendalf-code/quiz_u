@@ -1139,6 +1139,52 @@ function resetGameStats() {
 let configAllowCat = localStorage.getItem('cfg_allow_cat') !== 'false';
 let configAllowAuction = localStorage.getItem('cfg_allow_auction') !== 'false';
 let configAllowAuctionLeader = localStorage.getItem('cfg_allow_auction_leader') !== 'false';
+// Turn order (TASK-48): 'rotation' — teams pick in turn (default); 'winner' — whoever answered right picks next
+let configTurnOrderMode = readTurnOrderSetting();
+let questionWinnerTeamIdx = null; // local game: first team credited with points for the open question
+
+function readTurnOrderSetting() {
+    try {
+        return localStorage.getItem('cfg_turn_order') === 'winner' ? 'winner' : 'rotation';
+    } catch (e) {
+        return 'rotation';
+    }
+}
+
+function saveTurnOrderSetting(mode) {
+    configTurnOrderMode = mode === 'winner' ? 'winner' : 'rotation';
+    try {
+        localStorage.setItem('cfg_turn_order', configTurnOrderMode);
+    } catch (e) {
+    }
+}
+
+/** Local game: who picks after a played question. Nobody right in 'winner' mode: the chooser keeps the turn */
+function getNextTurnTeamIdxAfterQuestion() {
+    const n = teams.length || 1;
+    const winner = questionWinnerTeamIdx;
+    questionWinnerTeamIdx = null;
+    if (configTurnOrderMode === 'winner') {
+        return (winner !== null && teams[winner]) ? winner : currentTurnTeamIdx;
+    }
+    return (currentTurnTeamIdx + 1) % n;
+}
+
+/** Local game: a new round passes the turn on only in the 'rotation' mode */
+function getNextTurnTeamIdxAfterRound() {
+    return configTurnOrderMode === 'winner' ? currentTurnTeamIdx : (currentTurnTeamIdx + 1) % (teams.length || 1);
+}
+
+/** LAN: the server owns the turn; mirror its player id */
+function syncTurnFromServer(turnPlayerId) {
+    if (!turnPlayerId || !Array.isArray(teams)) return;
+    const idx = teams.findIndex(t => t.id === turnPlayerId);
+    if (idx === -1 || idx === currentTurnTeamIdx) return;
+    currentTurnTeamIdx = idx;
+    updateTurnDisplay();
+    updateTeamsPanel();
+    saveGameState();
+}
 
 document.getElementById('setting-type-cat').checked = configAllowCat;
 document.getElementById('setting-type-auction').checked = configAllowAuction;
@@ -1269,6 +1315,7 @@ function startTimerAfterVideo() {
 }
 
 function hideGameLayout() {
+    if (window.FinalRound) window.FinalRound.hide();
     ['game-board', 'game-header-block', 'main-teams-panel', 'teams-block-title', 'teams-block-wrapper'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -1663,6 +1710,9 @@ function saveSettings() {
     localStorage.setItem('cfg_allow_cat', configAllowCat);
     localStorage.setItem('cfg_allow_auction', configAllowAuction);
     localStorage.setItem('cfg_allow_auction_leader', configAllowAuctionLeader);
+    const turnOrderSelect = document.getElementById('setting-turn-order');
+    if (turnOrderSelect) saveTurnOrderSetting(turnOrderSelect.value);
+    currentLobbySettings.turnOrderMode = configTurnOrderMode;
 
     showSystemModal("🏁 Готовы к игре!", "Настройки успешно сохранены!", [
         {
@@ -2123,6 +2173,16 @@ function initBoard() {
         });
     }
 
+    // Final round (one question per theme): its own screen instead of a board with one cell (TASK-47)
+    if (window.FinalRound && typeof PackParser !== 'undefined' && PackParser.isFinalRound(round, currentRoundIndex, gameData.length)) {
+        if (board) board.style.display = 'none';
+        // LAN: the final is over (server GAME_OVER), the winners screen is up: do not bring the final back
+        if (isOnlineGame && lastServerRoomState === 'GAME_OVER') return;
+        window.FinalRound.showForRound(currentRoundIndex);
+        return;
+    }
+    if (window.FinalRound) window.FinalRound.hide();
+
     round.themes.forEach((theme, themeIdx) => {
         const row = document.createElement('div');
         row.classList.add('theme-row');
@@ -2209,6 +2269,7 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
 
     currentCost = question.cost;
     activeTeamIdxForQuestion = null;
+    questionWinnerTeamIdx = null;
     auctionBets = {};
 
     if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
@@ -3221,7 +3282,7 @@ function showAnswer() {
                 return;
             }
 
-            currentTurnTeamIdx = (currentTurnTeamIdx + 1) % teams.length;
+            currentTurnTeamIdx = getNextTurnTeamIdxAfterQuestion();
             saveGameState();
             updateTurnDisplay();
             updateTeamsPanel();
@@ -3235,6 +3296,7 @@ function showAnswer() {
 }
 
 function changeTeamScore(teamIdx, amount, syncToServer = true) {
+    if (amount > 0 && questionWinnerTeamIdx === null) questionWinnerTeamIdx = teamIdx;
     if (coreScoreManager) {
         coreScoreManager.teams = teams;
         coreScoreManager.gameStats = gameStats;
@@ -3259,6 +3321,7 @@ function changeTeamScore(teamIdx, amount, syncToServer = true) {
     updateTeamsPanel();
     renderModalTeamsList();
     saveGameState();
+    if (window.FinalRound) window.FinalRound.refresh();
 }
 
 function skipRound() {
@@ -3284,7 +3347,8 @@ function executeSkipRound() {
     closeSystemModal();
     stopQuestionAudio();
     currentRoundIndex++;
-    currentTurnTeamIdx = (currentTurnTeamIdx + 1) % teams.length;
+    // LAN: the server already moved the turn (room_state / turn_changed)
+    if (!isOnlineGame) currentTurnTeamIdx = getNextTurnTeamIdxAfterRound();
     if (currentRoundIndex >= gameData.length) {
         hideGameLayout();
         showWinnerCelebration();
@@ -3306,7 +3370,7 @@ function checkRoundEnd() {
         currentRoundIndex++;
         if (currentRoundIndex < gameData.length) {
             showSystemModal("🏁 РАУНД ЗАВЕРШЕН", "Все вопросы раунда разыграны!");
-            currentTurnTeamIdx = (currentTurnTeamIdx + 1) % teams.length;
+            currentTurnTeamIdx = getNextTurnTeamIdxAfterRound();
             initBoard();
             saveGameState();
         } else {
@@ -3490,6 +3554,10 @@ function onTurnOrderModalBackdropClick(event) {
 
 function selectTurnTeam(idx) {
     if (idx < 0 || idx >= teams.length) return;
+    if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected && teams[idx].id) {
+        // The server owns the turn: it answers with turn_changed
+        hostNetworkClient.setTurn(teams[idx].id);
+    }
     currentTurnTeamIdx = idx;
     updateTurnDisplay();
     updateTeamsPanel();
@@ -3750,7 +3818,8 @@ let currentLobbySettings = {
     answerTime: parseInt(localStorage.getItem('cfg_answer_time'), 10) >= 1 ? parseInt(localStorage.getItem('cfg_answer_time'), 10) : 5,
     penaltyEnabled: localStorage.getItem('cfg_penalty_enabled') === 'true',
     penaltyMode: localStorage.getItem('cfg_penalty_mode') || 'nominal',
-    penaltyFixedAmount: parseInt(localStorage.getItem('cfg_penalty_fixed_amount'), 10) || 100
+    penaltyFixedAmount: parseInt(localStorage.getItem('cfg_penalty_fixed_amount'), 10) || 100,
+    turnOrderMode: configTurnOrderMode
 };
 
 function getLobbySettings() {
@@ -3770,6 +3839,10 @@ function updateLobbySettingsChips() {
     const thinkingChip = document.getElementById('chip-thinking-time');
     const answerChip = document.getElementById('chip-answer-time');
     const penaltyChip = document.getElementById('chip-penalty');
+    const turnOrderChip = document.getElementById('chip-turn-order');
+    if (turnOrderChip) {
+        turnOrderChip.textContent = currentLobbySettings.turnOrderMode === 'winner' ? 'Ответивший верно' : 'По очереди';
+    }
 
     if (readingChip) {
         if (currentLobbySettings.readingTime === 0) {
@@ -3833,6 +3906,8 @@ function openLobbySettingsModal(event) {
     if (penaltyCheckbox) penaltyCheckbox.checked = Boolean(currentLobbySettings.penaltyEnabled);
     if (penaltyModeSelect) penaltyModeSelect.value = currentLobbySettings.penaltyMode || 'nominal';
     if (penaltyFixedInput) penaltyFixedInput.value = currentLobbySettings.penaltyFixedAmount || 100;
+    const turnOrderInput = document.getElementById('lobby-setting-turn-order');
+    if (turnOrderInput) turnOrderInput.value = currentLobbySettings.turnOrderMode === 'winner' ? 'winner' : 'rotation';
 
     toggleLobbyPenaltyInputs();
 
@@ -3880,13 +3955,17 @@ function saveLobbySettings() {
     const penaltyMode = (penaltyModeSelect && penaltyModeSelect.value === 'fixed') ? 'fixed' : 'nominal';
     const penaltyFixedAmount = penaltyFixedInput ? Math.max(10, parseInt(penaltyFixedInput.value, 10) || 100) : currentLobbySettings.penaltyFixedAmount;
 
+    const turnOrderInput = document.getElementById('lobby-setting-turn-order');
+    if (turnOrderInput) saveTurnOrderSetting(turnOrderInput.value);
+
     currentLobbySettings = {
         readingTime,
         thinkingTime,
         answerTime,
         penaltyEnabled,
         penaltyMode,
-        penaltyFixedAmount
+        penaltyFixedAmount,
+        turnOrderMode: configTurnOrderMode
     };
 
     configReadingTime = readingTime;
@@ -3920,6 +3999,10 @@ function syncLobbySettings(options) {
     if (typeof options.penaltyEnabled !== 'undefined') currentLobbySettings.penaltyEnabled = Boolean(options.penaltyEnabled);
     if (typeof options.penaltyMode !== 'undefined') currentLobbySettings.penaltyMode = options.penaltyMode === 'fixed' ? 'fixed' : 'nominal';
     if (typeof options.penaltyFixedAmount !== 'undefined') currentLobbySettings.penaltyFixedAmount = Math.max(10, parseInt(options.penaltyFixedAmount, 10));
+    if (typeof options.turnOrderMode !== 'undefined') {
+        currentLobbySettings.turnOrderMode = options.turnOrderMode === 'winner' ? 'winner' : 'rotation';
+        configTurnOrderMode = currentLobbySettings.turnOrderMode;
+    }
 
     configReadingTime = currentLobbySettings.readingTime;
     configThinkingTime = currentLobbySettings.thinkingTime;
@@ -3962,6 +4045,8 @@ function openPreGameSettings() {
     if (cat) cat.checked = configAllowCat;
     if (auc) auc.checked = configAllowAuction;
     if (lead) lead.checked = configAllowAuctionLeader;
+    const turnOrder = document.getElementById('setting-turn-order');
+    if (turnOrder) turnOrder.value = configTurnOrderMode;
     showSubScreen('sub-menu-settings');
 }
 
@@ -4426,10 +4511,18 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('auction_answer_start', (payload) => {
+            if (payload && payload.isFinal && window.FinalRound) {
+                window.FinalRound.onAnswersStart(payload);
+                return;
+            }
             onlineAuctionAnswersStarted(payload);
         });
 
         hostNetworkClient.on('auction_bet_made', (payload) => {
+            if (payload && payload.isFinal && window.FinalRound) {
+                window.FinalRound.onBet(payload);
+                return;
+            }
             const teamIdx = teams.findIndex(t => t.id === payload.playerId);
             if (teamIdx !== -1) {
                 const card = document.getElementById(`auction-card-team-${teamIdx}`);
@@ -4442,7 +4535,20 @@ function initHostNetwork(overrideUrl = null) {
             }
         });
 
-        hostNetworkClient.on('answer_timeout', () => {
+        // Final: typed answers reach only the PC and the phone host
+        hostNetworkClient.on('answer_submitted', (payload) => {
+            if (payload && payload.isFinal && window.FinalRound) window.FinalRound.onAnswerSubmitted(payload);
+        });
+
+        hostNetworkClient.on('final_judged', (payload) => {
+            if (window.FinalRound) window.FinalRound.onJudged(payload);
+        });
+
+        hostNetworkClient.on('answer_timeout', (payload) => {
+            if (payload && payload.isFinal && window.FinalRound) {
+                window.FinalRound.onAnswersLocked(payload);
+                return;
+            }
             activeOnlineBuzzer = null;
             stopOnlineAnswerCountdown();
             const answeringModal = document.getElementById('answering-player-modal');
@@ -4543,10 +4649,15 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('show_answer', () => {
+            if (window.FinalRound && window.FinalRound.isActive()) {
+                window.FinalRound.onShowAnswer();
+                return;
+            }
             showAnswer();
         });
 
         hostNetworkClient.on('game_paused', (payload) => {
+            if (window.FinalRound) window.FinalRound.onPause(payload && payload.isPaused);
             const banner = document.getElementById('disconnect-pause-banner');
             const desc = document.getElementById('disconnect-pause-desc');
             if (payload.isPaused) {
@@ -4564,13 +4675,19 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('question_closed', () => {
+            if (window.FinalRound && window.FinalRound.isActive()) {
+                // After the final the server is in GAME_OVER: show the winners
+                window.FinalRound.hide();
+                handleOnlineRoundTransition();
+                return;
+            }
             stopTimer();
             stopOnlineAnswerCountdown();
             stopQuestionAudio();
             if (currentThemeIdx !== null && currentQuestionIdx !== null && gameData?.[currentRoundIndex]?.themes?.[currentThemeIdx]?.questions?.[currentQuestionIdx]) {
                 gameData[currentRoundIndex].themes[currentThemeIdx].questions[currentQuestionIdx].used = true;
             }
-            currentTurnTeamIdx = (currentTurnTeamIdx + 1) % (teams.length || 1);
+            // The turn comes from the server (turn_changed / room_state)
             saveGameState();
             updateTurnDisplay();
             updateTeamsPanel();
@@ -4582,6 +4699,10 @@ function initHostNetwork(overrideUrl = null) {
         hostNetworkClient.on('question_active', (payload) => {
             if (!isGameStarted && typeof startOnlineGame === 'function') {
                 startOnlineGame(true);
+            }
+            if (payload && payload.questionType === 'final' && window.FinalRound) {
+                window.FinalRound.onQuestionActive(payload);
+                return;
             }
             const modal = document.getElementById('question-modal');
             const isModalActive = modal && modal.classList.contains('active') && modal.style.display !== 'none';
@@ -4618,6 +4739,7 @@ function initHostNetwork(overrideUrl = null) {
                 }
             }
             lastServerRoomState = payload.state;
+            if (isGameStarted && payload.turnPlayerId) syncTurnFromServer(payload.turnPlayerId);
             if (payload.state === 'BOARD') onlineRoundEndShown = false;
             if (payload.state === 'LOBBY') {
                 const wasInGame = isGameStarted;
@@ -4633,7 +4755,9 @@ function initHostNetwork(overrideUrl = null) {
                 }
             } else if (isGameStarted) {
                 const questionModal = document.getElementById('question-modal');
-                const questionOpen = questionModal && questionModal.classList.contains('active') && questionModal.style.display !== 'none';
+                // The final screen counts as an open question: `question_closed` shows the winners after it
+                const questionOpen = (questionModal && questionModal.classList.contains('active') && questionModal.style.display !== 'none')
+                    || Boolean(window.FinalRound && window.FinalRound.isActive());
                 if (!questionOpen) handleOnlineRoundTransition();
             }
             if (payload.state === 'BOARD' && !isGameStarted) {
@@ -4649,7 +4773,6 @@ function initHostNetwork(overrideUrl = null) {
         hostNetworkClient.on('round_changed', (payload) => {
             onlineRoundEndShown = false;
             currentRoundIndex = (payload && payload.roundIndex !== undefined) ? payload.roundIndex : (currentRoundIndex + 1);
-            currentTurnTeamIdx = 0;
             updateTurnDisplay();
             updateTeamsPanel();
             initBoard();
@@ -4666,8 +4789,12 @@ function initHostNetwork(overrideUrl = null) {
             executeSkipRound();
         });
 
-        hostNetworkClient.on('turn_passed', () => {
-            passTurnToNextTeam();
+        hostNetworkClient.on('turn_passed', (payload) => {
+            syncTurnFromServer(payload && payload.turnPlayerId);
+        });
+
+        hostNetworkClient.on('turn_changed', (payload) => {
+            syncTurnFromServer(payload && payload.turnPlayerId);
         });
 
         hostNetworkClient.on('server_error', (payload) => {

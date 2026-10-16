@@ -368,6 +368,19 @@ function handleClientMessage(ws, message) {
             break;
         }
 
+        case MSG_TYPES.HOST_JUDGE_FINAL: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            const finalRes = room.judgeFinalAnswer(payload.playerId, payload.isCorrect);
+            if (finalRes && !finalRes.success && !finalRes.already) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: finalRes.error || ERROR_CODES.INVALID_ACTION,
+                    message: finalRes.message || 'Не удалось оценить ответ'
+                }));
+            }
+            break;
+        }
+
         case MSG_TYPES.HOST_SET_AUCTION_BETS: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
@@ -433,6 +446,19 @@ function handleClientMessage(ws, message) {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
             room.passTurn();
+            break;
+        }
+
+        case MSG_TYPES.HOST_SET_TURN: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (!room || !ws.isHost) return;
+            const turnRes = room.setTurn(payload.playerId);
+            if (turnRes && !turnRes.success) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: turnRes.message
+                }));
+            }
             break;
         }
 
@@ -572,7 +598,13 @@ function handleClientMessage(ws, message) {
                     message: 'Некорректная сумма ставки'
                 }));
             }
-            room.handleAuctionBet(ws.playerId, amount);
+            const betRes = room.handleAuctionBet(ws.playerId, amount);
+            if (betRes && !betRes.success && betRes.message) {
+                ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: betRes.error || ERROR_CODES.INVALID_ACTION,
+                    message: betRes.message
+                }));
+            }
             break;
         }
 
