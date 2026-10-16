@@ -179,4 +179,65 @@ test('LAN fixes: pause / disconnect / scoring / rounds', async (t) => {
         assert.equal(submitted.payload.answerText.length, 300);
         room.destroy();
     });
+
+    await t.test('BUG-55: starting from the lobby clears stale used flags and round index', () => {
+        const { room } = makeRoom({}, 2);
+        room.addPlayer('Алиса', '🦊', mockWs());
+        room.setPack([{
+            roundName: 'Раунд 1',
+            themes: [{ name: 'Тема', questions: [{ cost: 100, q: 'Q1', a: 'A1', used: true }, { cost: 200, q: 'Q2', a: 'A2', used: true }] }]
+        }]);
+        room.currentRoundIndex = 1;
+        assert.equal(room.stateMachine.state, 'LOBBY');
+        const res = room.startGame();
+        assert.equal(res.success, true);
+        assert.equal(room.stateMachine.state, 'BOARD');
+        assert.equal(room.currentRoundIndex, 0);
+        const flags = room.currentPack.flatMap(r => r.themes.flatMap(th => th.questions.map(q => q.used)));
+        assert.deepEqual(flags, [false, false]);
+        const snapFlags = room.getStateSnapshot(false).board.themes.flatMap(th => th.questions.map(q => q.used));
+        assert.ok(snapFlags.every(u => u === false), 'snapshot board shows no used cells');
+        room.destroy();
+    });
+
+    await t.test('BUG-55: a running game is not reset by a second startGame call', () => {
+        const { room } = makeRoom({}, 2);
+        room.addPlayer('Алиса', '🦊', mockWs());
+        room.startGame();
+        room.selectQuestion(0, 0);
+        room.currentPack[0].themes[0].questions[0].used = true;
+        room.startGame();
+        assert.equal(room.currentPack[0].themes[0].questions[0].used, true, 'used flag kept mid-game');
+        room.destroy();
+    });
+
+    await t.test('BUG-55: resetToLobby clears used flags and player scores', () => {
+        const { room } = makeRoom({}, 1);
+        const p1 = room.addPlayer('Алиса', '🦊', mockWs()).player;
+        room.addPlayer('Боб', '🐼', mockWs());
+        room.startGame();
+        room.selectQuestion(0, 0);
+        p1.score = 300;
+        assert.equal(room.currentPack[0].themes[0].questions[0].used, true);
+        room.resetToLobby();
+        assert.equal(room.stateMachine.state, 'LOBBY');
+        assert.equal(room.currentPack[0].themes[0].questions[0].used, false);
+        assert.equal(room.currentPack[0].themes[0].questions[1].used, false);
+        assert.equal(p1.score, 0);
+        room.destroy();
+    });
+
+    await t.test('BUG-55: starting again from GAME_OVER clears the board', () => {
+        const { room } = makeRoom({}, 1);
+        room.addPlayer('Алиса', '🦊', mockWs());
+        room.startGame();
+        room.skipRound();
+        assert.equal(room.stateMachine.state, 'GAME_OVER');
+        room.currentPack[0].themes[0].questions[0].used = true;
+        room.startGame();
+        assert.equal(room.stateMachine.state, 'BOARD');
+        assert.equal(room.currentRoundIndex, 0);
+        assert.equal(room.currentPack[0].themes[0].questions[0].used, false);
+        room.destroy();
+    });
 });

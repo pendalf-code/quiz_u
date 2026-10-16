@@ -156,3 +156,11 @@ test('LAN: the server learns the special-question types the PC assigns at game s
     const resend = body.indexOf('hostNetworkClient.setPack(gameData)', finalize);
     assert.ok(finalize > 0 && resend > finalize, 'pack must be re-sent after resetQuestionsProgress() assigned cat/auction types');
 });
+
+test("LAN: startOnlineGame clears stale used flags before the first setPack (restart in the same room)", () => {
+    const game = read("js", "game.js");
+    const body = game.slice(game.indexOf("function startOnlineGame(fromServer = false)"), game.indexOf("function judgeOnlineAnswer"));
+    const clear = body.indexOf("q.used = false");
+    const firstSend = body.indexOf("hostNetworkClient.setPack(gameData)");
+    assert.ok(clear > 0 && firstSend > clear, "used flags must be cleared before the pack goes to the server");
+});

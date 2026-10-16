@@ -539,6 +539,18 @@ class Room {
         };
     }
 
+    _resetQuestionsUsed() {
+        if (this.currentPack && Array.isArray(this.currentPack)) {
+            this.currentPack.forEach(r => {
+                (r.themes || []).forEach(th => {
+                    (th.questions || []).forEach(q => {
+                        q.used = false;
+                    });
+                });
+            });
+        }
+    }
+
     startGame() {
         this.touch();
         const check = this.canStartGame();
@@ -549,19 +561,12 @@ class Room {
                 message: check.message
             };
         }
-        if (this.stateMachine.state === 'GAME_OVER') {
+        const state = this.stateMachine.state;
+        if (state === 'LOBBY' || state === 'GAME_OVER') {
             this.currentRoundIndex = 0;
             this.currentThemeIndex = null;
             this.currentQuestion = null;
-            if (this.currentPack && Array.isArray(this.currentPack)) {
-                this.currentPack.forEach(r => {
-                    (r.themes || []).forEach(th => {
-                        (th.questions || []).forEach(q => {
-                            q.used = false;
-                        });
-                    });
-                });
-            }
+            this._resetQuestionsUsed();
         }
         this.stateMachine.showBoard();
         this.broadcastRoomState();
@@ -598,15 +603,7 @@ class Room {
         this.disconnectedPlayerIds.clear();
 
         // Reset question used states in currentPack
-        if (this.currentPack && Array.isArray(this.currentPack)) {
-            this.currentPack.forEach(r => {
-                (r.themes || []).forEach(th => {
-                    (th.questions || []).forEach(q => {
-                        q.used = false;
-                    });
-                });
-            });
-        }
+        this._resetQuestionsUsed();
 
         // Reset player scores for new game
         for (const p of this.players.values()) {

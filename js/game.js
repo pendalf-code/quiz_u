@@ -4961,6 +4961,11 @@ function startOnlineGame(fromServer = false) {
     isGameStarted = true;
     onlineRoundEndShown = false;
     onlineGameOverShown = false;
+    // Cells played in the previous game must not go to the server (nor come back in its room_state echo,
+    // which only ever sets `used` locally): a restart in the same room opened with crossed-out cells
+    gameData.forEach(round => (round.themes || []).forEach(theme => (theme.questions || []).forEach(q => {
+        q.used = false;
+    })));
     if (!fromServer) {
         hostNetworkClient.setPack(gameData);
         hostNetworkClient.startGame();

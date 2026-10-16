@@ -480,7 +480,7 @@ describe('LAN Mode Containerized Integration Test Suite (Testcontainers-style)',
             {
                 roundIndex: 0,
                 roundName: '????? 1',
-                themes: [{ name: '?1', questions: [{ cost: 100, q: '?1', a: '?1', used: true }] }]
+                themes: [{ name: '?1', questions: [{ cost: 100, q: '?1', a: '?1' }] }]
             },
             {
                 roundIndex: 1,
@@ -501,9 +501,13 @@ describe('LAN Mode Containerized Integration Test Suite (Testcontainers-style)',
         container.sendMessage(hostWs, MSG_TYPES.HOST_START_GAME, {});
         await container.waitForMessage(hostWs, MSG_TYPES.ROOM_STATE);
 
+        // Actually play the only question of round 0 (selecting it marks it used)
+        container.sendMessage(hostWs, MSG_TYPES.HOST_SELECT_QUESTION, { themeIdx: 0, questionIdx: 0 });
+        await container.waitForMessage(hostWs, MSG_TYPES.QUESTION_ACTIVE);
+
         // Close question to trigger round end
         container.sendMessage(hostWs, MSG_TYPES.HOST_CLOSE_QUESTION, {});
-        const roundEndState = await container.waitForMessage(hostWs, MSG_TYPES.ROOM_STATE);
+        const roundEndState = await container.waitForMessage(hostWs, MSG_TYPES.ROOM_STATE, 3000, p => p.payload && p.payload.state === 'ROUND_END');
         assert.equal(roundEndState.payload.state, 'ROUND_END', 'Room state must be ROUND_END when all questions played');
 
         // Host phone presses "????????? ?????"
