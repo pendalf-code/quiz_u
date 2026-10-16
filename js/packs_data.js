@@ -10,7 +10,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Золотая классика Союзмультфильма'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": true,
+    "hasMedia": false,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -44,7 +44,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Магия Disney - Принцессы и Герои'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -86,7 +86,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Шедевры Pixar - От Игрушек до Тачек'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -212,7 +212,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Вселенная Гарри Поттера - Магия Хогвартса'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -800,7 +800,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Киновселенная Marvel - Эра Мстителей'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -1044,7 +1044,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Очень странные дела - Тайны Изнанки'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -1264,7 +1264,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Великие злодеи кинематографа'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -1332,7 +1332,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Магия спецэффектов и кино-трюков'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -1604,7 +1604,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Музыкальные инструменты народов мира'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -1740,7 +1740,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Электронная музыка и легендарные диджеи'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -2250,7 +2250,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Покемоны - Поймай их всех!'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -2590,7 +2590,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Эволюция консолей - От PlayStation до Switch'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -2624,7 +2624,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Тайны Солнечной системы - Планеты и луны'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -2794,7 +2794,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Космические первопроходцы - Гагарин и Аполлон'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3066,7 +3066,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Погода и стихии - Торнадо, молнии и цунами'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3100,7 +3100,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Великие учёные - Ньютон, Эйнштейн, Тесла'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3168,7 +3168,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Экология и будущее зеленой планеты'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3338,7 +3338,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Гиганты океана - Киты, дельфины и акулы'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3372,7 +3372,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Птицы мира - От колибри до страуса'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3474,7 +3474,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Животные ледяных полюсов - Пингвины и белые медведи'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3576,7 +3576,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Домашняя ферма - Лошади, коровы и овечки'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3644,7 +3644,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Растения-хищники и удивительная флора'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3678,7 +3678,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Красная книга - Спасение исчезающих видов'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3712,7 +3712,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Мастера маскировки в дикой природе'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3916,7 +3916,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Флаги и гербы государств мира'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3984,7 +3984,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Античная Греция - Боги Олимпа и Спарта'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -4154,7 +4154,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Реки, озёра и водопады - Волга, Байкал, Ниагара'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -4188,7 +4188,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Горные вершины - Эверест, Эльбрус и Альпы'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -4256,7 +4256,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Тайны цивилизаций - Майя, Ацтеки и Инки'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -4358,7 +4358,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Острова и океаны - Мадагаскар, Гренландия, Гавайи'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -4392,7 +4392,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'По Транссибирской магистрали через всю Россию'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -4494,7 +4494,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Золотая коллекция интернет-мемов'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -4528,7 +4528,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Мемы с пушистыми котиками - Рыбов и Наташа'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -4630,7 +4630,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Мемы из кино - Боромир, Шрек и Леонардо'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -4732,7 +4732,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Язык эмодзи, смайликов и интернет-этикет'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -5038,7 +5038,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Тренды коротких видео TikTok и Reels'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -5072,7 +5072,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Итальянская кухня - Пицца, паста и тирамису'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -5106,7 +5106,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Сладкоежки - Шоколад, торты и мороженое'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -5140,7 +5140,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Азиатский стритфуд - Суши, рамэн и вок'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -5208,7 +5208,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Русская кухня - Борщ, блины, пельмени и квас'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -5412,7 +5412,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Завтраки разных стран мира'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -5446,7 +5446,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Хлеб всему голова - Багет, лаваш и круассан'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -5684,7 +5684,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Хоккей - Красная машина и Кубок Стэнли'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -5854,7 +5854,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Шахматы - Короли, ферзи, Каспаров и Карлсен'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -6228,7 +6228,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Головоломки со словами - Анаграммы и шарады'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -6772,7 +6772,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Любимые игрушки - Куклы, машинки и мячики'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -6840,7 +6840,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Профессии вокруг нас - Врач, повар и пожарный'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -6874,7 +6874,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Машины и транспорт - Самолёты, поезда и корабли'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -7112,7 +7112,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Морские тайны для малышей - Рыбки и дельфины'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -8980,7 +8980,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Освоение космоса - Аполлон, МКС, Вояджер и Марсоходы'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9164,7 +9164,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Великие изобретения человечества - От колеса до Интернета'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9306,7 +9306,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Геология и вулканы - Тектоника плит, землетрясения, минералы'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9390,7 +9390,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Хищники планеты - Большие кошки, волки, медведи'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9482,7 +9482,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Птицы мира - От колибри до страуса и пингвина'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9574,7 +9574,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Обитатели джунглей и саванн - Слоны, жирафы, обезьяны'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9666,7 +9666,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Удивительные ядовитые твари и маскировка в природе'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9758,7 +9758,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Домашние питомцы - Породы собак, повадки кошек и грызуны'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9850,7 +9850,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Древний Рим - От республики до падения империи, легионы и цезари'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9902,7 +9902,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Древний Египет - Фараоны, пирамиды, мумии и боги Нила'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9946,7 +9946,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Средневековье - Рыцари, замки и крестовые походы'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -9998,7 +9998,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Эпоха Возрождения и великие географические открытия'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10042,7 +10042,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Древняя Греция - Мифы, Спарта, Афины и Александр Македонский'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10092,7 +10092,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Российская империя - Петр I, Екатерина II и эпоха балов'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10232,7 +10232,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Древний Восток - Самураи, ниндзя и Великая китайская стена'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10284,7 +10284,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Тайны инков, майя и ацтеков'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10328,7 +10328,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Мемы 2010-х - От троллфейса до кота за столом'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10424,7 +10424,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Культовые реалити и телешоу 2000-х'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10808,7 +10808,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Итальянская кухня - Паста, пицца, сыры и джелато'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10858,7 +10858,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Азиатский стритфуд - Рамен, том ям, суши и вок'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10900,7 +10900,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Французская кухня и высокая гастрономия'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10950,7 +10950,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Русская и кавказская кухня - Борщ, пельмени, шашлык и хачапури'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -10992,7 +10992,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Мировые сладости и десерты - Шоколад, круассаны, торты'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -11042,7 +11042,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Напитки мира - Кофе, чай, коктейли и виноделие'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -11134,7 +11134,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Экзотическая и экстремальная еда планеты'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -11272,7 +11272,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Боевые искусства и UFC - ММА, бокс, дзюдо и каратэ'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -11464,7 +11464,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Детективная логика и расследования'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -11648,7 +11648,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Занимательная география и флаги для всей семьи'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -12810,7 +12810,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Шедевры мировой живописи'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -12852,7 +12852,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Эпоха Возрождения - Титаны искусства'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -12894,7 +12894,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Импрессионизм и постимпрессионизм'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -12936,7 +12936,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Великая скульптура и зодчество'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -12978,7 +12978,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Русские художники-передвижники'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -13020,7 +13020,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Авангард, сюрреализм и модерн'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -13070,7 +13070,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Музеи и галереи мира'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -13112,7 +13112,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Боги и герои Древней Греции'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -13154,7 +13154,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Скандинавские саги и Тор'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -13196,7 +13196,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Славянская мифология и нечисть'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -13238,7 +13238,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Тайны Древнего Египта'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -13280,7 +13280,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Мифы Востока - Китай, Япония и Индия'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -13372,7 +13372,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Мифические чудовища и бестиарий'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -13414,7 +13414,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Высшая мифология мира'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -14622,7 +14622,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Ретро-игры 90-х - Денди, Сега, GameBoy'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -14806,7 +14806,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Солнечная система и планеты'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -14840,7 +14840,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Астрономия - Звёзды, чёрные дыры и квазары'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -14882,7 +14882,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Квантовая физика и теория относительности'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -14974,7 +14974,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Генетика, ДНК и эволюция жизни'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15058,7 +15058,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Освоение космоса - Аполлон, Восток и МКС'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15268,7 +15268,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Динозавры и доисторические гиганты'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15310,7 +15310,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Редкие и исчезающие виды планеты'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15360,7 +15360,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Флаги и столицы государств мира'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15402,7 +15402,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Чудеса света - Древние и новые'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15570,7 +15570,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Мировые цивилизации и древнейшие империи'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15620,7 +15620,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Золотой фонд интернет-мемов (2000-2015)'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15662,7 +15662,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Мемы 2020-х и ТикТок тренды'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15704,7 +15704,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Культовые комиксы - Marvel против DC'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15788,7 +15788,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Кухни народов мира - От пиццы до суши'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -15830,7 +15830,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Сладости и десерты - Кондитерское искусство'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -16046,7 +16046,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 2,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Математические головоломки и числа'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -16088,7 +16088,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Гранд-тест эрудиции и дедукции'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [

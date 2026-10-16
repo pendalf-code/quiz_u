@@ -1255,7 +1255,7 @@ function handleQuestionVideo(question, isAnswer = false) {
     iframeContainer.style.display = 'none';
     iframeElem.src = '';
 
-    const videoUrl = isAnswer ? question.answer_video : question.video;
+    const videoUrl = isAnswer ? (question.a_video || question.answer_video) : question.video;
 
     if (videoUrl && typeof videoUrl === 'string' && videoUrl.trim().length > 0) {
         const url = videoUrl.trim();
@@ -3247,8 +3247,10 @@ function showAnswer() {
 
     if (ansImgElement) {
         ansImgElement.classList.remove('img-error');
-        if (currentQuestionObj && currentQuestionObj.answer_img && typeof currentQuestionObj.answer_img === 'string' && currentQuestionObj.answer_img.trim().length > 0) {
-            ansImgElement.src = resolveMediaPath(currentQuestionObj.answer_img.trim());
+        // Паки пишут картинку ответа в 'a_img', старый формат — 'answer_img'
+        const answerImg = currentQuestionObj ? (currentQuestionObj.a_img || currentQuestionObj.answer_img) : null;
+        if (answerImg && typeof answerImg === 'string' && answerImg.trim().length > 0) {
+            ansImgElement.src = resolveMediaPath(answerImg.trim());
             ansImgElement.style.display = 'block';
         } else {
             ansImgElement.src = "";
