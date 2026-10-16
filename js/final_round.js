@@ -50,7 +50,9 @@
 
     function math(str) {
         const fn = (typeof window !== 'undefined' && typeof window.renderMathInString === 'function') ? window.renderMathInString : null;
-        return fn ? fn(esc(str)) : esc(str);
+        // Without `$` renderMathInString escapes by itself: escaping twice shows `&#39;` as text
+        if (!fn || !String(str == null ? '' : str).includes('$')) return esc(str);
+        return fn(esc(str));
     }
 
     function isLan() {
@@ -221,8 +223,12 @@
         screen.classList.toggle('is-host', pcControls());
 
         const round = currentRound();
+        // The round name is already in the top header: the screen shows only «ФИНАЛ»
         const roundName = $('final-round-name');
-        if (roundName) roundName.textContent = (round && round.roundName) || 'Финальный раунд';
+        if (roundName) {
+            roundName.textContent = '';
+            roundName.hidden = true;
+        }
 
         renderThemes(round);
         renderThemeBanner();
@@ -249,10 +255,8 @@
                 card.type = 'button';
                 card.onclick = () => start(idx);
             }
-            const q = theme.questions && theme.questions[0];
             card.innerHTML = `<span class="final-theme-card-label">Тема ${themes.length > 1 ? idx + 1 : ''}</span>
-                <span class="final-theme-card-name">${esc(theme.name || 'Финальная тема')}</span>
-                ${q && q.cost ? `<span class="final-theme-card-cost">номинал ${esc(q.cost)}</span>` : ''}`;
+                <span class="final-theme-card-name">${esc(theme.name || 'Финальная тема')}</span>`;
             box.appendChild(card);
         });
     }
