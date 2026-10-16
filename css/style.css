@@ -6216,6 +6216,14 @@ body.light-theme .btn-close-modal-x:hover {
 
     .lobby-pack-card {
         grid-column: 1 / -1;
+        height: auto;
+    }
+
+    /* Без фиксированной высоты карточки блоки не должны схлопываться до нуля */
+    .lobby-pack-info-card,
+    .lobby-settings-bar {
+        flex: 0 0 auto;
+        min-height: auto;
     }
 }
 
@@ -6793,6 +6801,68 @@ body.light-theme .btn-close-modal-x:hover {
         font-size: 11px;
         padding: 4px 8px;
         max-width: 60%;
+    }
+}
+
+/* Adaptive hardening for LAN lobby: no horizontal overflow on narrow widths (320px+) */
+.online-lobby-grid > .lobby-card,
+.online-lobby-header > * {
+    min-width: 0;
+}
+
+.lobby-player-info {
+    min-width: 0;
+}
+
+.lobby-player-name,
+.lobby-pack-name,
+.lobby-join-link {
+    overflow-wrap: anywhere;
+}
+
+.lobby-player-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .online-lobby-header {
+        grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+    }
+
+    .online-server-status {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .online-server-status .status-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+    }
+
+    .online-lobby-title {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 420px) {
+    .btn-back-lobby {
+        min-width: 0 !important;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .lobby-card-title,
+    .lobby-card-title-row {
+        min-width: 0;
+        flex-wrap: wrap;
+        gap: 6px;
     }
 }
 
