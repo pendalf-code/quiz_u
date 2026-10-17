@@ -290,6 +290,12 @@
         handleButtonB() {
             if (typeof document === 'undefined') return;
 
+            // 0. An open styled dropdown closes first
+            if (typeof window !== 'undefined' && window.QuizSelect && window.QuizSelect.isOpen()) {
+                window.QuizSelect.close(true);
+                return;
+            }
+
             // 1. Check if Question Modal is active
             const qModal = document.getElementById('question-modal');
             if (qModal && qModal.style.display !== 'none' && qModal.classList.contains('active')) {
@@ -507,6 +513,11 @@
          */
         getFocusableElements() {
             if (typeof document === 'undefined') return [];
+
+            // 0. An open styled dropdown (js/custom_select.js) captures the focus; its menu is position: fixed
+            if (typeof window !== 'undefined' && window.QuizSelect && window.QuizSelect.isOpen()) {
+                return window.QuizSelect.getOptions();
+            }
 
             // 1. If Question Modal is active, focus within it
             const qModal = document.getElementById('question-modal');
