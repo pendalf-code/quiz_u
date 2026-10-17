@@ -67,5 +67,5 @@ Windows/PowerShell: `npm.cmd` вместо `npm`. Перед коммитом д
 | `ROADMAP.md` | Релизные этапы |
 | `DESIGN_GUIDE.md` | Steam-страница, ассеты, маркетинг — **пока вне работы** |
 
-Стиль кода: `.aiassistant/rules/code style rules.md`. Шаблон PR: `.github/pull_request_template.md`.
+Шаблон PR: `.github/pull_request_template.md`.
 Тесты `tests/review_guide_integrity.test.js` проверяют наличие и ссылки в `docs/README.md`, `DEV_GUIDE.md`, `TASKS.md`, `ROADMAP.md`, `REVIEW_GUIDE.md` — не удаляй эти файлы и ссылку на `REVIEW_GUIDE.md` в них.

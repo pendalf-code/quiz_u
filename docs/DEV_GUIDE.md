@@ -8,7 +8,6 @@
 > * [TASKS.md](TASKS.md) — оперативный трекер фичей, улучшений и баг-фикса.
 > * [REVIEW_GUIDE.md](REVIEW_GUIDE.md) — регламент конструктивного код-ревью, чек-листы по компонентам и план комплексного ревью всего проекта.
 > * [DESIGN_GUIDE.md](DESIGN_GUIDE.md) — Steam Direct, ассеты, вишлисты и маркетинг в соцсетях.
-> * [.aiassistant/rules/code style rules.md](../.aiassistant/rules/code%20style%20rules.md) — базовые правила кодовой базы.
 
 ---
 

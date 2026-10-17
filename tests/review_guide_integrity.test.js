@@ -80,8 +80,7 @@ test('Project documentation cross-linking integrity in docs/', () => {
         path.join('docs', 'DEV_GUIDE.md'),
         path.join('docs', 'README.md'),
         path.join('docs', 'TASKS.md'),
-        path.join('docs', 'ROADMAP.md'),
-        path.join('.aiassistant', 'rules', 'code style rules.md')
+        path.join('docs', 'ROADMAP.md')
     ];
 
     for (const relPath of filesToTest) {

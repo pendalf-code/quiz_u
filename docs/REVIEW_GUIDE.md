@@ -7,7 +7,6 @@
 > * [ROADMAP.md](ROADMAP.md) — глобальные релизные этапы и трекер прогресса.
 > * [TASKS.md](TASKS.md) — оперативный трекер задач, фичей и багов.
 > * [DESIGN_GUIDE.md](DESIGN_GUIDE.md) — дизайн, маркетинг и подготовка ассетов для Steam Direct.
-> * [.aiassistant/rules/code style rules.md](../.aiassistant/rules/code%20style%20rules.md) — стандарты кода и правила кодовой базы.
 
 ---
 
