@@ -907,7 +907,7 @@
         elements.hostBoardGrid.innerHTML = '';
         const themes = boardData.themes || [];
         if (themes.length === 0) {
-            elements.hostBoardGrid.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:12px;">Ожидание загрузки пакета вопросов...</div>';
+            elements.hostBoardGrid.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:12px;">Ожидание загрузки пака вопросов...</div>';
             return;
         }
 

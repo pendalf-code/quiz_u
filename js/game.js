@@ -975,8 +975,8 @@ function startOnlineAnswerCountdown(seconds) {
     if (timerElem) {
         timerElem.textContent = seconds;
         timerElem.className = 'timer answering';
-                timerElem.classList.add('paused');
-                timerElem.classList.remove('frozen');
+        timerElem.classList.add('paused');
+        timerElem.classList.remove('frozen');
         timerElem.classList.remove('paused');
     }
 
@@ -1393,7 +1393,10 @@ function backToMainMenu() {
     if (isOnlineGame) {
         isGameStarted = false;
         if (hostNetworkClient && hostNetworkClient.isConnected) {
-            try { hostNetworkClient.resetToLobby(); } catch (_) {}
+            try {
+                hostNetworkClient.resetToLobby();
+            } catch (_) {
+            }
         }
         showSubScreen('sub-menu-online-lobby');
     } else {
@@ -1998,15 +2001,15 @@ function applyCustomQuestions() {
             }
             updateLobbyPackDisplay();
             showSubScreen('sub-menu-online-lobby');
-            showSystemModal("📥 ПАКЕТ ЗАГРУЖЕН", "Новый пакет вопросов успешно импортирован для онлайн-игры!");
+            showSystemModal("📥 ПАК ЗАГРУЖЕН", "Новый пак вопросов успешно импортирован для онлайн-игры!");
         } else {
             teams = [{name: "Команда 1", score: 0}, {name: "Команда 2", score: 0}];
             clearTeamInputs();
             showSubScreen('team-setup-container');
-            showSystemModal("📥 ПАКЕТ ЗАГРУЖЕН", "Новый пакет вопросов успешно импортирован!");
+            showSystemModal("📥 ПАК ЗАГРУЖЕН", "Новый пак вопросов успешно импортирован!");
         }
     } catch (e) {
-        showSystemModal("❌ ОШИБКА JSON КОДА", "Не удалось прочитать пакет: " + e.message);
+        showSystemModal("❌ ОШИБКА JSON КОДА", "Не удалось прочитать пак: " + e.message);
     }
 }
 
@@ -2694,7 +2697,10 @@ function onlineAuctionLeaderChosen(idx, bet) {
     activeTeamIdxForQuestion = idx;
     currentCost = bet || currentCost;
     teams.forEach((t, i) => {
-        auctionBets[i] = {val: i === idx ? currentCost : (auctionBets[i] ? auctionBets[i].val : 0), isPassed: i !== idx};
+        auctionBets[i] = {
+            val: i === idx ? currentCost : (auctionBets[i] ? auctionBets[i].val : 0),
+            isPassed: i !== idx
+        };
     });
     if (!gameStats[idx]) gameStats[idx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
     gameStats[idx].auctions++;
@@ -4189,7 +4195,7 @@ function uploadLobbyCustomPack(event) {
             showSystemModal("✅ Пакет загружен", `Пакет «${window.currentPackTitle}» успешно загружен и готов к сетевой игре!`);
         } catch (err) {
             console.error("Pack upload error:", err);
-            showSystemModal("⚠️ Ошибка файла", "Не удалось прочитать JSON-файл пакета: " + (err && err.message ? err.message : err));
+            showSystemModal("⚠️ Ошибка файла", "Не удалось прочитать JSON-файл пака: " + (err && err.message ? err.message : err));
         }
         if (event.target) event.target.value = '';
     };
@@ -4836,7 +4842,10 @@ function openQuestionFromHostPhone(themeIdx, questionIdx, cell, question) {
     }
     pendingNetworkQuestionOpen = true;
     cell.classList.add('cell-flash');
-    try { playTickSound(); } catch (_) {}
+    try {
+        playTickSound();
+    } catch (_) {
+    }
     setTimeout(open, 1300);
 }
 

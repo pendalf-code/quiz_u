@@ -10,8 +10,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { WebSocketServer } = require('ws');
-const { MSG_TYPES, ERROR_CODES, createMessage, parseMessage } = require('./protocol');
+const {WebSocketServer} = require('ws');
+const {MSG_TYPES, ERROR_CODES, createMessage, parseMessage} = require('./protocol');
 const os = require('os');
 const RoomManager = require('./RoomManager');
 
@@ -29,14 +29,14 @@ function getLanIp() {
             const lower = name.toLowerCase();
             // Skip virtual / VPN adapters that hijack or route away local traffic
             const isVirtual = lower.includes('vpn') || lower.includes('wireguard') ||
-                              lower.includes('amnezia') || lower.includes('tap') ||
-                              lower.includes('tun') || lower.includes('vethernet') ||
-                              lower.includes('wsl') || lower.includes('hyper-v') ||
-                              lower.includes('virtual');
+                lower.includes('amnezia') || lower.includes('tap') ||
+                lower.includes('tun') || lower.includes('vethernet') ||
+                lower.includes('wsl') || lower.includes('hyper-v') ||
+                lower.includes('virtual');
             for (const iface of interfaces[name]) {
                 if (iface.family === 'IPv4' && !iface.internal) {
                     if (iface.address.startsWith('169.254.') || iface.address.startsWith('127.')) continue;
-                    candidates.push({ name, address: iface.address, isVirtual });
+                    candidates.push({name, address: iface.address, isVirtual});
                 }
             }
         }
@@ -46,7 +46,8 @@ function getLanIp() {
         const anyPhysical = candidates.find(c => !c.isVirtual);
         if (anyPhysical) return anyPhysical.address;
         if (candidates.length > 0) return candidates[0].address;
-    } catch (_) {}
+    } catch (_) {
+    }
     return 'localhost';
 }
 
@@ -74,13 +75,13 @@ const MIME_TYPES = {
 const server = http.createServer((req, res) => {
     // Health Check Endpoint
     if (req.url === '/health' || req.url === '/healthz') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({ status: 'ok', uptime: process.uptime() }));
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        return res.end(JSON.stringify({status: 'ok', uptime: process.uptime()}));
     }
 
     // Stats Endpoint (Rooms count, active connections)
     if (req.url === '/stats' || req.url === '/api/stats') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.writeHead(200, {'Content-Type': 'application/json'});
         const stats = roomManager.getStats();
         return res.end(JSON.stringify({
             status: 'ok',
@@ -96,7 +97,7 @@ const server = http.createServer((req, res) => {
     try {
         decodedUrl = decodeURIComponent(req.url);
     } catch {
-        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.writeHead(400, {'Content-Type': 'text/plain; charset=utf-8'});
         return res.end('Bad Request');
     }
 
@@ -104,7 +105,7 @@ const server = http.createServer((req, res) => {
 
     // Global Path Traversal Protection
     if (cleanPath.includes('..') || cleanPath.includes('/.') || cleanPath.includes('\\\\')) {
-        res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.writeHead(403, {'Content-Type': 'text/plain; charset=utf-8'});
         return res.end('Forbidden');
     }
 
@@ -116,7 +117,7 @@ const server = http.createServer((req, res) => {
     // Handle /mobile route -> redirect to trailing slash or serve mobile web app
     if (cleanPath === '/mobile') {
         const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
-        res.writeHead(301, { 'Location': `/mobile/${query}` });
+        res.writeHead(301, {'Location': `/mobile/${query}`});
         return res.end();
     }
     if (cleanPath === '/mobile/') {
@@ -132,7 +133,7 @@ const server = http.createServer((req, res) => {
 
         // Path Traversal Security Check
         if (!resolvedPath.startsWith(mobileDir)) {
-            res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.writeHead(403, {'Content-Type': 'text/plain; charset=utf-8'});
             return res.end('Forbidden');
         }
 
@@ -145,7 +146,7 @@ const server = http.createServer((req, res) => {
         const resolvedPackPath = path.resolve(packsDir, relativePackPath);
 
         if (!resolvedPackPath.startsWith(packsDir)) {
-            res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.writeHead(403, {'Content-Type': 'text/plain; charset=utf-8'});
             return res.end('Forbidden');
         }
         return serveStaticFile(resolvedPackPath, res);
@@ -153,30 +154,30 @@ const server = http.createServer((req, res) => {
 
     // Handle allowed static asset prefixes for main host web app
     const isAllowedStaticPrefix = cleanPath.startsWith('/css/') ||
-                                  cleanPath.startsWith('/js/') ||
-                                  cleanPath.startsWith('/assets/') ||
-                                  cleanPath === '/favicon.ico';
+        cleanPath.startsWith('/js/') ||
+        cleanPath.startsWith('/assets/') ||
+        cleanPath === '/favicon.ico';
 
     if (isAllowedStaticPrefix) {
         const relativePath = cleanPath.startsWith('/') ? cleanPath.slice(1) : cleanPath;
         const resolvedPath = path.resolve(rootDir, relativePath);
 
         if (!resolvedPath.startsWith(rootDir)) {
-            res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.writeHead(403, {'Content-Type': 'text/plain; charset=utf-8'});
             return res.end('Forbidden');
         }
         return serveStaticFile(resolvedPath, res);
     }
 
     // Fallback 404
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
     res.end('Not Found');
 });
 
 function serveStaticFile(filePath, res) {
     fs.stat(filePath, (err, stats) => {
         if (err || !stats.isFile()) {
-            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
             return res.end('File Not Found');
         }
 
@@ -195,7 +196,7 @@ function serveStaticFile(filePath, res) {
 }
 
 // WebSocket Server
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({server});
 
 wss.on('connection', (ws, req) => {
     ws.isAlive = true;
@@ -236,7 +237,7 @@ wss.on('connection', (ws, req) => {
 });
 
 function handleClientMessage(ws, message) {
-    const { type } = message;
+    const {type} = message;
     const payload = (message.payload && typeof message.payload === 'object') ? message.payload : {};
 
     switch (type) {
@@ -266,7 +267,7 @@ function handleClientMessage(ws, message) {
             if (!payload.pack) {
                 return ws.send(createMessage(MSG_TYPES.ERROR, {
                     code: ERROR_CODES.INVALID_PAYLOAD,
-                    message: 'Пакет вопросов не указан'
+                    message: 'Пак вопросов не указан'
                 }));
             }
             room.setPack(payload.pack);
@@ -328,7 +329,7 @@ function handleClientMessage(ws, message) {
             if (!question) {
                 return ws.send(createMessage(MSG_TYPES.ERROR, {
                     code: ERROR_CODES.INVALID_PAYLOAD,
-                    message: 'Вопрос не найден в пакете'
+                    message: 'Вопрос не найден в паке'
                 }));
             }
             try {
@@ -633,7 +634,7 @@ function handleClientMessage(ws, message) {
         }
 
         case MSG_TYPES.PING: {
-            ws.send(createMessage(MSG_TYPES.PONG, { timestamp: Date.now() }));
+            ws.send(createMessage(MSG_TYPES.PONG, {timestamp: Date.now()}));
             break;
         }
 
@@ -652,7 +653,7 @@ function handleClientDisconnect(ws) {
                 room.hostWs = null;
                 const isGameRunning = (room.stateMachine && room.stateMachine.state !== 'INIT' && room.stateMachine.state !== 'LOBBY');
                 if (isGameRunning) {
-                    room.finishGame({ reason: 'host_disconnected', message: 'Ведущий отключился' });
+                    room.finishGame({reason: 'host_disconnected', message: 'Ведущий отключился'});
                 } else {
                     room.broadcastRoomState();
                 }
@@ -685,4 +686,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { server, wss, roomManager, getLanIp };
+module.exports = {server, wss, roomManager, getLanIp};
