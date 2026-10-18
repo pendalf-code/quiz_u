@@ -17,7 +17,7 @@ function validateAll() {
       let raw = fs.readFileSync(filePath, 'utf8');
       if (raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1);
       const data = JSON.parse(raw);
-      const rounds = Array.isArray(data) ? data : [data];
+      const rounds = Array.isArray(data) ? data : (Array.isArray(data.rounds) ? data.rounds : [data]);
 
       rounds.forEach((r, rIdx) => {
         (r.themes || []).forEach((t, tIdx) => {
