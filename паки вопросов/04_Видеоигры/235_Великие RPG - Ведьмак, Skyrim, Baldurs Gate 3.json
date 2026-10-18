@@ -375,10 +375,10 @@
     ]
   },
   {
-    "roundName": "ФИНАЛ: Решающий раунд",
+    "roundName": "ФИНАЛ",
     "themes": [
       {
-        "name": "Финальный вопрос",
+        "name": "Классические RPG",
         "questions": [
           {
             "q": "Какой легендарный изометрический движок BioWare на базе правил D&D AD&D 2nd Edition стал основой для Baldur's Gate, Icewind Dale и Planescape: Torment?",
