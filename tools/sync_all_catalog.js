@@ -17,7 +17,8 @@ const categoryIcons = {
   '09_Еда_и_Кулинария': '🍕',
   '10_Спорт_и_Рекорды': '🏆',
   '11_Логика_и_Загадки': '💡',
-  '12_Для_Самых_Маленьких': '🎈'
+  '12_Для_Самых_Маленьких': '🎈',
+  '19_Микс_и_Эрудиция': '🎲'
 };
 
 const categoryNames = {
@@ -32,7 +33,8 @@ const categoryNames = {
   '09_Еда_и_Кулинария': 'Еда и Кулинария',
   '10_Спорт_и_Рекорды': 'Спорт и Рекорды',
   '11_Логика_и_Загадки': 'Логика и Загадки',
-  '12_Для_Самых_Маленьких': 'Для Самых Маленьких'
+  '12_Для_Самых_Маленьких': 'Для Самых Маленьких',
+  '19_Микс_и_Эрудиция': 'Микс и Эрудиция'
 };
 
 function main() {
@@ -96,7 +98,8 @@ function main() {
       const catName = categoryNames[folder] || folder.replace(/^\d+_/, '').replace(/_/g, ' ');
       const catIcon = categoryIcons[folder] || '🎯';
 
-      // Determine difficulty
+      // Determine difficulty (an explicit value in the pack file wins)
+      const fileDifficulty = (!Array.isArray(data) && ['easy', 'medium', 'hard', 'expert'].includes(data.difficulty)) ? data.difficulty : null;
       let difficulty = 'medium';
       if (parseInt(numStr, 10) >= 191 && parseInt(numStr, 10) <= 206) {
         difficulty = 'easy';
@@ -105,6 +108,12 @@ function main() {
       } else if (cleanTitle.toLowerCase().includes('продвинут') || cleanTitle.toLowerCase().includes('эксперт') || cleanTitle.toLowerCase().includes('эйнштейн')) {
         difficulty = 'hard';
       }
+
+      if (fileDifficulty) {
+        difficulty = fileDifficulty;
+      }
+      const fileDescription = (!Array.isArray(data) && typeof data.description === 'string' && data.description.trim()) ? data.description.trim() : null;
+      const fileTags = (!Array.isArray(data) && Array.isArray(data.tags) && data.tags.length > 0) ? data.tags : null;
 
       // Relative path to JSON pack file
       const relativeJsonPath = `паки вопросов/${folder}/${file}`;
@@ -118,11 +127,11 @@ function main() {
         difficulty: difficulty,
         roundsCount: roundsCount,
         hasFinal: hasFinal,
-        description: `Увлекательная викторина по теме '${cleanTitle}'. Прекрасно подходит для игры любой компанией!`,
+        description: fileDescription || `Увлекательная викторина по теме '${cleanTitle}'. Прекрасно подходит для игры любой компанией!`,
         hasMedia: hasMedia,
         hasCat: true,
         hasAuction: true,
-        tags: [catName.toLowerCase(), 'викторина', 'квиз', 'эрудиция'],
+        tags: fileTags || [catName.toLowerCase(), 'викторина', 'квиз', 'эрудиция'],
         themeNames: themeNames,
         themesList: themeNames,
         questionsCount: questionsCount,
