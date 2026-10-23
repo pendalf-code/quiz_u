@@ -99,4 +99,48 @@
 | `assets/q_img/w2b_q_084.jpg` | [Aye-aye (Daubentonia madagascariensis) 1.jpg](https://commons.wikimedia.org/wiki/File:Aye-aye_%28Daubentonia_madagascariensis%29_1.jpg) | Tom Junek | CC BY-SA 3.0 |
 | `assets/q_img/w2b_q_085.jpg` | [Socotra dragon tree.JPG](https://commons.wikimedia.org/wiki/File:Socotra_dragon_tree.JPG) | Boris Khvostichenko(User:Boriskhv) | CC BY-SA 4.0 |
 | `assets/q_img/w2b_q_086.jpg` | [Tetrao urogallus Richard Bartz (cropped).jpg](https://commons.wikimedia.org/wiki/File:Tetrao_urogallus_Richard_Bartz_%28cropped%29.jpg) | Richard Bartz, Munich aka Makro Freak | CC BY-SA 2.5 |
+| `assets/q_img/w2b_q_087.jpg` | [Petra , Al-Khazneh 2.jpg](https://commons.wikimedia.org/wiki/File:Petra_%2C_Al-Khazneh_2.jpg) | Faraheed | CC BY-SA 3.0 |
+| `assets/q_img/w2b_q_088.jpg` | [Angkor Wat with its reflection (cropped).jpg](https://commons.wikimedia.org/wiki/File:Angkor_Wat_with_its_reflection_%28cropped%29.jpg) | Satdeep Gill | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_089.jpg` | [Flag of Nepal.svg](https://commons.wikimedia.org/wiki/File:Flag_of_Nepal.svg) | Drawn by Pumbaa80, Achim1999 | Public domain |
+| `assets/q_img/w2b_q_090.jpg` | [Flag of Mexico.svg](https://commons.wikimedia.org/wiki/File:Flag_of_Mexico.svg) | Omar Alejandro Covarrubias Neri, 9 April 2006. Based on the 1968 arms by Francisco Eppens Helguera and Juan Manuel Gabin | Public domain |
+| `assets/q_img/w2b_q_091.jpg` | [Nefertiti 30-01-2006.jpg](https://commons.wikimedia.org/wiki/File:Nefertiti_30-01-2006.jpg) | Arkadiy Etumyan | CC BY-SA 3.0 |
+| `assets/q_img/w2b_q_092.jpg` | [CairoEgMuseumTaaMaskMostlyPhotographed.jpg](https://commons.wikimedia.org/wiki/File:CairoEgMuseumTaaMaskMostlyPhotographed.jpg) | Roland Unger | Public domain |
+| `assets/q_img/w2b_q_093.jpg` | [Attica 06-13 Athens 50 View from Philopappos - Acropolis Hill.jpg](https://commons.wikimedia.org/wiki/File:Attica_06-13_Athens_50_View_from_Philopappos_-_Acropolis_Hill.jpg) | A.Savin | CC BY-SA 3.0 |
+| `assets/q_img/w2b_q_094.jpg` | [Interior oculus of the Rome Pantheon.jpg](https://commons.wikimedia.org/wiki/File:Interior_oculus_of_the_Rome_Pantheon.jpg) | T. Le Berre | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_095.jpg` | [Caerlaverock Castle - replica trebuchet - geograph.org.uk - 1135461.jpg](https://commons.wikimedia.org/wiki/File:Caerlaverock_Castle_-_replica_trebuchet_-_geograph.org.uk_-_1135461.jpg) | Elliott Simpson | CC BY-SA 2.0 |
+| `assets/q_img/w2b_q_096.jpg` | [Barcelona - Replica of Santa Maria Caravel.jpg](https://commons.wikimedia.org/wiki/File:Barcelona_-_Replica_of_Santa_Maria_Caravel.jpg) | Unknown author | Public domain |
+| `assets/q_img/w2b_q_097.jpg` | [Petronas Twin Towers (230715-1406).jpg](https://commons.wikimedia.org/wiki/File:Petronas_Twin_Towers_%28230715-1406%29.jpg) | Wee Hong | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_098.jpg` | [Bogolyubovo. Church of the Intercession on the Nerl P7130014 2350.jpg](https://commons.wikimedia.org/wiki/File:Bogolyubovo._Church_of_the_Intercession_on_the_Nerl_P7130014_2350.jpg) | Alexxx1979 | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_099.jpg` | [Salto Angel Dry Season.jpg](https://commons.wikimedia.org/wiki/File:Salto_Angel_Dry_Season.jpg) | Berrucomons | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_100.jpg` | [Matterhorn Riffelsee 2005-06-11.jpg](https://commons.wikimedia.org/wiki/File:Matterhorn_Riffelsee_2005-06-11.jpg) | Dirk Beyer | CC BY-SA 3.0 |
+| `assets/q_img/w2b_q_101.jpg` | [Plague mask 1630.jpg](https://commons.wikimedia.org/wiki/File:Plague_mask_1630.jpg) | Unknown authorUnknown author | Public domain |
+| `assets/q_img/w2b_q_102.jpg` | [Olmec Colossal Head, San Lorenzo, Veracruz, 1200-600 BC.jpg](https://commons.wikimedia.org/wiki/File:Olmec_Colossal_Head%2C_San_Lorenzo%2C_Veracruz%2C_1200-600_BC.jpg) | Gary Todd | CC0 |
+| `assets/q_img/w2b_q_103.jpg` | [2018 Kunstkamera building 01.jpg](https://commons.wikimedia.org/wiki/File:2018_Kunstkamera_building_01.jpg) | Andrey Korzun | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_104.jpg` | [Millau Viaduct (2724128971).jpg](https://commons.wikimedia.org/wiki/File:Millau_Viaduct_%282724128971%29.jpg) | Richard Leeming from London, UK | CC BY-SA 2.0 |
+| `assets/q_img/w2b_q_105.jpg` | [Moai Rano raraku.jpg](https://commons.wikimedia.org/wiki/File:Moai_Rano_raraku.jpg) | Aurbina | Public domain |
+| `assets/q_img/w2b_q_106.jpg` | [Ulan-Ude (11585711584).jpg](https://commons.wikimedia.org/wiki/File:Ulan-Ude_%2811585711584%29.jpg) | Clay Gilliland | CC BY-SA 2.0 |
+| `assets/q_img/w2b_q_107.jpg` | [Мансийские болваны.jpg](https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B0%D0%BD%D1%81%D0%B8%D0%B9%D1%81%D0%BA%D0%B8%D0%B5_%D0%B1%D0%BE%D0%BB%D0%B2%D0%B0%D0%BD%D1%8B.jpg) | Aleksandr Chazov | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_108.jpg` | [Lenapillarsriverview.JPG](https://commons.wikimedia.org/wiki/File:Lenapillarsriverview.JPG) | Linjye | CC BY-SA 3.0 |
+| `assets/q_img/w2b_q_109.jpg` | [Flag of Lebanon.svg](https://commons.wikimedia.org/wiki/File:Flag_of_Lebanon.svg) | Henri Pharaon | Public domain |
+| `assets/q_img/w2b_q_110.jpg` | [Flag of Mozambique.svg](https://commons.wikimedia.org/wiki/File:Flag_of_Mozambique.svg) | FRELIMO | Public domain |
+| `assets/q_img/w2b_q_111.jpg` | [Gobekli Tepe 2.jpg](https://commons.wikimedia.org/wiki/File:Gobekli_Tepe_2.jpg) | Teomancimit | CC BY-SA 3.0 |
+| `assets/q_img/w2b_q_112.jpg` | [Trajan's Column HD.jpg](https://commons.wikimedia.org/wiki/File:Trajan's_Column_HD.jpg) | Livioandronico2013 | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_113.jpg` | [Mercator 1569 world map composite.jpg](https://commons.wikimedia.org/wiki/File:Mercator_1569_world_map_composite.jpg) | Gerardus Mercator | Public domain |
+| `assets/q_img/w2b_q_114.jpg` | [The Capitoline Wolf, Musei Capitolini, Rome (13840968834).jpg](https://commons.wikimedia.org/wiki/File:The_Capitoline_Wolf%2C_Musei_Capitolini%2C_Rome_%2813840968834%29.jpg) | Carole Raddato from FRANKFURT, Germany | CC BY-SA 2.0 |
+| `assets/q_img/w2b_q_115.jpg` | [Harold arrow, Bayeux tapestry detail.jpeg](https://commons.wikimedia.org/wiki/File:Harold_arrow%2C_Bayeux_tapestry_detail.jpeg) | Unknown seemsters | Public domain |
+| `assets/q_img/w2b_q_116.jpg` | [Code of Hammurabi-Sb 8-IMG 7753-gradient.jpg](https://commons.wikimedia.org/wiki/File:Code_of_Hammurabi-Sb_8-IMG_7753-gradient.jpg) | Rama | CC BY-SA 3.0 fr |
+| `assets/q_img/w2b_q_117.jpg` | [Persepolis – Gate of All Nations 02.jpg](https://commons.wikimedia.org/wiki/File:Persepolis_%E2%80%93_Gate_of_All_Nations_02.jpg) | Skot | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_118.jpg` | [Marble statue of a togatus (man wearing a toga) MET DT11656.jpg](https://commons.wikimedia.org/wiki/File:Marble_statue_of_a_togatus_%28man_wearing_a_toga%29_MET_DT11656.jpg) | — | CC0 |
+| `assets/q_img/w2b_q_119.jpg` | [Ushabti, Denver Museum of Nature and Science.jpg](https://commons.wikimedia.org/wiki/File:Ushabti%2C_Denver_Museum_of_Nature_and_Science.jpg) | Avrand6 | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_120.jpg` | [Josselin, gargouille Notre Dame du Roncier.jpg](https://commons.wikimedia.org/wiki/File:Josselin%2C_gargouille_Notre_Dame_du_Roncier.jpg) | Tsaag Valren | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_121.jpg` | [Da Vinci Vitruve Luc Viatour.jpg](https://commons.wikimedia.org/wiki/File:Da_Vinci_Vitruve_Luc_Viatour.jpg) | Leonardo da Vinci | Public domain |
+| `assets/q_img/w2b_q_122.jpg` | [Van Eyck - Arnolfini Portrait.jpg](https://commons.wikimedia.org/wiki/File:Van_Eyck_-_Arnolfini_Portrait.jpg) | Jan van Eyck | Public domain |
+| `assets/q_img/w2b_q_123.jpg` | [Laocoon and His Sons.jpg](https://commons.wikimedia.org/wiki/File:Laocoon_and_His_Sons.jpg) | Hagesandros, Athenedoros, and Polydoros | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_124.jpg` | [Nike of Samothrace, Paris, Louvre.jpg](https://commons.wikimedia.org/wiki/File:Nike_of_Samothrace%2C_Paris%2C_Louvre.jpg) | Wilfredor | CC0 |
+| `assets/q_img/w2b_q_125.jpg` | [Samson fountain in Peterhof 01.jpg](https://commons.wikimedia.org/wiki/File:Samson_fountain_in_Peterhof_01.jpg) | Florstein (Telegram:WikiPhoto.Space) | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_126.jpg` | [Osebergskipet 2016.jpg](https://commons.wikimedia.org/wiki/File:Osebergskipet_2016.jpg) | Petter Ulleland | CC BY-SA 4.0 |
+| `assets/q_img/w2b_q_127.jpg` | [Rökstenen 1.JPG](https://commons.wikimedia.org/wiki/File:R%C3%B6kstenen_1.JPG) | Bengt Olof ÅRADSSON | CC BY 1.0 |
+| `assets/q_img/w2b_q_128.jpg` | [Kutuzov2 by Daw.jpg](https://commons.wikimedia.org/wiki/File:Kutuzov2_by_Daw.jpg) | George Dawe | Public domain |
+| `assets/q_img/w2b_q_129.jpg` | [Terracotta Army, View of Pit 1.jpg](https://commons.wikimedia.org/wiki/File:Terracotta_Army%2C_View_of_Pit_1.jpg) | Jmhullot | CC BY 3.0 |
+| `assets/q_img/w2b_q_130.jpg` | [Cusco Piedra de los doce angulos.jpg](https://commons.wikimedia.org/wiki/File:Cusco_Piedra_de_los_doce_angulos.jpg) | Unukorno | CC BY 3.0 |
 | `assets/video/w2b_v_001.mp4` | [Apollo 11 Landing - first steps on the moon.ogv](https://commons.wikimedia.org/wiki/File:Apollo_11_Landing_-_first_steps_on_the_moon.ogv) | NASA | Public domain |
