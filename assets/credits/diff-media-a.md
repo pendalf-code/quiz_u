@@ -4,6 +4,13 @@
 
 | Файл | Источник | Автор | Лицензия |
 |:---|:---|:---|:---|
+| `assets/music/w2a_m_201.mp3` | [MicroKORG Demo.ogg](https://commons.wikimedia.org/wiki/File:MicroKORG_Demo.ogg) | Autojak234 | CC BY-SA 4.0 |
+| `assets/music/w2a_m_210.mp3` | [Xylophone jingle.wav](https://commons.wikimedia.org/wiki/File:Xylophone_jingle.wav) | spazzo_1493 | CC BY 3.0 |
+| `assets/music/w2a_m_217.mp3` | [Subsynth-arpeggios.ogg](https://commons.wikimedia.org/wiki/File:Subsynth-arpeggios.ogg) | Public domainPublic domainfalsefalse This work has been released into the public domain by its author, Wji, at the Engli | Public domain |
+| `assets/music/w2a_m_218.mp3` | [Jugando con un theremin creado con arduino.wav](https://commons.wikimedia.org/wiki/File:Jugando_con_un_theremin_creado_con_arduino.wav) | Luis Alvaz | CC BY-SA 4.0 |
+| `assets/music/w2a_m_220.mp3` | [Nikolaj Alekseevič Nekrasov - Korobeiniki.ogg](https://commons.wikimedia.org/wiki/File:Nikolaj_Alekseevi%C4%8D_Nekrasov_-_Korobeiniki.ogg) | Pracchia-78 | Public domain |
+| `assets/music/w2a_m_221.mp3` | [Charpentier, Te Deum (Prelude).ogg](https://commons.wikimedia.org/wiki/File:Charpentier,_Te_Deum_(Prelude).ogg) | Ian Dollins | CC0 |
+| `assets/music/w2a_m_259.mp3` | [Funky Slap Bass line.ogg](https://commons.wikimedia.org/wiki/File:Funky_Slap_Bass_line.ogg) | Serolillo | CC BY 2.5 |
 | `assets/music/w2a_m_310.mp3` | [Pyotr Ilyich Tchaikovsky- Swan Lake- Extract from Act 4.flac](https://commons.wikimedia.org/wiki/File:Pyotr_Ilyich_Tchaikovsky-_Swan_Lake-_Extract_from_Act_4.flac) | Pyotr Ilyich Tchaikovsky; Antal Dorati; London Philharmonic Orchestra | Public domain |
 | `assets/q_img/w2a_q_001.jpg` | [Red Apple.jpg](https://commons.wikimedia.org/wiki/File:Red_Apple.jpg) | Abhijit Tembhekar from Mumbai, India | CC BY 2.0 |
 | `assets/q_img/w2a_q_002.jpg` | [Russell Madole, Brass Oil Lamp, c. 1939, NGA 24591.jpg](https://commons.wikimedia.org/wiki/File:Russell_Madole,_Brass_Oil_Lamp,_c._1939,_NGA_24591.jpg) | Russell Madole | CC0 |
