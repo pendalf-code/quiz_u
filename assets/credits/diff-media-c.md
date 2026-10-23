@@ -4,6 +4,9 @@
 
 | Файл | Источник | Автор | Лицензия |
 |:---|:---|:---|:---|
+| `assets/music/w2c_m_001.mp3` | [Medium rooster crowing.ogg](https://commons.wikimedia.org/wiki/File:Medium_rooster_crowing.ogg) | alys | Public domain |
+| `assets/music/w2c_m_002.mp3` | [Wolf howls.ogg](https://commons.wikimedia.org/wiki/File:Wolf_howls.ogg) | — | Public domain |
+| `assets/music/w2c_m_003.mp3` | [Meleagris gallopavo - Wild Turkey XC136045.ogg](https://commons.wikimedia.org/wiki/File:Meleagris_gallopavo_-_Wild_Turkey_XC136045.ogg) | Jonathon Jongsma | CC BY-SA 3.0 |
 | `assets/q_img/w2c_q_001.jpg` | [Cannoli siciliani.jpg](https://commons.wikimedia.org/wiki/File:Cannoli_siciliani.jpg) | Stefano Mortellaro from Catania, Italy | CC BY 2.0 |
 | `assets/q_img/w2c_q_002.jpg` | [Burrata2.jpg](https://commons.wikimedia.org/wiki/File:Burrata2.jpg) | Popo le Chien | CC0 |
 | `assets/q_img/w2c_q_003.jpg` | [French macaroons.jpg](https://commons.wikimedia.org/wiki/File:French_macaroons.jpg) | Shisma (talk) | CC0 |
@@ -90,3 +93,14 @@
 | `assets/q_img/w2c_q_084.jpg` | [John Tenniel- Alice's mad tea party, colour.jpg](https://commons.wikimedia.org/wiki/File:John_Tenniel-_Alice's_mad_tea_party%2C_colour.jpg) | John Tenniel | Public domain |
 | `assets/q_img/w2c_q_085.jpg` | [IngresOdipusAndSphinx.jpg](https://commons.wikimedia.org/wiki/File:IngresOdipusAndSphinx.jpg) | Jean-Auguste-Dominique Ingres | Public domain |
 | `assets/q_img/w2c_q_086.jpg` | [Black hole - Messier 87 crop max res.jpg](https://commons.wikimedia.org/wiki/File:Black_hole_-_Messier_87_crop_max_res.jpg) | Event Horizon Telescope, uploader cropped and converted TIF to JPG | CC BY 4.0 |
+| `assets/q_img/w2c_q_087.jpg` | [Salto Angel Dry Season.jpg](https://commons.wikimedia.org/wiki/File:Salto_Angel_Dry_Season.jpg) | Berrucomons | CC BY-SA 4.0 |
+| `assets/q_img/w2c_q_088.jpg` | [Peru Machu Picchu Sunrise.jpg](https://commons.wikimedia.org/wiki/File:Peru_Machu_Picchu_Sunrise.jpg) | Allard Schmidt (The Netherlands) | Public domain |
+| `assets/q_img/w2c_q_089.jpg` | [Bilibin. Baba Yaga.jpg](https://commons.wikimedia.org/wiki/File:Bilibin._Baba_Yaga.jpg) | Ivan Bilibin | Public domain |
+| `assets/q_img/w2c_q_090.jpg` | [Navigation sextant in Museum of the World Ocean - p8.jpg](https://commons.wikimedia.org/wiki/File:Navigation_sextant_in_Museum_of_the_World_Ocean_-_p8.jpg) | Александр Сигачёв | CC0 |
+| `assets/q_img/w2c_q_091.jpg` | [Panther chameleon (Furcifer pardalis) male Nosy Be.jpg](https://commons.wikimedia.org/wiki/File:Panther_chameleon_(Furcifer_pardalis)_male_Nosy_Be.jpg) | Charles J. Sharp | CC BY-SA 4.0 |
+| `assets/q_img/w2c_q_092.jpg` | [Galanthus nivalis close-up aka.jpg](https://commons.wikimedia.org/wiki/File:Galanthus_nivalis_close-up_aka.jpg) | André Karwath aka Aka | CC BY-SA 2.5 |
+| `assets/q_img/w2c_q_093.jpg` | [Cucurbita 2011 G1.jpg](https://commons.wikimedia.org/wiki/File:Cucurbita_2011_G1.jpg) | George Chernilevsky | Public domain |
+| `assets/q_img/w2c_q_094.jpg` | [Moscow tram 31270 2026-05 Shcherbakovskaya Street Vityaz-M 055.JPG](https://commons.wikimedia.org/wiki/File:Moscow_tram_31270_2026-05_Shcherbakovskaya_Street_Vityaz-M_055.JPG) | Artyom Svetlov | CC BY 4.0 |
+| `assets/q_img/w2c_q_095.jpg` | [Octopus vulgaris 03.jpg](https://commons.wikimedia.org/wiki/File:Octopus_vulgaris_03.jpg) | H. Zell | CC BY-SA 3.0 |
+| `assets/q_img/w2c_q_096.jpg` | [West European Hedgehog (Erinaceus europaeus)1.jpg](https://commons.wikimedia.org/wiki/File:West_European_Hedgehog_(Erinaceus_europaeus)1.jpg) | Hrald | CC BY-SA 3.0 |
+| `assets/q_img/w2c_q_097.jpg` | [Killerwhales jumping (cropped).jpg](https://commons.wikimedia.org/wiki/File:Killerwhales_jumping_(cropped).jpg) | Robert Pittman | Public domain |
