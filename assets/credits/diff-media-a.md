@@ -1,0 +1,66 @@
+# Медиа волны 2 (TASK-52, сессия diff-media-a)
+
+Все файлы — с Wikimedia Commons, свободные лицензии. Картинки ужаты до ≤ 1024 px / ≤ 200 КБ, аудио обрезано до ≤ 20 с (MP3 96 кбит/с).
+
+| Файл | Источник | Автор | Лицензия |
+|:---|:---|:---|:---|
+| `assets/q_img/w2a_q_001.jpg` | [Red Apple.jpg](https://commons.wikimedia.org/wiki/File:Red_Apple.jpg) | Abhijit Tembhekar from Mumbai, India | CC BY 2.0 |
+| `assets/q_img/w2a_q_002.jpg` | [Russell Madole, Brass Oil Lamp, c. 1939, NGA 24591.jpg](https://commons.wikimedia.org/wiki/File:Russell_Madole,_Brass_Oil_Lamp,_c._1939,_NGA_24591.jpg) | Russell Madole | CC0 |
+| `assets/q_img/w2a_q_003.jpg` | [Amphiprion ocellaris (Clown anemonefish) by Nick Hobgood.jpg](https://commons.wikimedia.org/wiki/File:Amphiprion_ocellaris_(Clown_anemonefish)_by_Nick_Hobgood.jpg) | Nick Hobgood | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_004.jpg` | [Child holds colorful balloons while standing outside a house with adults in the background during a gathering.jpg](https://commons.wikimedia.org/wiki/File:Child_holds_colorful_balloons_while_standing_outside_a_house_with_adults_in_the_background_during_a_gathering.jpg) | Shixart1985 | CC BY 2.0 |
+| `assets/q_img/w2a_q_005.jpg` | [Red Panda (24986761703).jpg](https://commons.wikimedia.org/wiki/File:Red_Panda_(24986761703).jpg) | Mathias Appel | CC0 |
+| `assets/q_img/w2a_q_006.jpg` | [Comet-Hale-Bopp-29-03-1997 hires adj.jpg](https://commons.wikimedia.org/wiki/File:Comet-Hale-Bopp-29-03-1997_hires_adj.jpg) | Philipp Salzgeber | CC BY-SA 2.0 at |
+| `assets/q_img/w2a_q_007.jpg` | [80-391-9014 Kyiv Sofia 2 RB 24.jpg](https://commons.wikimedia.org/wiki/File:80-391-9014_Kyiv_Sofia_2_RB_24.jpg) | Rbrechko | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_008.jpg` | [Silurus glanis 02.jpg](https://commons.wikimedia.org/wiki/File:Silurus_glanis_02.jpg) | Dieter Florian (To contact the author, ask the uploader or take a look at tauchshop-florian.de.) | CC BY-SA 3.0 de |
+| `assets/q_img/w2a_q_009.jpg` | [Búho nival (Bubo scandiacus), Arcos de la Frontera, Cádiz, España, 2015-12-08, DD 03.JPG](https://commons.wikimedia.org/wiki/File:B%C3%BAho_nival_(Bubo_scandiacus),_Arcos_de_la_Frontera,_C%C3%A1diz,_Espa%C3%B1a,_2015-12-08,_DD_03.JPG) | Diego Delso | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_010.jpg` | [Malayopython reticulatus, Reticulated python - Kaeng Krachan District, Phetchaburi Province (47924282891).jpg](https://commons.wikimedia.org/wiki/File:Malayopython_reticulatus,_Reticulated_python_-_Kaeng_Krachan_District,_Phetchaburi_Province_(47924282891).jpg) | Rushenb | CC BY-SA 2.0 |
+| `assets/q_img/w2a_q_011.jpg` | [Cervus elaphus Luc Viatour 3.jpg](https://commons.wikimedia.org/wiki/File:Cervus_elaphus_Luc_Viatour_3.jpg) | Lviatour | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_012.jpg` | [Old Oak in Mont.jpg](https://commons.wikimedia.org/wiki/File:Old_Oak_in_Mont.jpg) | Pierre-Jacques DESPA | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_013.jpg` | [Red Onion on White.JPG](https://commons.wikimedia.org/wiki/File:Red_Onion_on_White.JPG) | Colin | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_014.jpg` | [Lion (Panthera leo) male 6y.jpg](https://commons.wikimedia.org/wiki/File:Lion_(Panthera_leo)_male_6y.jpg) | Charles J. Sharp | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_015.jpg` | [Tonkotsu Ramen - Goemon Ramen Bar 2023-06-06.jpg](https://commons.wikimedia.org/wiki/File:Tonkotsu_Ramen_-_Goemon_Ramen_Bar_2023-06-06.jpg) | Andy Li | CC0 |
+| `assets/q_img/w2a_q_016.jpg` | [Lightmatter panda.jpg](https://commons.wikimedia.org/wiki/File:Lightmatter_panda.jpg) | Aaron Logan | CC BY 1.0 |
+| `assets/q_img/w2a_q_017.jpg` | [PN-9 flying boat in flight 1920s.jpg](https://commons.wikimedia.org/wiki/File:PN-9_flying_boat_in_flight_1920s.jpg) | Bain News Service | Public domain |
+| `assets/q_img/w2a_q_018.jpg` | [Hoteltoaster 01 (sk).jpg](https://commons.wikimedia.org/wiki/File:Hoteltoaster_01_(sk).jpg) | Photograph: SusKauz, Frankfurt am Main | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_019.jpg` | [Esox lucius 2021 G1.jpg](https://commons.wikimedia.org/wiki/File:Esox_lucius_2021_G1.jpg) | George Chernilevsky | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_020.jpg` | [Ripe wheat field - geograph.org.uk - 945885.jpg](https://commons.wikimedia.org/wiki/File:Ripe_wheat_field_-_geograph.org.uk_-_945885.jpg) | Jonathan Billinger | CC BY-SA 2.0 |
+| `assets/q_img/w2a_q_021.jpg` | [Fennec Fox Peek.jpg](https://commons.wikimedia.org/wiki/File:Fennec_Fox_Peek.jpg) | Anass ERRIHANI | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_022.jpg` | [African buffalo (Syncerus caffer) male with Oxpecker.jpg](https://commons.wikimedia.org/wiki/File:African_buffalo_(Syncerus_caffer)_male_with_Oxpecker.jpg) | Charles J. Sharp | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_023.jpg` | [Haeckel Chiroptera.jpg](https://commons.wikimedia.org/wiki/File:Haeckel_Chiroptera.jpg) | Ernst Haeckel | Public domain |
+| `assets/q_img/w2a_q_024.jpg` | [Classical Guitar two views2.png](https://commons.wikimedia.org/wiki/File:Classical_Guitar_two_views2.png) | User:Martin Möller | CC BY-SA 2.0 de |
+| `assets/q_img/w2a_q_025.jpg` | [Tamias striatus CT.jpg](https://commons.wikimedia.org/wiki/File:Tamias_striatus_CT.jpg) | Cephas | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_026.jpg` | [Bengal tiger (Panthera tigris tigris) female 3.jpg](https://commons.wikimedia.org/wiki/File:Bengal_tiger_(Panthera_tigris_tigris)_female_3.jpg) | Charles J. Sharp | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_027.jpg` | [Meaty Lasagna 8of8 (8736299782).jpg](https://commons.wikimedia.org/wiki/File:Meaty_Lasagna_8of8_(8736299782).jpg) | Breville USA | CC BY 2.0 |
+| `assets/q_img/w2a_q_028.jpg` | [Portrait de Charles Perrault par Charles Le Brun.jpg](https://commons.wikimedia.org/wiki/File:Portrait_de_Charles_Perrault_par_Charles_Le_Brun.jpg) | Charles Le Brun | Public domain |
+| `assets/q_img/w2a_q_029.jpg` | [Female with rack with wool and a drop spindle Ecuador.jpg](https://commons.wikimedia.org/wiki/File:Female_with_rack_with_wool_and_a_drop_spindle_Ecuador.jpg) | Peter van der Sluijs | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_030.jpg` | [Anguillidae Anguilla anguilla 1.jpg](https://commons.wikimedia.org/wiki/File:Anguillidae_Anguilla_anguilla_1.jpg) | NasserHalaweh | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_031.jpg` | [Ratatouille.jpg](https://commons.wikimedia.org/wiki/File:Ratatouille.jpg) | Marcus Guimarães | CC BY 2.0 |
+| `assets/q_img/w2a_q_032.jpg` | [Steinway & Sons concert grand piano, model D-274, manufactured at Steinway's factory in Hamburg, Germany.png](https://commons.wikimedia.org/wiki/File:Steinway_%26_Sons_concert_grand_piano,_model_D-274,_manufactured_at_Steinway%27s_factory_in_Hamburg,_Germany.png) | Steinway &amp; Sons, 10 Rondenbarg, Hamburg D-22525, Germany, eu.steinway.com.Steinway &amp; Sons, 1 Steinway Place, Lon | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_033.jpg` | [Saitama Domestic Pigs In Pasture 1.jpg](https://commons.wikimedia.org/wiki/File:Saitama_Domestic_Pigs_In_Pasture_1.jpg) | 京浜にけ at Japanese Wikipedia | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_034.jpg` | [Zeppelin NT Nippon Airship Corporation.JPG](https://commons.wikimedia.org/wiki/File:Zeppelin_NT_Nippon_Airship_Corporation.JPG) | まも(Mamo) | Public domain |
+| `assets/q_img/w2a_q_035.jpg` | [Ivan Bilibin - prince-ivan-and-the-firebird-illustration-for-the-russian-fairy-story-the-firebird-1901.jpg](https://commons.wikimedia.org/wiki/File:Ivan_Bilibin_-_prince-ivan-and-the-firebird-illustration-for-the-russian-fairy-story-the-firebird-1901.jpg) | Ivan Bilibin | Public domain |
+| `assets/q_img/w2a_q_036.jpg` | [Ilya Repin - Sadko - Google Art Project.jpg](https://commons.wikimedia.org/wiki/File:Ilya_Repin_-_Sadko_-_Google_Art_Project.jpg) | Ilya Repin | Public domain |
+| `assets/q_img/w2a_q_037.jpg` | [Lion's mane jellyfish swimming side view.gif](https://commons.wikimedia.org/wiki/File:Lion%27s_mane_jellyfish_swimming_side_view.gif) | W.carter | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_038.jpg` | [Statue of Ramesses II in Karnak Temple in Luxor Egypt.JPG](https://commons.wikimedia.org/wiki/File:Statue_of_Ramesses_II_in_Karnak_Temple_in_Luxor_Egypt.JPG) | MusikAnimal | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_039.jpg` | [Viking gold Thor's hammer pendant (FindID 553540).jpg](https://commons.wikimedia.org/wiki/File:Viking_gold_Thor%27s_hammer_pendant_(FindID_553540).jpg) | Lincolnshire County Council, Adam Daubney, 2013-04-04 14:22:46 | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_040.jpg` | [George Frederick Watts, 1860-62, Sir Galahad, oil on canvas, 191.8 x 107 cm, Harvard Art Museums, Fogg Museum.jpg](https://commons.wikimedia.org/wiki/File:George_Frederick_Watts,_1860-62,_Sir_Galahad,_oil_on_canvas,_191.8_x_107_cm,_Harvard_Art_Museums,_Fogg_Museum.jpg) | George Frederic Watts | Public domain |
+| `assets/q_img/w2a_q_041.jpg` | [Rök runestone (Rök, Ödeshög Municipality, Östergötland, Sweden).jpg](https://commons.wikimedia.org/wiki/File:R%C3%B6k_runestone_(R%C3%B6k,_%C3%96desh%C3%B6g_Municipality,_%C3%96sterg%C3%B6tland,_Sweden).jpg) | L'imaginaire | CC0 |
+| `assets/q_img/w2a_q_042.jpg` | [Four Parmigiano-Reggiano wheels with classifications.JPG](https://commons.wikimedia.org/wiki/File:Four_Parmigiano-Reggiano_wheels_with_classifications.JPG) | Wittylama | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_043.jpg` | [Duck-billed platypus (Ornithorhynchus anatinus) Scottsdale.jpg](https://commons.wikimedia.org/wiki/File:Duck-billed_platypus_(Ornithorhynchus_anatinus)_Scottsdale.jpg) | Charles J. Sharp | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_044.jpg` | [Yellow Tiger Moth Góraszka.JPG](https://commons.wikimedia.org/wiki/File:Yellow_Tiger_Moth_G%C3%B3raszka.JPG) | Łukasz Golowanow &amp; Maciej Hypś, Konflikty.pl | Attribution |
+| `assets/q_img/w2a_q_045.jpg` | [Evolution of a Tornado.jpg](https://commons.wikimedia.org/wiki/File:Evolution_of_a_Tornado.jpg) | JasonWeingart | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_046.jpg` | [RUS-2016-Aerial-SPB-Peter and Paul Fortress 02.jpg](https://commons.wikimedia.org/wiki/File:RUS-2016-Aerial-SPB-Peter_and_Paul_Fortress_02.jpg) | Godot13 | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_047.jpg` | [Bremen, Bremer Stadtmusikanten -- 2021 -- 6358.jpg](https://commons.wikimedia.org/wiki/File:Bremen,_Bremer_Stadtmusikanten_--_2021_--_6358.jpg) | Dietmar Rabich | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_048.jpg` | [The Unicorn in Captivity (from the Unicorn Tapestries) MET DP118991.jpg](https://commons.wikimedia.org/wiki/File:The_Unicorn_in_Captivity_(from_the_Unicorn_Tapestries)_MET_DP118991.jpg) | unknown | CC0 |
+| `assets/q_img/w2a_q_049.jpg` | [Rose flower (71881).jpg](https://commons.wikimedia.org/wiki/File:Rose_flower_(71881).jpg) | Sandhiya.B05 | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_050.jpg` | [Sydney Opera House - Dec 2008.jpg](https://commons.wikimedia.org/wiki/File:Sydney_Opera_House_-_Dec_2008.jpg) | Diliff | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_051.jpg` | [Cockroach July 2013-1.jpg](https://commons.wikimedia.org/wiki/File:Cockroach_July_2013-1.jpg) | Alvesgaspar | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_052.jpg` | [Hipopótamo (Hippopotamus amphibius), parque nacional de Chobe, Botsuana, 2018-07-28, DD 82.jpg](https://commons.wikimedia.org/wiki/File:Hipop%C3%B3tamo_(Hippopotamus_amphibius),_parque_nacional_de_Chobe,_Botsuana,_2018-07-28,_DD_82.jpg) | Diego Delso | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_053.jpg` | [Garmon accordions at the Musical Instruments Museum, Brussels.jpg](https://commons.wikimedia.org/wiki/File:Garmon_accordions_at_the_Musical_Instruments_Museum,_Brussels.jpg) | Sdkb | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_054.jpg` | [Axolotl Ambystoma mexicanum Aquarium Zoo Berlin, 2007.jpg](https://commons.wikimedia.org/wiki/File:Axolotl_Ambystoma_mexicanum_Aquarium_Zoo_Berlin,_2007.jpg) | Kristof Magnusson | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_055.jpg` | [The "Tusculum portrait", a rare bust of Julius Caesar in his lifetime, 45 - 43 BC, Moi, Auguste, Empereur de Rome exhibi](https://commons.wikimedia.org/wiki/File:The_%22Tusculum_portrait%22,_a_rare_bust_of_Julius_Caesar_in_his_lifetime,_45_-_43_BC,_Moi,_Auguste,_Empereur_de_Rome_exhibition,_Grand_Palais,_Paris_-_14628246546.jpg) | Following Hadrian | CC BY-SA 2.0 |
+| `assets/q_img/w2a_q_056.jpg` | [Waffle Maker.jpg](https://commons.wikimedia.org/wiki/File:Waffle_Maker.jpg) | Donovan Govan. | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_057.jpg` | [Two male giraffes are necking in San Francisco Zoo.jpg](https://commons.wikimedia.org/wiki/File:Two_male_giraffes_are_necking_in_San_Francisco_Zoo.jpg) | Brocken Inaglory | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_058.jpg` | [Pantomimes lumineuses. Théâtre optique de E. Reynaud, musique de Gaston Paulin. affiche avec la lettre, Jules Chéret.jpg](https://commons.wikimedia.org/wiki/File:Pantomimes_lumineuses._Th%C3%A9%C3%A2tre_optique_de_E._Reynaud,_musique_de_Gaston_Paulin._affiche_avec_la_lettre,_Jules_Ch%C3%A9ret.jpg) | Chéret, Jules (1836-1932). Illustrateur | Public domain |
+| `assets/q_img/w2a_q_059.jpg` | [Book of Kells ChiRho Folio 34R.png](https://commons.wikimedia.org/wiki/File:Book_of_Kells_ChiRho_Folio_34R.png) | unknown Irish or Scottish monks | Public domain |
+| `assets/q_img/w2a_q_060.jpg` | [Zoetrope (AM 2001.6.1-2).jpg](https://commons.wikimedia.org/wiki/File:Zoetrope_(AM_2001.6.1-2).jpg) | unknown | CC BY 4.0 |
