@@ -49,3 +49,28 @@
 | `assets/q_img/w2c_q_043.jpg` | [Cannele (12559).jpg](https://commons.wikimedia.org/wiki/File:Cannele_(12559).jpg) | Rhododendrites | CC BY-SA 4.0 |
 | `assets/q_img/w2c_q_044.jpg` | [Trifle.jpg](https://commons.wikimedia.org/wiki/File:Trifle.jpg) | --Ben 18:33, 25 March 2006 (UTC) | Public domain |
 | `assets/q_img/w2c_q_045.jpg` | [Lagotto Romagnolo 2.jpg](https://commons.wikimedia.org/wiki/File:Lagotto_Romagnolo_2.jpg) | Alberto Ziveri | CC BY-SA 2.0 |
+| `assets/q_img/w2c_q_046.jpg` | [Camp Nou aerial (cropped).jpg](https://commons.wikimedia.org/wiki/File:Camp_Nou_aerial_(cropped).jpg) | Oh-Barcelona.com from Barcelona, Spain | CC BY 2.0 |
+| `assets/q_img/w2c_q_047.jpg` | [Pankration Met 16.71.jpg](https://commons.wikimedia.org/wiki/File:Pankration_Met_16.71.jpg) | Kleophrades Painter | CC BY 2.5 |
+| `assets/q_img/w2c_q_048.jpg` | [Surfaceuse.jpg](https://commons.wikimedia.org/wiki/File:Surfaceuse.jpg) | Myrabella | CC BY-SA 3.0 |
+| `assets/q_img/w2c_q_049.jpg` | [James Naismith at Springfield College circa 1920.jpg](https://commons.wikimedia.org/wiki/File:James_Naismith_at_Springfield_College_circa_1920.jpg) | Springfield College (Courtesy of Springfield College, Babson Library, Archives a | Public domain |
+| `assets/q_img/w2c_q_050.jpg` | [F1 Carbon Fibre Halo at Formula 1 Exhibition, London.jpg](https://commons.wikimedia.org/wiki/File:F1_Carbon_Fibre_Halo_at_Formula_1_Exhibition%2C_London.jpg) | Hullian111 | CC BY-SA 4.0 |
+| `assets/q_img/w2c_q_051.jpg` | [2022 6 Hours of Spa-Francorchamps - Eau Rouge Corner.jpg](https://commons.wikimedia.org/wiki/File:2022_6_Hours_of_Spa-Francorchamps_-_Eau_Rouge_Corner.jpg) | United Autosports | CC BY-SA 2.0 |
+| `assets/q_img/w2c_q_052.jpg` | [UFC-Octagon-USMCPhoto.jpg](https://commons.wikimedia.org/wiki/File:UFC-Octagon-USMCPhoto.jpg) | — | Public domain |
+| `assets/q_img/w2c_q_053.jpg` | [Strawberries and cream Wimbledon 2014.jpg](https://commons.wikimedia.org/wiki/File:Strawberries_and_cream_Wimbledon_2014.jpg) | Micolo J from Shrewsbury, England | CC BY 2.0 |
+| `assets/q_img/w2c_q_054.jpg` | [IBM Deep Blue at Computer History Museum (9361685537).jpg](https://commons.wikimedia.org/wiki/File:IBM_Deep_Blue_at_Computer_History_Museum_(9361685537).jpg) | Anton Chiang from Cupertino, CA, USA | CC BY 2.0 |
+| `assets/q_img/w2c_q_055.jpg` | [Mysovskiy Sergey surfing Nazare.jpg](https://commons.wikimedia.org/wiki/File:Mysovskiy_Sergey_surfing_Nazare.jpg) | Alohamansurfer | CC BY-SA 4.0 |
+| `assets/q_img/w2c_q_056.jpg` | [CheeseRollingRace.jpg](https://commons.wikimedia.org/wiki/File:CheeseRollingRace.jpg) | Dave Farrance | CC BY-SA 3.0 |
+| `assets/q_img/w2c_q_057.jpg` | [Malmstrom wife carry.JPG](https://commons.wikimedia.org/wiki/File:Malmstrom_wife_carry.JPG) | U.S. Air Force photo by Cortney Paxton | Public domain |
+| `assets/q_img/w2c_q_058.jpg` | [WC 2010 Tong Jian and Pang Qing (death spiral).jpg](https://commons.wikimedia.org/wiki/File:WC_2010_Tong_Jian_and_Pang_Qing_(death_spiral).jpg) | David W. Carmichael | CC BY-SA 3.0 |
+| `assets/q_img/w2c_q_059.jpg` | [Water polo player.jpg](https://commons.wikimedia.org/wiki/File:Water_polo_player.jpg) | Ankarino | CC BY 2.0 |
+| `assets/q_img/w2c_q_060.jpg` | [Air Force Academy high jump.jpg](https://commons.wikimedia.org/wiki/File:Air_Force_Academy_high_jump.jpg) | (U.S. Air Force photo/Staff Sgt. Larry E. Reid Jr. | Public domain |
+| `assets/q_img/w2c_q_061.jpg` | [Biathlon-Targets.jpg](https://commons.wikimedia.org/wiki/File:Biathlon-Targets.jpg) | glawster | CC BY-SA 2.0 |
+| `assets/q_img/w2c_q_062.jpg` | [Camp Nou des de l'helicòpter.jpg](https://commons.wikimedia.org/wiki/File:Camp_Nou_des_de_l'helic%C3%B2pter.jpg) | Jo | Public domain |
+| `assets/q_img/w2c_q_063.jpg` | [12-01-20-yog-674.jpg](https://commons.wikimedia.org/wiki/File:12-01-20-yog-674.jpg) | Ralf Roletschek | CC BY-SA 3.0 at |
+| `assets/q_img/w2c_q_064.jpg` | [The Vuvuzela Kid.jpg](https://commons.wikimedia.org/wiki/File:The_Vuvuzela_Kid.jpg) | Dplanet:: | CC BY 2.0 |
+| `assets/q_img/w2c_q_065.jpg` | [Slam Dunk, Venice Beach (5749061012).jpg](https://commons.wikimedia.org/wiki/File:Slam_Dunk%2C_Venice_Beach_(5749061012).jpg) | InSapphoWeTrust from Los Angeles, California, USA | CC BY-SA 2.0 |
+| `assets/q_img/w2c_q_066.jpg` | [Wai khru ram muay 4.jpg](https://commons.wikimedia.org/wiki/File:Wai_khru_ram_muay_4.jpg) | B20180 | CC BY-SA 3.0 |
+| `assets/q_img/w2c_q_067.jpg` | [El Capitan and Valley View.jpg](https://commons.wikimedia.org/wiki/File:El_Capitan_and_Valley_View.jpg) | Melgna | CC BY-SA 4.0 |
+| `assets/q_img/w2c_q_068.jpg` | [1983 Audi quattro A1 Group B Michèle Mouton and Fabrizia Pons.jpg](https://commons.wikimedia.org/wiki/File:1983_Audi_quattro_A1_Group_B_Mich%C3%A8le_Mouton_and_Fabrizia_Pons.jpg) | Gravitatas | CC0 |
+| `assets/q_img/w2c_q_069.jpg` | [Drag racing christmas tree.jpg](https://commons.wikimedia.org/wiki/File:Drag_racing_christmas_tree.jpg) | Dwerg85 | CC BY-SA 3.0 |
+| `assets/q_img/w2c_q_070.jpg` | [Olympic-flag-Victoria.jpg](https://commons.wikimedia.org/wiki/File:Olympic-flag-Victoria.jpg) | Makaristos | Public domain |
