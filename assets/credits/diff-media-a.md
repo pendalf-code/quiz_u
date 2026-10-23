@@ -4,6 +4,7 @@
 
 | Файл | Источник | Автор | Лицензия |
 |:---|:---|:---|:---|
+| `assets/music/w2a_m_310.mp3` | [Pyotr Ilyich Tchaikovsky- Swan Lake- Extract from Act 4.flac](https://commons.wikimedia.org/wiki/File:Pyotr_Ilyich_Tchaikovsky-_Swan_Lake-_Extract_from_Act_4.flac) | Pyotr Ilyich Tchaikovsky; Antal Dorati; London Philharmonic Orchestra | Public domain |
 | `assets/q_img/w2a_q_001.jpg` | [Red Apple.jpg](https://commons.wikimedia.org/wiki/File:Red_Apple.jpg) | Abhijit Tembhekar from Mumbai, India | CC BY 2.0 |
 | `assets/q_img/w2a_q_002.jpg` | [Russell Madole, Brass Oil Lamp, c. 1939, NGA 24591.jpg](https://commons.wikimedia.org/wiki/File:Russell_Madole,_Brass_Oil_Lamp,_c._1939,_NGA_24591.jpg) | Russell Madole | CC0 |
 | `assets/q_img/w2a_q_003.jpg` | [Amphiprion ocellaris (Clown anemonefish) by Nick Hobgood.jpg](https://commons.wikimedia.org/wiki/File:Amphiprion_ocellaris_(Clown_anemonefish)_by_Nick_Hobgood.jpg) | Nick Hobgood | CC BY-SA 3.0 |
@@ -110,3 +111,27 @@
 | `assets/q_img/w2a_q_162.jpg` | [Curt O. Schaller - Steadicam Operator - Entwickler und Designer der artemis-Reihe von Sachtler.jpg](https://commons.wikimedia.org/wiki/File:Curt_O._Schaller_-_Steadicam_Operator_-_Entwickler_und_Designer_der_artemis-Reihe_von_Sachtler.jpg) | Christian R. F. Schaller | CC BY 3.0 |
 | `assets/q_img/w2a_q_164.jpg` | [Katharine Hepburn publicity photograph.jpg](https://commons.wikimedia.org/wiki/File:Katharine_Hepburn_publicity_photograph.jpg) | Metro-Goldwyn-Mayer Studios; Restored by Adam Cuerden | Public domain |
 | `assets/q_img/w2a_q_165.jpg` | [Roberto Benigni-5274.jpg](https://commons.wikimedia.org/wiki/File:Roberto_Benigni-5274.jpg) | Harald Krichel | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_301.jpg` | [Portrait photoshoot at Worldcon 75, Helsinki, before the Hugo Awards – George R. R. Martin (cropped).jpg](https://commons.wikimedia.org/wiki/File:Portrait_photoshoot_at_Worldcon_75,_Helsinki,_before_the_Hugo_Awards_%E2%80%93_George_R._R._Martin_(cropped).jpg) | Henry Söderlund | CC BY 4.0 |
+| `assets/q_img/w2a_q_302.jpg` | [Las Vegas (Nevada, USA), The Strip -- 2012 -- 6232.jpg](https://commons.wikimedia.org/wiki/File:Las_Vegas_(Nevada,_USA),_The_Strip_--_2012_--_6232.jpg) | Dietmar Rabich | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_304.jpg` | [John Romero - Jason Scott interview (6951215353) (cropped).jpg](https://commons.wikimedia.org/wiki/File:John_Romero_-_Jason_Scott_interview_(6951215353)_(cropped).jpg) | Jason Scott | CC BY 2.0 |
+| `assets/q_img/w2a_q_305.jpg` | [Ferris wheel in Pripyat, Ukraine.jpg](https://commons.wikimedia.org/wiki/File:Ferris_wheel_in_Pripyat,_Ukraine.jpg) | Giles Thomas | CC BY-SA 2.0 |
+| `assets/q_img/w2a_q_307.jpg` | [Pharos of Alexandria, reconstruction 2021.jpg](https://commons.wikimedia.org/wiki/File:Pharos_of_Alexandria,_reconstruction_2021.jpg) | Віщун | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_308.jpg` | [Roman turtle formation on trajan column.jpg](https://commons.wikimedia.org/wiki/File:Roman_turtle_formation_on_trajan_column.jpg) | unknown | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_311.jpg` | [Yuji Naka' - Magic - Monaco - 2015-03-21- P1030036 (cropped).jpg](https://commons.wikimedia.org/wiki/File:Yuji_Naka%27_-_Magic_-_Monaco_-_2015-03-21-_P1030036_(cropped).jpg) | Yves Tennevin | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_312.jpg` | [Hallgrímskirkja.jpeg](https://commons.wikimedia.org/wiki/File:Hallgr%C3%ADmskirkja.jpeg) | Andreas Tille | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_313.jpg` | [Richard garriott july 2008.jpg](https://commons.wikimedia.org/wiki/File:Richard_garriott_july_2008.jpg) | NASA | Public domain |
+| `assets/q_img/w2a_q_315.jpg` | [William Gibson 60th birthday portrait.jpg](https://commons.wikimedia.org/wiki/File:William_Gibson_60th_birthday_portrait.jpg) | Gonzo Bonzo | CC BY-SA 2.0 |
+| `assets/q_img/w2a_q_316.jpg` | [Brandenburg Gate Quadriga at Night.jpg](https://commons.wikimedia.org/wiki/File:Brandenburg_Gate_Quadriga_at_Night.jpg) | א (Aleph) Creator: Johann Gottfried Schadow | CC BY-SA 2.5 |
+| `assets/q_img/w2a_q_317.jpg` | [ANA soldier with RPG-7 in 2013-cropped.jpg](https://commons.wikimedia.org/wiki/File:ANA_soldier_with_RPG-7_in_2013-cropped.jpg) | Staff Sgt. Ezekiel Kitandwe | Public domain |
+| `assets/q_img/w2a_q_318.jpg` | [AA VARTA battery-side PNr°0782.jpg](https://commons.wikimedia.org/wiki/File:AA_VARTA_battery-side_PNr%C2%B00782.jpg) | D-Kuru | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_320.jpg` | [Shigeru Miyamoto 20150610 (cropped).jpg](https://commons.wikimedia.org/wiki/File:Shigeru_Miyamoto_20150610_(cropped).jpg) | Minister's Secretariat Personnel Division | CC BY 4.0 |
+| `assets/q_img/w2a_q_321.jpg` | [Banana bunch in a banana farm at Chinawal.jpg](https://commons.wikimedia.org/wiki/File:Banana_bunch_in_a_banana_farm_at_Chinawal.jpg) | abhiriksh | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_322.jpg` | [Los Angeles Pollution.jpg](https://commons.wikimedia.org/wiki/File:Los_Angeles_Pollution.jpg) | Diliff | CC BY-SA 3.0 |
+| `assets/q_img/w2a_q_323.jpg` | [Florence Cathedral seen from Piazzale Michelangelo night dllu.jpg](https://commons.wikimedia.org/wiki/File:Florence_Cathedral_seen_from_Piazzale_Michelangelo_night_dllu.jpg) | Dllu | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_325.jpg` | [Cerberus-Blake.jpeg](https://commons.wikimedia.org/wiki/File:Cerberus-Blake.jpeg) | William Blake | Public domain |
+| `assets/q_img/w2a_q_327.jpg` | [Naturalistslibra25-p326a-kraken.jpg](https://commons.wikimedia.org/wiki/File:Naturalistslibra25-p326a-kraken.jpg) | Lizars, W. H. 1788-1859 , engraver | Public domain |
+| `assets/q_img/w2a_q_328.jpg` | [Notch receives the Pioneer Award at GDC 2016 (cropped).jpg](https://commons.wikimedia.org/wiki/File:Notch_receives_the_Pioneer_Award_at_GDC_2016_(cropped).jpg) | Official GDC | CC BY 2.0 |
+| `assets/q_img/w2a_q_330.jpg` | [Nintendo-Entertainment-System-NES-Zapper-Gray-R.jpg](https://commons.wikimedia.org/wiki/File:Nintendo-Entertainment-System-NES-Zapper-Gray-R.jpg) | Evan-Amos | Public domain |
+| `assets/q_img/w2a_q_336.jpg` | [2023 Proca neurobalistyczna.jpg](https://commons.wikimedia.org/wiki/File:2023_Proca_neurobalistyczna.jpg) | Jacek Halicki | CC BY-SA 4.0 |
+| `assets/q_img/w2a_q_338.jpg` | [Sid Meier 2015-02-25 (cropped).jpg](https://commons.wikimedia.org/wiki/File:Sid_Meier_2015-02-25_(cropped).jpg) | Guerric | CC BY-SA 2.0 |
+| `assets/q_img/w2a_q_339.jpg` | [1996-2002 Toyota Supra rear.jpg](https://commons.wikimedia.org/wiki/File:1996-2002_Toyota_Supra_rear.jpg) | TTTNIS | CC0 |
