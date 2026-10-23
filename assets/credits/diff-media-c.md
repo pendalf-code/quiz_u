@@ -74,3 +74,19 @@
 | `assets/q_img/w2c_q_068.jpg` | [1983 Audi quattro A1 Group B Michèle Mouton and Fabrizia Pons.jpg](https://commons.wikimedia.org/wiki/File:1983_Audi_quattro_A1_Group_B_Mich%C3%A8le_Mouton_and_Fabrizia_Pons.jpg) | Gravitatas | CC0 |
 | `assets/q_img/w2c_q_069.jpg` | [Drag racing christmas tree.jpg](https://commons.wikimedia.org/wiki/File:Drag_racing_christmas_tree.jpg) | Dwerg85 | CC BY-SA 3.0 |
 | `assets/q_img/w2c_q_070.jpg` | [Olympic-flag-Victoria.jpg](https://commons.wikimedia.org/wiki/File:Olympic-flag-Victoria.jpg) | Makaristos | Public domain |
+| `assets/q_img/w2c_q_071.jpg` | [Optical illusion vase 2.png](https://commons.wikimedia.org/wiki/File:Optical_illusion_vase_2.png) | Περίεργος | Public domain |
+| `assets/q_img/w2c_q_072.jpg` | [Grille-hermann.jpg](https://commons.wikimedia.org/wiki/File:Grille-hermann.jpg) | Oldum | CC BY-SA 4.0 |
+| `assets/q_img/w2c_q_073.jpg` | [Sierpinski triangle tiling.gif](https://commons.wikimedia.org/wiki/File:Sierpinski_triangle_tiling.gif) | MagistraMundi | CC BY-SA 3.0 |
+| `assets/q_img/w2c_q_074.jpg` | [Albrecht Dürer - Melencolia I (detail).jpg](https://commons.wikimedia.org/wiki/File:Albrecht_D%C3%BCrer_-_Melencolia_I_(detail).jpg) | Albrecht Dürer | Public domain |
+| `assets/q_img/w2c_q_075.jpg` | [Senet game in Berlin.jpg](https://commons.wikimedia.org/wiki/File:Senet_game_in_Berlin.jpg) | Interfase | Public domain |
+| `assets/q_img/w2c_q_076.jpg` | [Kryptos sculptor.jpg](https://commons.wikimedia.org/wiki/File:Kryptos_sculptor.jpg) | Jim Sanborn | CC BY-SA 3.0 |
+| `assets/q_img/w2c_q_077.jpg` | [Voynich Manuscript (135).jpg](https://commons.wikimedia.org/wiki/File:Voynich_Manuscript_(135).jpg) | Unknown authorUnknown author | Public domain |
+| `assets/q_img/w2c_q_078.jpg` | [9 Dots Blue Unsolved.png](https://commons.wikimedia.org/wiki/File:9_Dots_Blue_Unsolved.png) | MissLunaRose12 | CC BY-SA 4.0 |
+| `assets/q_img/w2c_q_079.jpg` | [Om Yggdrasil by Frølich.jpg](https://commons.wikimedia.org/wiki/File:Om_Yggdrasil_by_Fr%C3%B8lich.jpg) | Lorenz Frølich | Public domain |
+| `assets/q_img/w2c_q_080.jpg` | [SATOR-AREPO-TENET-OPERA-ROTAS bis.jpg](https://commons.wikimedia.org/wiki/File:SATOR-AREPO-TENET-OPERA-ROTAS_bis.jpg) | https://commons.wikimedia.org/wiki/User:Mattes | Public domain |
+| `assets/q_img/w2c_q_081.jpg` | [Grenoble - SATOR AREPO TENET OPERA ROTAS.JPG](https://commons.wikimedia.org/wiki/File:Grenoble_-_SATOR_AREPO_TENET_OPERA_ROTAS.JPG) | Eusebius | CC BY 3.0 |
+| `assets/q_img/w2c_q_082.jpg` | [Monty Hall. Ilustración de paradoja. Puerta abierta.png](https://commons.wikimedia.org/wiki/File:Monty_Hall._Ilustraci%C3%B3n_de_paradoja._Puerta_abierta.png) | Joaquín Córdova | CC BY-SA 4.0 |
+| `assets/q_img/w2c_q_083.jpg` | [Blood Stained Floorboard Treated with Luminol (1424860617).jpg](https://commons.wikimedia.org/wiki/File:Blood_Stained_Floorboard_Treated_with_Luminol_(1424860617).jpg) | Jack Spades | Public domain |
+| `assets/q_img/w2c_q_084.jpg` | [John Tenniel- Alice's mad tea party, colour.jpg](https://commons.wikimedia.org/wiki/File:John_Tenniel-_Alice's_mad_tea_party%2C_colour.jpg) | John Tenniel | Public domain |
+| `assets/q_img/w2c_q_085.jpg` | [IngresOdipusAndSphinx.jpg](https://commons.wikimedia.org/wiki/File:IngresOdipusAndSphinx.jpg) | Jean-Auguste-Dominique Ingres | Public domain |
+| `assets/q_img/w2c_q_086.jpg` | [Black hole - Messier 87 crop max res.jpg](https://commons.wikimedia.org/wiki/File:Black_hole_-_Messier_87_crop_max_res.jpg) | Event Horizon Telescope, uploader cropped and converted TIF to JPG | CC BY 4.0 |
