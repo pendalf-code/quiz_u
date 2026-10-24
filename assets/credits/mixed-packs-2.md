@@ -48,3 +48,19 @@
 | `assets/q_img/w2m_q_043.jpg` | [Yellowstone National Park (WY, USA), Old Faithful Geyser -- 2022 -- 2595.jpg](https://commons.wikimedia.org/wiki/File:Yellowstone_National_Park_(WY,_USA),_Old_Faithful_Geyser_--_2022_--_2595.jpg) | Dietmar Rabich | CC BY-SA 4.0 |
 | `assets/q_img/w2m_q_044.jpg` | [Sagrada Familia March 2015-10a.jpg](https://commons.wikimedia.org/wiki/File:Sagrada_Familia_March_2015-10a.jpg) | Alvesgaspar | CC BY-SA 4.0 |
 | `assets/q_img/w2m_q_045.jpg` | [Tillandsia, Bromeliad epiphyte on Cycad.jpg](https://commons.wikimedia.org/wiki/File:Tillandsia,_Bromeliad_epiphyte_on_Cycad.jpg) | Prashanthns | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_046.jpg` | [Coral Atoll (28966820215).jpg](https://commons.wikimedia.org/wiki/File:Coral_Atoll_(28966820215).jpg) | Michael Coghlan from Adelaide, Australia | CC BY-SA 2.0 |
+| `assets/q_img/w2m_q_047.jpg` | [Ensemble of the Solovetsky monastery in the fog.jpg](https://commons.wikimedia.org/wiki/File:Ensemble_of_the_Solovetsky_monastery_in_the_fog.jpg) | Александр Байдуков | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_048.jpg` | [Samanid Mausoleum, Bukhara.jpg](https://commons.wikimedia.org/wiki/File:Samanid_Mausoleum,_Bukhara.jpg) | Bgag | CC0 |
+| `assets/music/w2m_m_004.mp3` | [American Barn Owl Screech.flac](https://commons.wikimedia.org/wiki/File:American_Barn_Owl_Screech.flac) | Daniel Polin | CC BY 4.0 |
+| `assets/q_img/w2m_q_049.jpg` | [Gokstad Ship, late 9th cent., Viking Ship Museum, Oslo (5) (36467293805).jpg](https://commons.wikimedia.org/wiki/File:Gokstad_Ship,_late_9th_cent.,_Viking_Ship_Museum,_Oslo_(5)_(36467293805).jpg) | Richard Mortel from Riyadh, Saudi Arabia | CC BY 2.0 |
+| `assets/q_img/w2m_q_050.jpg` | [Apadana and Tachara of Persepolis.jpg](https://commons.wikimedia.org/wiki/File:Apadana_and_Tachara_of_Persepolis.jpg) | Carole Raddato | CC BY-SA 2.0 |
+| `assets/q_img/w2m_q_051.jpg` | [Snowcapped Mount Kazbek (Mqinvartsveri) under setting sun.jpg](https://commons.wikimedia.org/wiki/File:Snowcapped_Mount_Kazbek_(Mqinvartsveri)_under_setting_sun.jpg) | Vyacheslav Argenberg | CC BY 4.0 |
+| `assets/q_img/w2m_q_052.jpg` | [RyoanJi-Dry garden.jpg](https://commons.wikimedia.org/wiki/File:RyoanJi-Dry_garden.jpg) | Stephane D'Alu | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_053.jpg` | [Neuschwanstein Castle from Marienbrücke, 2011 May.jpg](https://commons.wikimedia.org/wiki/File:Neuschwanstein_Castle_from_Marienbr%C3%BCcke,_2011_May.jpg) | Ximonic, Simo Räsänen (post-processing) &amp; Tauno Räsänen (photograph) | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_054.jpg` | [Duck-billed platypus (Ornithorhynchus anatinus) surfacing Scottsdale.jpg](https://commons.wikimedia.org/wiki/File:Duck-billed_platypus_(Ornithorhynchus_anatinus)_surfacing_Scottsdale.jpg) | Charles J. Sharp | CC BY-SA 4.0 |
+| `assets/music/w2m_m_005.mp3` | [Handel - Suites for Harpsichord - No.5 in E major - The Harmonious Blacksmith.ogg](https://commons.wikimedia.org/wiki/File:Handel_-_Suites_for_Harpsichord_-_No.5_in_E_major_-_The_Harmonious_Blacksmith.ogg) | Musopen | CC0 |
+| `assets/q_img/w2m_q_055.jpg` | [Common eland (Taurotragus oryx) Malolotja 2.jpg](https://commons.wikimedia.org/wiki/File:Common_eland_(Taurotragus_oryx)_Malolotja_2.jpg) | Charles J. Sharp | CC BY-SA 4.0 |
+
+| `assets/q_img/w2m_q_057.jpg` | [Goldschopfpinguin (Eudyptes chrysolophus).jpg](https://commons.wikimedia.org/wiki/File:Goldschopfpinguin_(Eudyptes_chrysolophus).jpg) | Sastognuti | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_058.jpg` | [The Verona Arena 10.08.2012.jpg](https://commons.wikimedia.org/wiki/File:The_Verona_Arena_10.08.2012.jpg) | Bo&amp;Ko | CC BY-SA 2.0 |
+| `assets/q_img/w2m_q_059.jpg` | [European hornet 090621.jpg](https://commons.wikimedia.org/wiki/File:European_hornet_090621.jpg) | Aconcagua (talk) | CC BY-SA 3.0 |
