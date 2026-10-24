@@ -58,7 +58,7 @@ function hasQuestionMedia(q) {
 }
 
 function isFinalRound(round) {
-    return !!round.isFinal || /финал/i.test(round.roundName || '');
+    return !!round.isFinal || /^s*финалs*$/i.test(round.roundName || '');
 }
 
 function safeFileTitle(title) {
@@ -168,6 +168,7 @@ function checkPack(file, data, ctx) {
     const themeKeys = new Set();
     regular.forEach((r, rIdx) => {
         if (!r.roundName) errors.push(`round ${rIdx + 1} has no roundName`);
+        if (/финал|final/i.test(r.roundName || '')) errors.push(`round ${rIdx + 1}: regular round name must not contain «финал»`);
         const n = (r.themes || []).length;
         if (n < 5 || n > 6) errors.push(`round ${rIdx + 1}: expected 5-6 themes, got ${n}`);
         (r.themes || []).forEach(t => {

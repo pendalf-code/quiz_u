@@ -34,3 +34,17 @@
 | `assets/q_img/w2m_q_026.jpg` | [Les Bourgeois de Calais devant l'hôtel de ville.jpg](https://commons.wikimedia.org/wiki/File:Les_Bourgeois_de_Calais_devant_l'h%C3%B4tel_de_ville.jpg) | Jörg Braukmann | CC BY-SA 4.0 |
 | `assets/q_img/w2m_q_027.jpg` | [Ponte di Rialto Venice 1.jpg](https://commons.wikimedia.org/wiki/File:Ponte_di_Rialto_Venice_1.jpg) | kallerna | CC BY-SA 4.0 |
 | `assets/music/w2m_m_003.mp3` | [Humpback-Whale-Song-on-the-Southern-Ocean-Feeding-Grounds-Implications-for-Cultural-Transmission-pone.0079422.s005.oga](https://commons.wikimedia.org/wiki/File:Humpback-Whale-Song-on-the-Southern-Ocean-Feeding-Grounds-Implications-for-Cultural-Transmission-pone.0079422.s005.oga) | Garland E, Gedamke J, Rekdahl M, Noad M, Garrigue C, Gales N | CC BY 2.5 |
+| `assets/q_img/w2m_q_028.jpg` | [Hercules beetle (Dynastes hercules).jpg](https://commons.wikimedia.org/wiki/File:Hercules_beetle_(Dynastes_hercules).jpg) | Novita Estiti from Tokyo, Japan | CC BY 2.0 |
+| `assets/q_img/w2m_q_029.jpg` | [Cumulonimbus incus over Warsaw, Poland.jpg](https://commons.wikimedia.org/wiki/File:Cumulonimbus_incus_over_Warsaw,_Poland.jpg) | Kamil Nowacki | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_031.jpg` | [Flamingos at Lake Natron, Tanzania.jpg](https://commons.wikimedia.org/wiki/File:Flamingos_at_Lake_Natron,_Tanzania.jpg) | Christoph Strässler | CC BY-SA 2.0 |
+| `assets/q_img/w2m_q_032.jpg` | [Wooden house in Bryggen.jpg](https://commons.wikimedia.org/wiki/File:Wooden_house_in_Bryggen.jpg) | Pudelek | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_034.jpg` | [Perro de raza Akita Inu 08.jpg](https://commons.wikimedia.org/wiki/File:Perro_de_raza_Akita_Inu_08.jpg) | Novoklimov | CC0 |
+| `assets/q_img/w2m_q_035.jpg` | [Dactylopius coccus 01.jpg](https://commons.wikimedia.org/wiki/File:Dactylopius_coccus_01.jpg) | H. Zell | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_036.jpg` | [El Capitan from Yosemite Valley floor near Bridalveil Fall in November 2004.jpeg](https://commons.wikimedia.org/wiki/File:El_Capitan_from_Yosemite_Valley_floor_near_Bridalveil_Fall_in_November_2004.jpeg) | The original uploader was Mav at English Wikipedia. | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_037.jpg` | [Ivangorod Fortress, Russia 2025.jpg](https://commons.wikimedia.org/wiki/File:Ivangorod_Fortress,_Russia_2025.jpg) | Photographer: Mosbatho | CC BY 4.0 |
+| `assets/q_img/w2m_q_038.jpg` | [Smolny 2013 1.jpg](https://commons.wikimedia.org/wiki/File:Smolny_2013_1.jpg) | Perituss | CC0 |
+| `assets/q_img/w2m_q_039.jpg` | [San Francisco cable car no. 24 en 2016.JPG](https://commons.wikimedia.org/wiki/File:San_Francisco_cable_car_no._24_en_2016.JPG) | © Pierre André | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_040.jpg` | [Male Betta -34245661920.jpg](https://commons.wikimedia.org/wiki/File:Male_Betta_-34245661920.jpg) | ivabalk https://pixabay.com/pt/users/ivabalk-782511/ | CC0 |
+| `assets/q_img/w2m_q_043.jpg` | [Yellowstone National Park (WY, USA), Old Faithful Geyser -- 2022 -- 2595.jpg](https://commons.wikimedia.org/wiki/File:Yellowstone_National_Park_(WY,_USA),_Old_Faithful_Geyser_--_2022_--_2595.jpg) | Dietmar Rabich | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_044.jpg` | [Sagrada Familia March 2015-10a.jpg](https://commons.wikimedia.org/wiki/File:Sagrada_Familia_March_2015-10a.jpg) | Alvesgaspar | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_045.jpg` | [Tillandsia, Bromeliad epiphyte on Cycad.jpg](https://commons.wikimedia.org/wiki/File:Tillandsia,_Bromeliad_epiphyte_on_Cycad.jpg) | Prashanthns | CC BY-SA 3.0 |
