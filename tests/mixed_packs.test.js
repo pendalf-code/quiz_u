@@ -8,7 +8,10 @@ const PackParser = require('../js/core/PackParser.js');
 const ROOT = path.join(__dirname, '..');
 const MIX_FOLDER = '19_Микс_и_Эрудиция';
 const MIX_DIR = path.join(ROOT, 'паки вопросов', MIX_FOLDER);
-const MIXED_PACKS = 15;
+const FIRST_PACK = 407;
+const MIXED_PACKS = 85;
+const EXPECTED_SHAPES = { 1: 17, 2: 24, 3: 17, '1+F': 9, '2+F': 9, '3+F': 9 };
+const MAX_MEDIA_PER_PACK = 2;
 
 function readPack(file) {
   let raw = fs.readFileSync(path.join(MIX_DIR, file), 'utf8');
@@ -50,12 +53,12 @@ describe('TASK-46: mixed-topic packs (Микс и Эрудиция)', () => {
     assert.ok(src.includes(`'${MIX_FOLDER}': 'Микс и Эрудиция'`));
   });
 
-  it(`folder has exactly ${MIXED_PACKS} mixed packs numbered 407-421`, () => {
+  it(`folder has exactly ${MIXED_PACKS} mixed packs numbered 407-491`, () => {
     const nums = mixFiles().map(f => parseInt(f, 10));
-    assert.deepStrictEqual(nums, Array.from({ length: MIXED_PACKS }, (_, i) => 407 + i));
+    assert.deepStrictEqual(nums, Array.from({ length: MIXED_PACKS }, (_, i) => FIRST_PACK + i));
   });
 
-  it('round shapes: 3 packs each with 1/2/3 rounds, plus 2 packs each with 1/2/3 rounds and a final', () => {
+  it('round shapes: 15 original + 70 new packs keep the 1/2/3 rounds ± final proportions', () => {
     const shapes = {};
     mixFiles().forEach(file => {
       const rounds = PackParser.normalizeGameData(readPack(file));
@@ -68,7 +71,7 @@ describe('TASK-46: mixed-topic packs (Микс и Эрудиция)', () => {
         assert.ok(r.themes[0].name && !/финал/i.test(r.themes[0].name), `${file}: final theme must name the topic`);
       });
     });
-    assert.deepStrictEqual(shapes, { 1: 3, 2: 3, 3: 3, '1+F': 2, '2+F': 2, '3+F': 2 });
+    assert.deepStrictEqual(shapes, EXPECTED_SHAPES);
   });
 
   it('every mixed pack passes PackParser.validatePack and the mixed-pack rules', () => {
@@ -86,10 +89,14 @@ describe('TASK-46: mixed-topic packs (Микс и Эрудиция)', () => {
       const regular = rounds.filter((r, i) => !PackParser.isFinalRound(r, i, rounds.length));
       assert.ok(regular.length >= 1 && regular.length <= 3, `${file}: 1-3 regular rounds`);
       regular.forEach(r => assert.ok(r.themes.length >= 5 && r.themes.length <= 6, `${file}: 5-6 themes per round`));
+      let media = 0;
       rounds.forEach(r => r.themes.forEach(t => t.questions.forEach(q => {
         assert.ok(q.q.trim().endsWith('?'), `${file}: question without "?": ${q.q}`);
         assert.ok(!q.type, `${file}: special types are assigned at runtime`);
+        if (q.img || q.music || q.video) media++;
       })));
+      assert.ok(media <= MAX_MEDIA_PER_PACK, `${file}: ${media} media questions, max ${MAX_MEDIA_PER_PACK}`);
+      assert.strictEqual(!!data.hasMedia, media > 0, `${file}: hasMedia flag`);
     });
   });
 
