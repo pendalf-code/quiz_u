@@ -19,6 +19,8 @@ const MIX_DIR = path.join(PACKS_DIR, MIX_FOLDER);
 const MIX_CATEGORY = 'Микс и Эрудиция';
 const MIX_ICON = '🎲';
 const FINAL_COST = 1500;
+const MEDIA_KEYS = ['img', 'music', 'video'];
+const MAX_MEDIA_PER_PACK = 2;
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const MEDIA_WORDS = /(на фото|фотограф[иі]и? изображ|изображ[её]н|изображени|на картинке|на снимке|на экране|послушайте|прослушайте|звучит мелоди|на видео|на рисунке|покажите)/i;
 
@@ -49,6 +51,10 @@ function listMixFiles(from, to) {
         .map(f => ({ file: f, num: parseInt(f, 10) }))
         .filter(x => !isNaN(x.num) && x.num >= from && x.num <= to)
         .sort((a, b) => a.num - b.num);
+}
+
+function hasQuestionMedia(q) {
+    return MEDIA_KEYS.some(k => typeof q[k] === 'string' && q[k].length > 0);
 }
 
 function isFinalRound(round) {
@@ -89,7 +95,7 @@ function normalizePack(data, num) {
         roundsCount: regular.length,
         hasFinal: rounds.some(isFinalRound),
         description: data.description,
-        hasMedia: false,
+        hasMedia: rounds.some(r => (r.themes || []).some(t => (t.questions || []).some(hasQuestionMedia))),
         hasCat: true,
         hasAuction: true,
         tags: Array.isArray(data.tags) ? data.tags : [],
@@ -189,6 +195,7 @@ function checkPack(file, data, ctx) {
         if (qs[0] && qs[0].cost !== FINAL_COST) errors.push(`final cost must be ${FINAL_COST}`);
     });
 
+    let mediaCount = 0;
     rounds.forEach(r => (r.themes || []).forEach(t => (t.questions || []).forEach((q, i) => {
         const where = `"${t.name}" Q${i + 1}`;
         const qt = String(q.q || '').trim();
@@ -196,9 +203,15 @@ function checkPack(file, data, ctx) {
         if (!qt.endsWith('?')) errors.push(`${where}: question must end with "?"`);
         if (qt.length < 25) warnings.push(`${where}: very short question`);
         if (at.length > 70) warnings.push(`${where}: long answer (${at.length} chars)`);
-        if (MEDIA_WORDS.test(qt)) errors.push(`${where}: references media that does not exist`);
+        const withMedia = hasQuestionMedia(q);
+        if (withMedia) mediaCount++;
+        if (MEDIA_WORDS.test(qt) && !withMedia) errors.push(`${where}: references media that does not exist`);
         if (q.type) errors.push(`${where}: do not set "type" (special types are assigned at runtime)`);
-        if (q.img || q.music || q.video || q.a_img || q.audio) errors.push(`${where}: media fields are not allowed in mixed packs`);
+        if (q.audio) errors.push(`${where}: use "music" instead of "audio"`);
+        if (q.a_img || q.a_video) errors.push(`${where}: answer media are not used in mixed packs`);
+        MEDIA_KEYS.forEach(k => {
+            if (q[k] && !fs.existsSync(path.join(ROOT, q[k]))) errors.push(`${where}: missing media file ${q[k]}`);
+        });
         const nq = ' ' + normText(qt) + ' ';
         answerVariants(at).forEach(av => {
             if (av.length >= 3 && nq.includes(' ' + av + ' ')) errors.push(`${where}: answer "${at}" is contained in the question`);
@@ -207,7 +220,9 @@ function checkPack(file, data, ctx) {
         const hit = stems(at.replace(/\([^)]*\)/g, ' '), 5).filter(s => qStems.has(s));
         if (hit.length) warnings.push(`${where}: answer stem(s) [${hit.join(', ')}] appear in question | Q: ${qt} | A: ${at}`);
     })));
-    return { errors, warnings, questions: v.questionsCount };
+    if (mediaCount > MAX_MEDIA_PER_PACK) errors.push(`${mediaCount} media questions, max ${MAX_MEDIA_PER_PACK} per pack`);
+    if (data.hasMedia !== (mediaCount > 0)) errors.push('hasMedia flag out of sync (run normalize)');
+    return { errors, warnings, questions: v.questionsCount, media: mediaCount };
 }
 
 function collectTitles(exceptFolder) {
