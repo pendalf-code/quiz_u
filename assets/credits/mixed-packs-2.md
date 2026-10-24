@@ -64,3 +64,18 @@
 | `assets/q_img/w2m_q_057.jpg` | [Goldschopfpinguin (Eudyptes chrysolophus).jpg](https://commons.wikimedia.org/wiki/File:Goldschopfpinguin_(Eudyptes_chrysolophus).jpg) | Sastognuti | CC BY-SA 4.0 |
 | `assets/q_img/w2m_q_058.jpg` | [The Verona Arena 10.08.2012.jpg](https://commons.wikimedia.org/wiki/File:The_Verona_Arena_10.08.2012.jpg) | Bo&amp;Ko | CC BY-SA 2.0 |
 | `assets/q_img/w2m_q_059.jpg` | [European hornet 090621.jpg](https://commons.wikimedia.org/wiki/File:European_hornet_090621.jpg) | Aconcagua (talk) | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_060.jpg` | [Crab Nebula.jpg](https://commons.wikimedia.org/wiki/File:Crab_Nebula.jpg) | NASA, ESA, J. Hester and A. Loll (Arizona State University) | Public domain |
+| `assets/q_img/w2m_q_061.jpg` | [Pskov. The ensemble of the Pskov Kremlin.jpg](https://commons.wikimedia.org/wiki/File:Pskov._The_ensemble_of_the_Pskov_Kremlin.jpg) | Александр Байдуков | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_062.jpg` | [Pik Pobedy and Vazha-Pshavela Peak at sunset from South Engilchek Base Camp, Central Tian Shan, Kyrgyzstan.jpg](https://commons.wikimedia.org/wiki/File:Pik_Pobedy_and_Vazha-Pshavela_Peak_at_sunset_from_South_Engilchek_Base_Camp,_Central_Tian_Shan,_Kyrgyzstan.jpg) | Maryliflower | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_063.jpg` | [Akashi Bridge.JPG](https://commons.wikimedia.org/wiki/File:Akashi_Bridge.JPG) | Tysto | Public domain |
+| `assets/q_img/w2m_q_064.jpg` | [Rafflesia arnoldii, Sumatra.jpg](https://commons.wikimedia.org/wiki/File:Rafflesia_arnoldii,_Sumatra.jpg) | LukeTriton | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_065.jpg` | [Leafcutter ant with leaf.jpg](https://commons.wikimedia.org/wiki/File:Leafcutter_ant_with_leaf.jpg) | Matheysil | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_066.jpg` | [Moscow Courtyard (Polenov, 1878).jpg](https://commons.wikimedia.org/wiki/File:Moscow_Courtyard_(Polenov,_1878).jpg) | Vasily Polenov | Public domain |
+| `assets/music/w2m_m_006.mp3` | [Grus grus - Common Crane XC596509.mp3](https://commons.wikimedia.org/wiki/File:Grus_grus_-_Common_Crane_XC596509.mp3) | Benoît Van Hecke | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_067.jpg` | [Mount Ararat and Khor Virap, Ararat Plain, Armenia.jpg](https://commons.wikimedia.org/wiki/File:Mount_Ararat_and_Khor_Virap,_Ararat_Plain,_Armenia.jpg) | Vyacheslav Argenberg | CC BY 4.0 |
+| `assets/q_img/w2m_q_068.jpg` | [Haeuser Marburger Strasse 19 und 21 in Kirchhain-Anzefahr, von Nordwesten.jpg](https://commons.wikimedia.org/wiki/File:Haeuser_Marburger_Strasse_19_und_21_in_Kirchhain-Anzefahr,_von_Nordwesten.jpg) | Jörg Wiegels | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_069.jpg` | [Przewalski's Horse (02710137).jpg](https://commons.wikimedia.org/wiki/File:Przewalski's_Horse_(02710137).jpg) | IAEA Imagebank | CC BY-SA 2.0 |
+| `assets/q_img/w2m_q_070.jpg` | [Araucaria araucana (Araucaria du Chili) - 98.jpg](https://commons.wikimedia.org/wiki/File:Araucaria_araucana_(Araucaria_du_Chili)_-_98.jpg) | Another one of my pictures: This photograph was taken by Medium69 (William Crochot) and released under the license state | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_071.jpg` | [Crater Tycho on the Moon.jpg](https://commons.wikimedia.org/wiki/File:Crater_Tycho_on_the_Moon.jpg) | NASA Hubble | CC BY 2.0 |
+| `assets/q_img/w2m_q_072.jpg` | [Vierwaldstättersee photo in Luzern.jpg](https://commons.wikimedia.org/wiki/File:Vierwaldst%C3%A4ttersee_photo_in_Luzern.jpg) | Rich Flight22 | CC BY 4.0 |
+| `assets/q_img/w2m_q_073.jpg` | [Bever - Eurasian beaver - Castor fiber 2.jpg](https://commons.wikimedia.org/wiki/File:Bever_-_Eurasian_beaver_-_Castor_fiber_2.jpg) | Bouke ten Cate | CC BY 4.0 |
