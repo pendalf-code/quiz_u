@@ -37,3 +37,4 @@
 | `assets/q_img/w2d_q_030.jpg` | [H-4 Hercules 2.jpg](https://commons.wikimedia.org/wiki/File:H-4_Hercules_2.jpg) | SDASM Archives | Public domain |
 | `assets/q_img/w2d_q_031.jpg` | [Cruiser Aurora 01.jpg](https://commons.wikimedia.org/wiki/File:Cruiser_Aurora_01.jpg) | Florstein (Telegram:WikiPhoto.Space) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
 | `assets/q_img/w2d_q_032.jpg` | [Ship's Bell, HMS Bangor - geograph.org.uk - 842963.jpg](https://commons.wikimedia.org/wiki/File:Ship's_Bell,_HMS_Bangor_-_geograph.org.uk_-_842963.jpg) | Ross | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0) |
+| `assets/q_img/w2d_q_033.jpg` | [0629Fa3. Repino. Estate-Museum of the artist I.E. Repin.jpg](https://commons.wikimedia.org/wiki/File:0629Fa3._Repino._Estate-Museum_of_the_artist_I.E._Repin.jpg) | Александровы АГ | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
