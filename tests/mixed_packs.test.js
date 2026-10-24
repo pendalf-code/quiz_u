@@ -9,7 +9,8 @@ const ROOT = path.join(__dirname, '..');
 const MIX_FOLDER = '19_Микс_и_Эрудиция';
 const MIX_DIR = path.join(ROOT, 'паки вопросов', MIX_FOLDER);
 const FIRST_PACK = 407;
-const MIN_PACKS = 15;
+const MIXED_PACKS = 85;
+const EXPECTED_SHAPES = { 1: 17, 2: 24, 3: 17, '1+F': 9, '2+F': 9, '3+F': 9 };
 const MAX_MEDIA_PER_PACK = 2;
 
 function readPack(file) {
@@ -52,13 +53,12 @@ describe('TASK-46: mixed-topic packs (Микс и Эрудиция)', () => {
     assert.ok(src.includes(`'${MIX_FOLDER}': 'Микс и Эрудиция'`));
   });
 
-  it('folder has mixed packs numbered contiguously from 407', () => {
+  it(`folder has exactly ${MIXED_PACKS} mixed packs numbered 407-491`, () => {
     const nums = mixFiles().map(f => parseInt(f, 10));
-    assert.ok(nums.length >= MIN_PACKS, `at least ${MIN_PACKS} packs`);
-    assert.deepStrictEqual(nums, Array.from({ length: nums.length }, (_, i) => FIRST_PACK + i));
+    assert.deepStrictEqual(nums, Array.from({ length: MIXED_PACKS }, (_, i) => FIRST_PACK + i));
   });
 
-  it('round shapes: 1/2/3 rounds, with or without a final; every shape present', () => {
+  it('round shapes: 15 original + 70 new packs keep the 1/2/3 rounds ± final proportions', () => {
     const shapes = {};
     mixFiles().forEach(file => {
       const rounds = PackParser.normalizeGameData(readPack(file));
@@ -71,8 +71,7 @@ describe('TASK-46: mixed-topic packs (Микс и Эрудиция)', () => {
         assert.ok(r.themes[0].name && !/финал/i.test(r.themes[0].name), `${file}: final theme must name the topic`);
       });
     });
-    assert.deepStrictEqual(Object.keys(shapes).sort(), ['1', '1+F', '2', '2+F', '3', '3+F']);
-    Object.entries(shapes).forEach(([key, n]) => assert.ok(n >= 2, `shape ${key}: ${n} packs`));
+    assert.deepStrictEqual(shapes, EXPECTED_SHAPES);
   });
 
   it('every mixed pack passes PackParser.validatePack and the mixed-pack rules', () => {
