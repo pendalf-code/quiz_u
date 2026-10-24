@@ -79,3 +79,17 @@
 | `assets/q_img/w2m_q_071.jpg` | [Crater Tycho on the Moon.jpg](https://commons.wikimedia.org/wiki/File:Crater_Tycho_on_the_Moon.jpg) | NASA Hubble | CC BY 2.0 |
 | `assets/q_img/w2m_q_072.jpg` | [Vierwaldstättersee photo in Luzern.jpg](https://commons.wikimedia.org/wiki/File:Vierwaldst%C3%A4ttersee_photo_in_Luzern.jpg) | Rich Flight22 | CC BY 4.0 |
 | `assets/q_img/w2m_q_073.jpg` | [Bever - Eurasian beaver - Castor fiber 2.jpg](https://commons.wikimedia.org/wiki/File:Bever_-_Eurasian_beaver_-_Castor_fiber_2.jpg) | Bouke ten Cate | CC BY 4.0 |
+| `assets/q_img/w2m_q_074.jpg` | [Strigops habroptila ULaval 1.jpg](https://commons.wikimedia.org/wiki/File:Strigops_habroptila_ULaval_1.jpg) | Cephas | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_075.jpg` | [Residential rooftop photovoltaic array of four panels in Syria.jpg](https://commons.wikimedia.org/wiki/File:Residential_rooftop_photovoltaic_array_of_four_panels_in_Syria.jpg) | Hayan Alhasan | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_077.jpg` | [0281Ca. Stroganov Palace in St. Petersburg.jpg](https://commons.wikimedia.org/wiki/File:0281Ca._Stroganov_Palace_in_St._Petersburg.jpg) | Александровы АГ | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_078.jpg` | [Hubble image of the Ring Nebula (Messier 57).jpg](https://commons.wikimedia.org/wiki/File:Hubble_image_of_the_Ring_Nebula_(Messier_57).jpg) | NASA, ESA, and C. Robert O’Dell (Vanderbilt University) | Public domain |
+| `assets/q_img/w2m_q_079.jpg` | [Белуха, вид с озер.jpg](https://commons.wikimedia.org/wiki/File:%D0%91%D0%B5%D0%BB%D1%83%D1%85%D0%B0,_%D0%B2%D0%B8%D0%B4_%D1%81_%D0%BE%D0%B7%D0%B5%D1%80.jpg) | NastasiaMazanova | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_080.jpg` | [Monastery of El Escorial 04.jpg](https://commons.wikimedia.org/wiki/File:Monastery_of_El_Escorial_04.jpg) | Bernard Gagnon | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_081.jpg` | [Gate of Salutation (Topkapı Palace) (2024).jpg](https://commons.wikimedia.org/wiki/File:Gate_of_Salutation_(Topkap%C4%B1_Palace)_(2024).jpg) | Premeditated | CC BY-SA 4.0 |
+| `assets/music/w2m_m_007.mp3` | [Vivaldi - Four Seasons 1 Spring mvt 1 Allegro - John Harrison violin.oga](https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_1_Spring_mvt_1_Allegro_-_John_Harrison_violin.oga) | Antonio Vivaldi | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_082.jpg` | [Berlin, East Side Gallery 2014-07 (Alexej Taranin - Mauern international).jpg](https://commons.wikimedia.org/wiki/File:Berlin,_East_Side_Gallery_2014-07_(Alexej_Taranin_-_Mauern_international).jpg) | HerrAdams | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_083.jpg` | [Sika deer in Nara Park, November 2016.jpg](https://commons.wikimedia.org/wiki/File:Sika_deer_in_Nara_Park,_November_2016.jpg) | Martin Falbisoner | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_084.jpg` | [GAZ-21 "Volga" (3rd series).jpg](https://commons.wikimedia.org/wiki/File:GAZ-21_%22Volga%22_(3rd_series).jpg) | DL24 at English Wikipedia | Public domain |
+| `assets/q_img/w2m_q_085.jpg` | [Condor flying over the Colca canyon in Peru.jpg](https://commons.wikimedia.org/wiki/File:Condor_flying_over_the_Colca_canyon_in_Peru.jpg) | Abehm-de. | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_086.jpg` | [Pteropus poliocephalus - Grey-headed Flying Fox -JZ111.jpg](https://commons.wikimedia.org/wiki/File:Pteropus_poliocephalus_-_Grey-headed_Flying_Fox_-JZ111.jpg) | MathKnight and Zachi Evenor | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_087.jpg` | [Thai green chicken curry and roti.jpg](https://commons.wikimedia.org/wiki/File:Thai_green_chicken_curry_and_roti.jpg) | Takeaway | CC BY-SA 3.0 |
