@@ -37,7 +37,7 @@ function parseArgs(argv) {
 }
 
 function curl(url, outFile) {
-    const base = ['-s', '-L', '--fail', '--max-time', '60', '-A', UA];
+    const base = ['-s', '-L', '--fail', '--max-time', '60', '--retry', '2', '--retry-delay', '10', '-A', UA];
     if (outFile) {
         execFileSync('curl', base.concat(['-o', outFile, url]));
         return null;
