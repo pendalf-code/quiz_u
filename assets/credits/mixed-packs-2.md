@@ -93,3 +93,18 @@
 | `assets/q_img/w2m_q_085.jpg` | [Condor flying over the Colca canyon in Peru.jpg](https://commons.wikimedia.org/wiki/File:Condor_flying_over_the_Colca_canyon_in_Peru.jpg) | Abehm-de. | CC BY-SA 3.0 |
 | `assets/q_img/w2m_q_086.jpg` | [Pteropus poliocephalus - Grey-headed Flying Fox -JZ111.jpg](https://commons.wikimedia.org/wiki/File:Pteropus_poliocephalus_-_Grey-headed_Flying_Fox_-JZ111.jpg) | MathKnight and Zachi Evenor | CC BY-SA 3.0 |
 | `assets/q_img/w2m_q_087.jpg` | [Thai green chicken curry and roti.jpg](https://commons.wikimedia.org/wiki/File:Thai_green_chicken_curry_and_roti.jpg) | Takeaway | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_088.jpg` | [Anopheles stephensi.jpeg](https://commons.wikimedia.org/wiki/File:Anopheles_stephensi.jpeg) | Jim Gathany | Public domain |
+| `assets/q_img/w2m_q_090.jpg` | [Bull northern elephant seal close up - DPLA - bf6b12a28cf62b8a24f8c4c305c80b6c.jpg](https://commons.wikimedia.org/wiki/File:Bull_northern_elephant_seal_close_up_-_DPLA_-_bf6b12a28cf62b8a24f8c4c305c80b6c.jpg) | Garst, Warren, 1922-2016, photographer | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_091.jpg` | [The Pantheon dome, Rome (Ank Kumar) 01.jpg](https://commons.wikimedia.org/wiki/File:The_Pantheon_dome,_Rome_(Ank_Kumar)_01.jpg) | Ank Kumar | CC BY-SA 4.0 |
+| `assets/q_img/w2m_q_093.jpg` | [Helix pomatia june01.JPG](https://commons.wikimedia.org/wiki/File:Helix_pomatia_june01.JPG) | Pinky sl | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_094.jpg` | [Dante Alighieri's portrait by Sandro Botticelli.jpg](https://commons.wikimedia.org/wiki/File:Dante_Alighieri's_portrait_by_Sandro_Botticelli.jpg) | After Sandro Botticelli | Public domain |
+| `assets/q_img/w2m_q_095.jpg` | [Hama. Waterwheel on Orontes River LOC matpc.06756.jpg](https://commons.wikimedia.org/wiki/File:Hama._Waterwheel_on_Orontes_River_LOC_matpc.06756.jpg) | Matson Collection | Public domain |
+| `assets/q_img/w2m_q_096.jpg` | [Avachinsky Volcano (23682444539).jpg](https://commons.wikimedia.org/wiki/File:Avachinsky_Volcano_(23682444539).jpg) | kuhnmi | CC BY 2.0 |
+| `assets/q_img/w2m_q_097.jpg` | [Michelangelo's Pietà Saint Peter's Basilica Vatican City.jpg](https://commons.wikimedia.org/wiki/File:Michelangelo's_Piet%C3%A0_Saint_Peter's_Basilica_Vatican_City.jpg) | Jebulon | CC0 |
+| `assets/q_img/w2m_q_098.jpg` | [Worm-WormWheel-gearbox.jpg](https://commons.wikimedia.org/wiki/File:Worm-WormWheel-gearbox.jpg) | — | CC BY-SA 2.0 |
+| `assets/music/w2m_m_008.mp3` | [Wolf howls.ogg](https://commons.wikimedia.org/wiki/File:Wolf_howls.ogg) | — | Public domain |
+| `assets/q_img/w2m_q_099.jpg` | [Apollo 11 Launch2.jpg](https://commons.wikimedia.org/wiki/File:Apollo_11_Launch2.jpg) | NASA; restored by Michel Vuijlsteke | Public domain |
+| `assets/q_img/w2m_q_100.jpg` | [Copy of an Etruscan denture, Europe Wellcome L0058138.jpg](https://commons.wikimedia.org/wiki/File:Copy_of_an_Etruscan_denture,_Europe_Wellcome_L0058138.jpg) | — | CC BY 4.0 |
+| `assets/q_img/w2m_q_101.jpg` | [Bufo marinus in Venezuela.jpg](https://commons.wikimedia.org/wiki/File:Bufo_marinus_in_Venezuela.jpg) | Wilfredor | CC0 |
+| `assets/q_img/w2m_q_102.jpg` | [Bete Giyorgis 01.jpg](https://commons.wikimedia.org/wiki/File:Bete_Giyorgis_01.jpg) | Bernard Gagnon | CC BY-SA 3.0 |
+| `assets/q_img/w2m_q_103.jpg` | [Goethe (Stieler 1828).jpg](https://commons.wikimedia.org/wiki/File:Goethe_(Stieler_1828).jpg) | Joseph Karl Stieler | Public domain |
