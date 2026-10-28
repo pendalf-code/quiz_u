@@ -1749,7 +1749,7 @@ function addInputRow() {
     }
     const row = document.createElement('div');
     row.className = 'team-input-row';
-    row.innerHTML = `<input type="text" class="team-input" value="Команда ${container.children.length + 1}" placeholder="Название команды ${container.children.length + 1}">
+    row.innerHTML = `<input type="text" class="team-input" maxlength="15" value="Команда ${container.children.length + 1}" placeholder="Название команды ${container.children.length + 1}">
             <button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌</button>`;
     container.appendChild(row);
 }
@@ -1862,7 +1862,7 @@ function saveTeamsFromSetup() {
     let seenNames = [];
 
     inputs.forEach((input) => {
-        const name = input.value.trim();
+        const name = input.value.trim().slice(0, 15);
         if (name === "") {
             hasEmptyFields = true;
             input.style.borderColor = "var(--error-red)";
@@ -3770,8 +3770,8 @@ function clearTeamInputs() {
     const inputsContainer = document.getElementById('team-inputs');
     if (inputsContainer) {
         inputsContainer.innerHTML = `
-                <div class="team-input-row"><input type="text" class="team-input" value="Команда 1" placeholder="Название команды 1"><button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌</button></div>
-                <div class="team-input-row"><input type="text" class="team-input" value="Команда 2" placeholder="Название команды 2"><button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌</button></div>`;
+                <div class="team-input-row"><input type="text" class="team-input" maxlength="15" value="Команда 1" placeholder="Название команды 1"><button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌</button></div>
+                <div class="team-input-row"><input type="text" class="team-input" maxlength="15" value="Команда 2" placeholder="Название команды 2"><button class="btn-remove-team" onclick="removeInputRow(this)" title="Удалить команду">❌</button></div>`;
         inputsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(240px, 1fr))';
         inputsContainer.style.maxWidth = '';
         inputsContainer.style.margin = '30px 0 40px 0';
