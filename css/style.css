@@ -619,7 +619,7 @@ body.light-theme .question-cost.used {
 }
 
 .team-card.active-turn {
-    border: 4px solid var(--team-card-active-border) !important;
+    border-color: var(--team-card-active-border) !important;
     box-shadow: 0 0 25px rgba(253, 216, 53, 0.6) !important;
     transform: scale(1.05);
     background: var(--team-card-active-bg) !important;
@@ -8726,17 +8726,11 @@ body.light-theme .lobby-setting-value {
 .team-card.active-turn.is-leader {
     border: 4px solid var(--team-card-active-border) !important;
     background: var(--team-card-active-bg) !important;
-    box-shadow: 0 0 18px rgba(253, 216, 53, 0.55) !important;
+    box-shadow: 0 0 16px 3px rgba(253, 216, 53, 0.6) !important;
     transform: none;
     animation: none;
-    padding-top: 22px;
-    padding-bottom: 22px;
     flex-grow: 1.35;
     z-index: 2;
-}
-
-.team-card.active-turn .team-title {
-    font-size: clamp(15px, 1.6vw, 22px);
 }
 
 .team-card.active-turn .team-points-clickable {
@@ -8817,15 +8811,34 @@ body.light-theme .lobby-setting-value {
 }
 
 @media (max-width: 767px) {
-    .team-card.active-turn {
-        padding: 16px 8px !important;
-    }
-
-    .team-card.active-turn .team-title {
-        font-size: 15px !important;
-    }
-
     .team-card.active-turn .team-points-clickable {
         font-size: 26px !important;
+    }
+}
+
+/* Фиксированная сетка внутри карточки: название сверху (место под 2 строки), очки прижаты к низу */
+.team-card {
+    justify-content: flex-start !important;
+}
+
+.team-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.4em;
+    flex: 0 0 auto;
+    text-align: center;
+}
+
+.team-points-clickable {
+    margin-top: auto;
+    line-height: 1;
+    min-height: 52px;
+    flex: 0 0 auto;
+}
+
+@media (max-width: 767px) {
+    .team-points-clickable {
+        min-height: 48px !important;
     }
 }
