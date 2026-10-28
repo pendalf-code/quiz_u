@@ -18,8 +18,8 @@ test('Server: RoomManager Tests', async (t) => {
     await t.test('generates valid 4-character uppercase alphanumeric codes without confusing letters', () => {
         const code = rm.generateUniqueRoomCode();
         assert.equal(typeof code, 'string');
-        assert.equal(code.length, 4);
-        assert.match(code, /^[A-Z0-9]{4}$/);
+        assert.equal(code.length, 5);
+        assert.match(code, /^[A-Z0-9]{5}$/);
         // Ensure no 0, O, 1, I, L
         assert.equal(/[0O1IL]/.test(code), false, 'Room code must not contain 0, O, 1, I, L');
     });

@@ -2,11 +2,13 @@
  * Quiz U - Room Manager
  */
 
+const crypto = require('crypto');
 const Room = require('./Room');
 
 // Alphabet without easily confused characters (no 0, O, 1, I, L)
 const ROOM_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ';
-const ROOM_CODE_LENGTH = 4;
+const ROOM_CODE_LENGTH = 5;
+const MAX_ROOMS = 500;
 const DEFAULT_INACTIVE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 
 class RoomManager {
@@ -25,7 +27,7 @@ class RoomManager {
         for (let i = 0; i < maxAttempts; i++) {
             let code = '';
             for (let j = 0; j < ROOM_CODE_LENGTH; j++) {
-                const randIdx = Math.floor(Math.random() * ROOM_CODE_CHARS.length);
+                const randIdx = crypto.randomInt(ROOM_CODE_CHARS.length);
                 code += ROOM_CODE_CHARS[randIdx];
             }
             if (!this.rooms.has(code)) {
@@ -36,6 +38,7 @@ class RoomManager {
     }
 
     createRoom(hostWs, options = {}) {
+        if (this.rooms.size >= MAX_ROOMS) throw new Error('Room limit reached');
         const code = this.generateUniqueRoomCode();
         const room = new Room(code, hostWs, options);
         this.rooms.set(code, room);

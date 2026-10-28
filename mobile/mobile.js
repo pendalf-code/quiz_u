@@ -859,7 +859,7 @@
             if (type === 'final' && state.finalBetLimits && !state.finalBetLimits[p.id]) betLabel = 'нет очков';
             const isTop = !isCat && bet > 0 && bet === maxBet;
             row.innerHTML = `
-                <span class="host-special-avatar">${p.avatar || '🐱'}</span>
+                <span class="host-special-avatar">${escapeHtml(p.avatar || '🐱')}</span>
                 <span class="host-special-name">${escapeHtml(p.name)}</span>
                 <span class="host-special-score">${p.score || 0}</span>
                 ${isCat ? '' : `<span class="host-special-bet${isTop ? ' top' : ''}${placed[p.id] && bet === 0 ? ' pass' : ''}">${betLabel}</span>`}
@@ -967,7 +967,7 @@
             row.className = 'host-player-row' + (p.isConnected === false ? ' offline' : '');
             row.innerHTML = `
                 <div class="host-player-info">
-                    <span class="host-player-avatar">${p.avatar || '🐱'}</span>
+                    <span class="host-player-avatar">${escapeHtml(p.avatar || '🐱')}</span>
                     <span class="host-player-name">${escapeHtml(p.name)}</span>
                     <span class="host-player-score">${p.score || 0}</span>
                 </div>
@@ -1055,7 +1055,7 @@
             card.id = `host-auction-card-${pid}`;
             card.innerHTML = `
                 <div class="host-auction-card-head">
-                    <span class="host-auction-card-team">${p.avatar || '⭐'} ${escapeHtml(p.name)}</span>
+                    <span class="host-auction-card-team">${escapeHtml(p.avatar || '⭐')} ${escapeHtml(p.name)}</span>
                     <span class="host-auction-card-bet">Ставка: ${bet} очков</span>
                 </div>
                 <div class="host-auction-card-ans" id="host-auction-ans-${pid}">
@@ -1104,7 +1104,7 @@
                 <button type="button" class="host-auction-btn-minus" ${state.finalLocked ? '' : 'disabled'}>❌ Неверно −${bet}</button>`;
         card.innerHTML = `
             <div class="host-auction-card-head">
-                <span class="host-auction-card-team">${p.avatar || '⭐'} ${escapeHtml(p.name)}</span>
+                <span class="host-auction-card-team">${escapeHtml(p.avatar || '⭐')} ${escapeHtml(p.name)}</span>
                 <span class="host-auction-card-bet">Ставка: ${bet}</span>
             </div>
             <div class="host-auction-card-ans">${ans ? `✍️ ${escapeHtml(ans)}` : (state.finalLocked ? '— нет ответа —' : '⏳ Пишет ответ...')}</div>
@@ -1146,7 +1146,7 @@
             row.innerHTML = `
                 <div class="player-row-left">
                     <span>${idx + 1}.</span>
-                    <span>${p.avatar || (isHost ? '🎙️' : '🐱')}</span>
+                    <span>${escapeHtml(p.avatar || (isHost ? '🎙️' : '🐱'))}</span>
                     <span>${escapeHtml(p.name)}${isHost ? ' (Ведущий)' : ''}</span>
                 </div>
                 <div class="player-row-score">${isHost ? '🎙️' : (p.score || 0)}</div>
@@ -1174,7 +1174,7 @@
             item.dataset.id = p.id;
             item.innerHTML = `
                 <div class="cat-player-left">
-                    <span class="cat-player-avatar">${p.avatar || '🐱'}</span>
+                    <span class="cat-player-avatar">${escapeHtml(p.avatar || '🐱')}</span>
                     <span class="cat-player-name">${escapeHtml(p.name)}</span>
                 </div>
                 <span class="cat-player-score">${p.score || 0}</span>
@@ -2590,7 +2590,7 @@
                 if (code) return code.toUpperCase().trim();
 
                 const cleanHash = hash.replace(/^[#/]+/, '').trim().toUpperCase();
-                if (/^[A-Z0-9]{4}$/.test(cleanHash)) {
+                if (/^[A-Z0-9]{4,6}$/.test(cleanHash)) {
                     return cleanHash;
                 }
             }

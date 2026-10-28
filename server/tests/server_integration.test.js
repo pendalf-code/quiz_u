@@ -102,7 +102,7 @@ test('Server: Real WebSocket Integration Test', async (t) => {
         const roomCreatedMsg = await waitForMessage(hostWs, MSG_TYPES.ROOM_CREATED);
         const roomCode = roomCreatedMsg.payload.roomCode;
         assert.ok(roomCode);
-        assert.equal(roomCode.length, 4);
+        assert.equal(roomCode.length, 5);
 
         // 1b. Attempt to start game with 0 players -> must fail with NOT_ENOUGH_PLAYERS (TASK-05)
         hostWs.send(createMessage(MSG_TYPES.HOST_START_GAME));

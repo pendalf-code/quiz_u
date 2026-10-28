@@ -53,6 +53,61 @@ function getLanIp() {
 
 const roomManager = new RoomManager();
 
+const MAX_WS_PAYLOAD = 8 * 1024 * 1024; // a pack with inline media is big, but not 100 MB
+const MSG_RATE_LIMIT = {capacity: 120, perSecond: 40}; // per socket token bucket
+const JOIN_FAIL_LIMIT = 8; // failed joins per IP within the window before a cooldown
+const JOIN_FAIL_WINDOW_MS = 60 * 1000;
+const joinFailures = new Map(); // ip -> {count, since}
+
+function isInside(baseDir, target) {
+    return target === baseDir || target.startsWith(baseDir + path.sep);
+}
+
+function isLoopback(addr) {
+    return addr === '127.0.0.1' || addr === '::1' || addr === '::ffff:127.0.0.1';
+}
+
+// Browsers send Origin on WebSocket: refuse pages from the public internet (cross-site hijacking),
+// keep LAN pages, localhost, file:// and the Tauri / Capacitor shells working
+function isAllowedOrigin(origin, host) {
+    if (!origin || origin === 'null') return true;
+    let url;
+    try {
+        url = new URL(origin);
+    } catch {
+        return false;
+    }
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return true; // tauri:, capacitor:, ionic:, file:
+    if (url.host === host) return true;
+    const h = url.hostname;
+    return h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local')
+        || /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.)/.test(h)
+        || h === '[::1]';
+}
+
+function ipOf(ws) {
+    return (ws._socket && ws._socket.remoteAddress) || 'unknown';
+}
+
+function isJoinBlocked(ip) {
+    const rec = joinFailures.get(ip);
+    if (!rec) return false;
+    if (Date.now() - rec.since > JOIN_FAIL_WINDOW_MS) {
+        joinFailures.delete(ip);
+        return false;
+    }
+    return rec.count >= JOIN_FAIL_LIMIT;
+}
+
+function noteJoinFailure(ip) {
+    const rec = joinFailures.get(ip);
+    if (!rec || Date.now() - rec.since > JOIN_FAIL_WINDOW_MS) {
+        joinFailures.set(ip, {count: 1, since: Date.now()});
+    } else {
+        rec.count++;
+    }
+}
+
 // MIME Types Map
 const MIME_TYPES = {
     '.html': 'text/html; charset=utf-8',
@@ -81,6 +136,10 @@ const server = http.createServer((req, res) => {
 
     // Stats Endpoint (Rooms count, active connections)
     if (req.url === '/stats' || req.url === '/api/stats') {
+        if (!isLoopback(req.socket.remoteAddress)) {
+            res.writeHead(403, {'Content-Type': 'text/plain; charset=utf-8'});
+            return res.end('Forbidden');
+        }
         res.writeHead(200, {'Content-Type': 'application/json'});
         const stats = roomManager.getStats();
         return res.end(JSON.stringify({
@@ -111,7 +170,7 @@ const server = http.createServer((req, res) => {
 
     // Handle root / and /index.html -> serve main host application
     if (cleanPath === '/' || cleanPath === '/index.html') {
-        return serveStaticFile(path.join(rootDir, 'index.html'), res);
+        return serveStaticFile(path.join(rootDir, 'index.html'), res, req);
     }
 
     // Handle /mobile route -> redirect to trailing slash or serve mobile web app
@@ -121,10 +180,10 @@ const server = http.createServer((req, res) => {
         return res.end();
     }
     if (cleanPath === '/mobile/') {
-        return serveStaticFile(path.join(mobileDir, 'index.html'), res);
+        return serveStaticFile(path.join(mobileDir, 'index.html'), res, req);
     }
     if (cleanPath === '/mobile.js' || cleanPath === '/mobile.css' || cleanPath === '/manifest.json') {
-        return serveStaticFile(path.join(mobileDir, cleanPath.slice(1)), res);
+        return serveStaticFile(path.join(mobileDir, cleanPath.slice(1)), res, req);
     }
 
     if (cleanPath.startsWith('/mobile/')) {
@@ -132,12 +191,12 @@ const server = http.createServer((req, res) => {
         const resolvedPath = path.resolve(mobileDir, relativeMobilePath);
 
         // Path Traversal Security Check
-        if (!resolvedPath.startsWith(mobileDir)) {
+        if (!isInside(mobileDir, resolvedPath)) {
             res.writeHead(403, {'Content-Type': 'text/plain; charset=utf-8'});
             return res.end('Forbidden');
         }
 
-        return serveStaticFile(resolvedPath, res);
+        return serveStaticFile(resolvedPath, res, req);
     }
 
     // Handle question packs static requests
@@ -145,11 +204,11 @@ const server = http.createServer((req, res) => {
         const relativePackPath = cleanPath.slice('/паки вопросов/'.length);
         const resolvedPackPath = path.resolve(packsDir, relativePackPath);
 
-        if (!resolvedPackPath.startsWith(packsDir)) {
+        if (!isInside(packsDir, resolvedPackPath)) {
             res.writeHead(403, {'Content-Type': 'text/plain; charset=utf-8'});
             return res.end('Forbidden');
         }
-        return serveStaticFile(resolvedPackPath, res);
+        return serveStaticFile(resolvedPackPath, res, req);
     }
 
     // Handle allowed static asset prefixes for main host web app
@@ -162,11 +221,11 @@ const server = http.createServer((req, res) => {
         const relativePath = cleanPath.startsWith('/') ? cleanPath.slice(1) : cleanPath;
         const resolvedPath = path.resolve(rootDir, relativePath);
 
-        if (!resolvedPath.startsWith(rootDir)) {
+        if (!isInside(rootDir, resolvedPath)) {
             res.writeHead(403, {'Content-Type': 'text/plain; charset=utf-8'});
             return res.end('Forbidden');
         }
-        return serveStaticFile(resolvedPath, res);
+        return serveStaticFile(resolvedPath, res, req);
     }
 
     // Fallback 404
@@ -174,7 +233,7 @@ const server = http.createServer((req, res) => {
     res.end('Not Found');
 });
 
-function serveStaticFile(filePath, res) {
+function serveStaticFile(filePath, res, req) {
     fs.stat(filePath, (err, stats) => {
         if (err || !stats.isFile()) {
             res.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
@@ -183,32 +242,69 @@ function serveStaticFile(filePath, res) {
 
         const ext = path.extname(filePath).toLowerCase();
         const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-
-        res.writeHead(200, {
+        const headers = {
             'Content-Type': contentType,
-            'Content-Length': stats.size,
-            'Cache-Control': 'no-cache'
-        });
+            'Accept-Ranges': 'bytes',
+            'Cache-Control': 'no-cache',
+            'X-Content-Type-Options': 'nosniff'
+        };
 
-        const readStream = fs.createReadStream(filePath);
-        readStream.pipe(res);
+        // Video / audio need byte ranges to seek (and Safari / iOS refuse to play without them)
+        const rangeMatch = req && req.headers.range && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+        if (rangeMatch && (rangeMatch[1] || rangeMatch[2])) {
+            let start;
+            let end;
+            if (rangeMatch[1] === '') { // suffix range: the last N bytes
+                start = Math.max(0, stats.size - parseInt(rangeMatch[2], 10));
+                end = stats.size - 1;
+            } else {
+                start = parseInt(rangeMatch[1], 10);
+                end = rangeMatch[2] === '' ? stats.size - 1 : Math.min(parseInt(rangeMatch[2], 10), stats.size - 1);
+            }
+            if (start >= stats.size || start > end) {
+                res.writeHead(416, {'Content-Range': `bytes */${stats.size}`});
+                return res.end();
+            }
+            res.writeHead(206, {
+                ...headers,
+                'Content-Range': `bytes ${start}-${end}/${stats.size}`,
+                'Content-Length': end - start + 1
+            });
+            return fs.createReadStream(filePath, {start, end}).on('error', () => res.destroy()).pipe(res);
+        }
+
+        res.writeHead(200, {...headers, 'Content-Length': stats.size});
+        fs.createReadStream(filePath).on('error', () => res.destroy()).pipe(res);
     });
 }
 
 // WebSocket Server
-const wss = new WebSocketServer({server});
+const wss = new WebSocketServer({
+    server,
+    maxPayload: MAX_WS_PAYLOAD,
+    verifyClient: (info) => isAllowedOrigin(info.origin, info.req.headers.host)
+});
 
 wss.on('connection', (ws, req) => {
     ws.isAlive = true;
     ws.roomCode = null;
     ws.playerId = null;
     ws.isHost = false;
+    ws.bucket = {tokens: MSG_RATE_LIMIT.capacity, last: Date.now()};
 
     ws.on('pong', () => {
         ws.isAlive = true;
     });
 
     ws.on('message', (data) => {
+        const now = Date.now();
+        const bucket = ws.bucket;
+        bucket.tokens = Math.min(MSG_RATE_LIMIT.capacity, bucket.tokens + (now - bucket.last) / 1000 * MSG_RATE_LIMIT.perSecond);
+        bucket.last = now;
+        if (bucket.tokens < 1) {
+            return ws.close(1008, 'Rate limit exceeded');
+        }
+        bucket.tokens -= 1;
         try {
             const message = parseMessage(data);
             if (!message) {
@@ -246,7 +342,15 @@ function handleClientMessage(ws, message) {
             if (ws.roomCode) {
                 roomManager.deleteRoom(ws.roomCode);
             }
-            const room = roomManager.createRoom(ws, payload.options || {});
+            let room;
+            try {
+                room = roomManager.createRoom(ws, payload.options || {});
+            } catch (e) {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_ACTION,
+                    message: 'Слишком много комнат на сервере, попробуйте позже'
+                }));
+            }
             ws.isHost = true;
             ws.roomCode = room.code;
 
@@ -538,8 +642,16 @@ function handleClientMessage(ws, message) {
                 }));
             }
 
+            const joinIp = ipOf(ws);
+            if (isJoinBlocked(joinIp)) {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_ACTION,
+                    message: 'Слишком много неудачных попыток входа, подождите минуту'
+                }));
+            }
             const room = roomManager.getRoom(payload.roomCode);
             if (!room) {
+                noteJoinFailure(joinIp);
                 ws.send(createMessage(MSG_TYPES.ERROR, {
                     code: ERROR_CODES.ROOM_NOT_FOUND,
                     message: 'Комната с таким кодом не найдена'
