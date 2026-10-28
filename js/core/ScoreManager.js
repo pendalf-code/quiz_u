@@ -127,9 +127,7 @@
             this.teams[idx].score += amount;
             const teamId = this.teams[idx].id;
 
-            const statObj = this.gameStats[teamId] || this.gameStats[idx] || { correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0 };
-            this.gameStats[teamId] = statObj;
-            this.gameStats[idx] = statObj;
+            const statObj = this._getStatObj(teamId, idx);
 
             if (category === 'pass') {
                 statObj.passes++;
@@ -147,6 +145,17 @@
         }
 
         /**
+         * Объект статистики команды. Локальные команды без `id` не должны делить один ключ "undefined".
+         */
+        _getStatObj(teamId, idx) {
+            const statObj = (teamId && this.gameStats[teamId]) || this.gameStats[idx]
+                || { correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0 };
+            if (teamId) this.gameStats[teamId] = statObj;
+            this.gameStats[idx] = statObj;
+            return statObj;
+        }
+
+        /**
          * Применяет изменение очков ко всем командам (например, бонус/штраф раунда).
          * @param {number} delta
          */
@@ -154,10 +163,7 @@
             if (typeof delta !== 'number' || isNaN(delta)) return;
             this.teams.forEach((team, idx) => {
                 team.score += delta;
-                const teamId = team.id;
-                const statObj = this.gameStats[teamId] || this.gameStats[idx] || { correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0 };
-                this.gameStats[teamId] = statObj;
-                this.gameStats[idx] = statObj;
+                const statObj = this._getStatObj(team.id, idx);
                 if (delta > 0) statObj.correct++;
                 else if (delta < 0) statObj.wrong++;
             });

@@ -113,10 +113,11 @@
                             cost: q.cost !== undefined ? q.cost : q.price,
                             q: q.q,
                             type: q.type || 'normal',
-                            hasMedia: !!(q.img || q.music || q.video)
+                            hasMedia: !!(q.img || q.music || q.audio || q.video)
                         };
                         if (q.img) sanitized.img = q.img;
                         if (q.music) sanitized.music = q.music;
+                        if (q.audio) sanitized.audio = q.audio;
                         if (q.video) sanitized.video = q.video;
                         // Поле 'a' (ответ) и 'a_img' принципиально НЕ включаются!
                         return sanitized;
@@ -172,6 +173,7 @@
             };
             if (question.img) safe.img = question.img;
             if (question.music) safe.music = question.music;
+            if (question.audio) safe.audio = question.audio;
             if (question.video) safe.video = question.video;
             return safe;
         }

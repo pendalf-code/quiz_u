@@ -277,7 +277,7 @@
         const q = st.question;
         let html = q.q ? `<div class="final-question-text">${math(q.q)}</div>` : '';
         if (q.img) html += `<img class="final-question-img" alt="Иллюстрация" src="${esc(media(q.img))}" onerror="this.style.display='none'">`;
-        if (q.music) html += `<audio class="final-question-audio" controls src="${esc(media(q.music))}"></audio>`;
+        if (q.audio || q.music) html += `<audio class="final-question-audio" controls src="${esc(media(q.audio || q.music))}"></audio>`;
         if (q.video) html += `<video class="final-question-video" controls src="${esc(media(q.video))}"></video>`;
         // Re-rendering must not restart a playing audio / video
         if (box.dataset.key !== String(q.q) + st.stage) {

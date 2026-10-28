@@ -5,7 +5,7 @@ const path = require('path');
 
 const rootDir = path.join(__dirname, '..');
 const packsDir = path.join(rootDir, 'паки вопросов');
-const MEDIA_KEYS = ['img', 'music', 'video', 'a_img', 'a_video', 'answer_img', 'answer_video'];
+const MEDIA_KEYS = ['img', 'music', 'audio', 'video', 'a_img', 'a_video', 'answer_img', 'answer_video'];
 
 function forEachQuestion(cb) {
     for (const folder of fs.readdirSync(packsDir)) {
@@ -30,18 +30,15 @@ test('PC answer screen shows a_img (pack format) as well as legacy answer_img', 
     assert.ok(src.includes('question.a_video || question.answer_video'));
 });
 
-test('every media file referenced by packs exists; no unsupported "audio" key', () => {
+test('every media file referenced by packs exists', () => {
     const missing = [];
-    const badKeys = [];
     forEachQuestion((q, where) => {
-        if (q.audio) badKeys.push(where);
         for (const key of MEDIA_KEYS) {
             const val = q[key];
             if (typeof val !== 'string' || val.startsWith('data:') || /^https?:/.test(val)) continue;
             if (!fs.existsSync(path.join(rootDir, val))) missing.push(`${where}: ${key}=${val}`);
         }
     });
-    assert.deepEqual(badKeys, [], 'use "music" instead of "audio"');
     assert.deepEqual(missing.slice(0, 20), []);
 });
 
@@ -96,7 +93,7 @@ test('media questions stay balanced: at most 2 per pack (art packs are image-bas
             let media = 0;
             for (const round of rounds) {
                 for (const theme of round.themes || []) {
-                    for (const q of theme.questions || []) if (q.img || q.music || q.video) media++;
+                    for (const q of theme.questions || []) if (q.img || q.music || q.audio || q.video) media++;
                 }
             }
             if (media > 2) over.push(`${folder}/${file}: ${media}`);

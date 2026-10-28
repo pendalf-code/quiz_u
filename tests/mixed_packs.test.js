@@ -93,7 +93,7 @@ describe('TASK-46: mixed-topic packs (Микс и Эрудиция)', () => {
       rounds.forEach(r => r.themes.forEach(t => t.questions.forEach(q => {
         assert.ok(q.q.trim().endsWith('?'), `${file}: question without "?": ${q.q}`);
         assert.ok(!q.type, `${file}: special types are assigned at runtime`);
-        if (q.img || q.music || q.video) media++;
+        if (q.img || q.music || q.audio || q.video) media++;
       })));
       assert.ok(media <= MAX_MEDIA_PER_PACK, `${file}: ${media} media questions, max ${MAX_MEDIA_PER_PACK}`);
       assert.strictEqual(!!data.hasMedia, media > 0, `${file}: hasMedia flag`);

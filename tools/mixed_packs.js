@@ -19,7 +19,7 @@ const MIX_DIR = path.join(PACKS_DIR, MIX_FOLDER);
 const MIX_CATEGORY = 'Микс и Эрудиция';
 const MIX_ICON = '🎲';
 const FINAL_COST = 1500;
-const MEDIA_KEYS = ['img', 'music', 'video'];
+const MEDIA_KEYS = ['img', 'music', 'audio', 'video'];
 const MAX_MEDIA_PER_PACK = 2;
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const MEDIA_WORDS = /(на фото|фотограф[иі]и? изображ|изображ[её]н|изображени|на картинке|на снимке|на экране|послушайте|прослушайте|звучит мелоди|на видео|на рисунке|покажите)/i;
@@ -208,7 +208,6 @@ function checkPack(file, data, ctx) {
         if (withMedia) mediaCount++;
         if (MEDIA_WORDS.test(qt) && !withMedia) errors.push(`${where}: references media that does not exist`);
         if (q.type) errors.push(`${where}: do not set "type" (special types are assigned at runtime)`);
-        if (q.audio) errors.push(`${where}: use "music" instead of "audio"`);
         if (q.a_img || q.a_video) errors.push(`${where}: answer media are not used in mixed packs`);
         MEDIA_KEYS.forEach(k => {
             if (q[k] && !fs.existsSync(path.join(ROOT, q[k]))) errors.push(`${where}: missing media file ${q[k]}`);

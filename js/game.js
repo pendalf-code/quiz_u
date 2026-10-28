@@ -4,6 +4,13 @@ let isTestMode = false;
 
 let currentActiveQuestion = null;
 let isAnswerTimerActive = false;
+
+function escapeHtml(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 let savedThinkingTime = 0;
 let answerCountdownInterval = null;
 
@@ -2044,7 +2051,7 @@ function updateTeamsPanel() {
         }
 
         const crownHtml = isLeader ? '<div class="leader-crown-badge" title="Лидер игры! 👑">👑</div>' : '';
-        card.innerHTML = `${crownHtml}<div class="team-title">⭐ ${team.name}</div><div class="team-points-clickable" onclick="promptScoreDirectly(${originalIdx})" title="Нажмите, чтобы изменить счёт">${team.score}</div>`;
+        card.innerHTML = `${crownHtml}<div class="team-title">⭐ ${escapeHtml(team.name)}</div><div class="team-points-clickable" onclick="promptScoreDirectly(${originalIdx})" title="Нажмите, чтобы изменить счёт">${team.score}</div>`;
 
         panel.appendChild(card);
     });
@@ -2054,7 +2061,7 @@ function promptScoreDirectly(teamIdx) {
     const currentTeam = teams[teamIdx];
     showSystemModal(
         "✏️ ИЗМЕНЕНИЕ ОЧКОВ КОМАНДЕ",
-        `Команда: <b style="color:var(--gold-accent)">"${currentTeam.name}"</b> (Текущий счёт: ${currentTeam.score})
+        `Команда: <b style="color:var(--gold-accent)">"${escapeHtml(currentTeam.name)}"</b> (Текущий счёт: ${currentTeam.score})
              <input type="number" id="direct-score-input" class="modal-score-input-large" placeholder="Количество очков..." oninput="updateDirectScoreButtonsText()">`,
         [
             {text: "Прибавить (+0)", class: "btn-success", action: () => applyScoreChange(teamIdx, 1)},
@@ -2089,7 +2096,7 @@ function applyScoreChange(teamIdx, multiplier) {
     teams[teamIdx].score += delta;
     updateTeamsPanel();
     saveGameState();
-    showSystemModal("✅ ОЧКИ ОБНОВЛЕНЫ", `Команде "${teams[teamIdx].name}" успешно ${delta > 0 ? 'начислено' : 'списано'}: <b>${Math.abs(delta)}</b> очков!`);
+    showSystemModal("✅ ОЧКИ ОБНОВЛЕНЫ", `Команде "${escapeHtml(teams[teamIdx].name)}" успешно ${delta > 0 ? 'начислено' : 'списано'}: <b>${Math.abs(delta)}</b> очков!`);
 }
 
 function promptScoreForAll() {
@@ -2367,10 +2374,11 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
 
         hasVideoInQuestion = handleQuestionVideo(question, false);
 
-        if (question.audio && typeof question.audio === 'string' && question.audio.trim().length > 0) {
+        const qAudio = question.audio || question.music;
+        if (qAudio && typeof qAudio === 'string' && qAudio.trim().length > 0) {
             if (audioElement) {
                 audioElement.style.display = 'block';
-                audioElement.src = resolveMediaPath(question.audio.trim());
+                audioElement.src = resolveMediaPath(qAudio.trim());
                 audioElement.play().catch(e => {
                 });
             }
@@ -2488,7 +2496,7 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
             card.id = `auction-card-team-${idx}`;
             card.innerHTML = `
                     <div class="auction-team-header">
-                        <span>⭐ ${t.name} (Очки: ${t.score})</span>
+                        <span>⭐ ${escapeHtml(t.name)} (Очки: ${t.score})</span>
                         <span style="color: var(--gold-accent); font-size: 15px; font-weight: 800;">Диапазон: ${minBet} - ${maxBet}</span>
                     </div>
                     <div class="auction-controls-row">
@@ -2635,7 +2643,7 @@ function confirmAllAuctionBets() {
             return;
         }
         if (leaders.length > 1) {
-            showSystemModal("⚖️ НИЧЬЯ В ТОРГАХ!", `Команды ${leaders.map(i => `"${teams[i].name}"`).join(' и ')} поставили одинаковую сумму (<b>${maxBet}</b>)!`);
+            showSystemModal("⚖️ НИЧЬЯ В ТОРГАХ!", `Команды ${leaders.map(i => `"${escapeHtml(teams[i].name)}"`).join(' и ')} поставили одинаковую сумму (<b>${maxBet}</b>)!`);
             return;
         }
 
@@ -2655,7 +2663,7 @@ function confirmAllAuctionBets() {
         const listContainer = document.getElementById('teams-modal-list');
         if (listContainer) listContainer.innerHTML = '';
         const badge = document.getElementById('modal-special-badge');
-        if (badge) badge.innerHTML = `🔨 ПЕРИОД ТОРГОВ ЗАВЕРШЁН! 🔨<span>Победитель аукциона: <b>${teams[winnerIdx].name}</b> со ставкой <b>${maxBet}</b>!</span>`;
+        if (badge) badge.innerHTML = `🔨 ПЕРИОД ТОРГОВ ЗАВЕРШЁН! 🔨<span>Победитель аукциона: <b>${escapeHtml(teams[winnerIdx].name)}</b> со ставкой <b>${maxBet}</b>!</span>`;
         document.getElementById('timer-hint').textContent = `🎯 Отвечает команда: "${teams[winnerIdx].name}" (Ставка: ${maxBet})`;
     } else {
         teams.forEach((t, idx) => {
@@ -2708,7 +2716,7 @@ function onlineAuctionLeaderChosen(idx, bet) {
     const listContainer = document.getElementById('teams-modal-list');
     if (listContainer) listContainer.innerHTML = '';
     const badge = document.getElementById('modal-special-badge');
-    if (badge) badge.innerHTML = `🔨 Торги завершены<span>Отвечает <b>${teams[idx].name}</b>, ставка <b>${currentCost}</b></span>`;
+    if (badge) badge.innerHTML = `🔨 Торги завершены<span>Отвечает <b>${escapeHtml(teams[idx].name)}</b>, ставка <b>${currentCost}</b></span>`;
     const hintElem = document.getElementById('timer-hint');
     if (hintElem) hintElem.textContent = `Отвечает «${teams[idx].name}» · ставка ${currentCost}`;
     const btnArea = document.getElementById('modal-buttons-area');
@@ -2755,7 +2763,7 @@ function selectTeamForCatInBag(teamIdx, fromServer = false) {
     document.getElementById('timer-hint').textContent = `🎯 Отвечает команда: "${teams[teamIdx].name}"`;
     document.getElementById('timer-hint').style.color = "#ff9f43";
     const listContainer = document.getElementById('teams-modal-list');
-    if (listContainer) listContainer.innerHTML = `<div style="text-align:center; font-size:22px; font-weight:800; color:var(--gold-accent); margin-bottom:15px;">Вопрос передан команде: ${teams[teamIdx].name}!</div>`;
+    if (listContainer) listContainer.innerHTML = `<div style="text-align:center; font-size:22px; font-weight:800; color:var(--gold-accent); margin-bottom:15px;">Вопрос передан команде: ${escapeHtml(teams[teamIdx].name)}!</div>`;
     const badge = document.getElementById('modal-special-badge');
     if (badge) badge.remove();
     const btnArea = document.getElementById('modal-buttons-area');
@@ -2825,10 +2833,11 @@ function startPausedSpecialTimer() {
 
     const hasVideo = handleQuestionVideo(question, false);
 
-    if (question && question.audio && typeof question.audio === 'string' && question.audio.trim().length > 0) {
+    const qAudio = question && (question.audio || question.music);
+    if (qAudio && typeof qAudio === 'string' && qAudio.trim().length > 0) {
         if (audioElement) {
             audioElement.style.display = 'block';
-            audioElement.src = resolveMediaPath(question.audio.trim());
+            audioElement.src = resolveMediaPath(qAudio.trim());
             audioElement.play().catch(e => {
             });
         }
@@ -2988,8 +2997,10 @@ function toggleAnswerPause() {
         const modalRingSecs = document.getElementById('answering-ring-seconds');
         const modalRingProgress = document.getElementById('answering-ring-progress');
 
-        const activeTeam = teams[currentTurnIndex] || teams[0];
-        const activeTeamNum = (currentTurnIndex >= 0 ? currentTurnIndex + 1 : 1);
+        const answeringIdx = (activeTeamIdxForQuestion !== null && teams[activeTeamIdxForQuestion])
+            ? activeTeamIdxForQuestion : currentTurnTeamIdx;
+        const activeTeam = teams[answeringIdx] || teams[0];
+        const activeTeamNum = (answeringIdx >= 0 ? answeringIdx + 1 : 1);
 
         if (answeringModal) {
             answeringModal.classList.remove('hidden');
@@ -3169,7 +3180,7 @@ function renderModalTeamsList() {
 
         row.innerHTML = `
                 <div class="modal-team-info-group">
-                    <span class="modal-team-title">🎯 ${team.name}</span>
+                    <span class="modal-team-title">🎯 ${escapeHtml(team.name)}</span>
                     <span class="modal-badge-score">Очки: ${team.score}</span>
                     <span class="modal-badge-bet">Ставка: ${betVal}</span>
                 </div>
@@ -3190,7 +3201,7 @@ function renderModalTeamsList() {
                 row.style.opacity = '0.5';
                 row.innerHTML = `
                         <div class="modal-team-info-group">
-                            <span class="modal-team-title">⭐ ${team.name}</span>
+                            <span class="modal-team-title">⭐ ${escapeHtml(team.name)}</span>
                             <span class="modal-badge-score">Очки: ${team.score}</span>
                             <span class="modal-badge-bet" style="border-color:var(--error-red); color:var(--error-red); background:rgba(214,48,49,0.15);">🚫 ПАС</span>
                         </div>
@@ -3199,7 +3210,7 @@ function renderModalTeamsList() {
                 const teamBet = (betInfo && betInfo.val !== undefined) ? betInfo.val : currentCost;
                 row.innerHTML = `
                         <div class="modal-team-info-group">
-                            <span class="modal-team-title">⭐ ${team.name}</span>
+                            <span class="modal-team-title">⭐ ${escapeHtml(team.name)}</span>
                             <span class="modal-badge-score">Очки: ${team.score}</span>
                             <span class="modal-badge-bet">Ставка: ${teamBet}</span>
                         </div>
@@ -3218,7 +3229,7 @@ function renderModalTeamsList() {
             row.className = 'modal-team-row';
             row.innerHTML = `
                     <div class="modal-team-info-group">
-                        <span class="modal-team-title">⭐ ${team.name}</span>
+                        <span class="modal-team-title">⭐ ${escapeHtml(team.name)}</span>
                         <span class="modal-badge-score">Очки: ${team.score}</span>
                     </div>
                     <div class="modal-team-actions">
@@ -3402,7 +3413,7 @@ function showWinnerCelebration() {
     let winnerDesc = "";
 
     if (winners.length > 1) {
-        let names = winners.map(w => `<b>"${w.name}"</b>`).join(', ');
+        let names = winners.map(w => `<b>"${escapeHtml(w.name)}"</b>`).join(', ');
         winnerText = "⚖️ БОЕВАЯ НИЧЬЯ! ⚖️";
         winnerDesc = `<div style="font-size:24px; font-weight:800; color:#ffffff; margin: 15px 0;">
                 Победили команды: ${names}<br><br>
@@ -3412,7 +3423,7 @@ function showWinnerCelebration() {
         let winner = winners[0];
         winnerText = "🏆 ПОБЕДИТЕЛЬ ВИКТОРИНЫ! 🏆";
         winnerDesc = `<div style="font-size:26px; font-weight:800; color:#ffffff; margin: 20px 0;">
-                Победила команда: <b style="color:var(--gold-accent); font-size:36px;">"${winner.name}"</b><br><br>
+                Победила команда: <b style="color:var(--gold-accent); font-size:36px;">"${escapeHtml(winner.name)}"</b><br><br>
                 С прекрасным результатом: <b style="color:var(--gold-accent); font-size:36px;">${winner.score}</b> очков! 🎆
             </div>`;
     }
@@ -3473,7 +3484,7 @@ function showFinalGameStats() {
 
         tableHtml += `
                 <tr class="${isWinner ? 'winner-row' : ''}">
-                    <td><div class="stats-team-name">${teamIcon} ${t.name}</div></td>
+                    <td><div class="stats-team-name">${teamIcon} ${escapeHtml(t.name)}</div></td>
                     <td style="color:var(--gold-accent); font-weight:900; font-size:22px;">${t.score}</td>
                     <td style="color:var(--success-green); font-weight:900; font-size:22px;">${st.correct}</td>
                     <td style="color:var(--error-red); font-weight:900; font-size:22px;">${st.wrong}</td>
@@ -4448,7 +4459,7 @@ function initHostNetwork(overrideUrl = null) {
                 status.textContent = 'Отвечает игрок:';
             }
             if (text) {
-                text.innerHTML = `<b>${payload.playerName}</b>`;
+                text.innerHTML = `<b>${escapeHtml(payload.playerName)}</b>`;
             }
 
             // Start synchronized circular countdown ring (TASK-02)
@@ -4502,6 +4513,14 @@ function initHostNetwork(overrideUrl = null) {
                 const text = document.getElementById('online-buzzer-text');
                 if (text) text.textContent = 'Кнопка активна';
             }
+        });
+
+        hostNetworkClient.on('player_passed', (payload) => {
+            const idx = teams.findIndex(t => t.id === (payload && payload.playerId));
+            if (idx === -1) return;
+            if (!gameStats[idx]) gameStats[idx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
+            gameStats[idx].passes++;
+            saveGameState();
         });
 
         hostNetworkClient.on('cat_transferred', (payload) => {
@@ -5027,12 +5046,12 @@ function renderLobbyPlayers() {
 
         chip.innerHTML = `
                 <div class="lobby-player-avatar-wrapper">
-                    <div class="lobby-player-avatar">${p.avatar || (isHostRole ? '🎙️' : '🎮')}</div>
+                    <div class="lobby-player-avatar">${escapeHtml(p.avatar || (isHostRole ? '🎙️' : '🎮'))}</div>
                     <span class="lobby-avatar-status-dot ${statusClass}"></span>
                 </div>
                 <div class="lobby-player-info">
                     <div class="lobby-player-name-row">
-                        <span class="lobby-player-name">${p.name || 'Участник'}</span>
+                        <span class="lobby-player-name">${escapeHtml(p.name || 'Участник')}</span>
                         <span class="${roleBadgeClass}">${roleText}</span>
                     </div>
                     <div class="lobby-player-meta-row">
@@ -5094,6 +5113,7 @@ function startOnlineGame(fromServer = false) {
         score: p.score || 0,
         avatar: p.avatar || '🎮'
     }));
+    resetGameStats(); // a restart in the same room must not inherit the previous game's stats
 
     // Set before talking to the server: its `room_state: BOARD` echo must not restart the game
     isGameStarted = true;

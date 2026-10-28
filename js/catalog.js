@@ -771,7 +771,7 @@ function generatePackHtmlDocument(pack, rounds) {
 
             const questionsHtml = questions.map((q, qIdx) => {
                 const cost = q.cost != null ? q.cost : (qIdx + 1) * 100;
-                const audioBadge = q.audio ? '<div class="q-audio-badge">🎵 Аудио-вопрос</div>' : '';
+                const audioBadge = (q.audio || q.music) ? '<div class="q-audio-badge">🎵 Аудио-вопрос</div>' : '';
                 const qText = esc(q.q || '');
                 const aText = esc(q.a || '');
 
