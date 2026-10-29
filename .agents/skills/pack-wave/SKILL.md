@@ -5,7 +5,7 @@ description: 'Create, review or rework question packs in "паки вопрос�
 
 # Pack wave
 
-Resolve repository paths below from the project root. User instructions take precedence over this workflow. Source of truth for rules: `docs/OVERHAUL_2026-10.md` (wave 1 + wave 2). Read it first if a rule below looks stale.
+Resolve repository paths below from the project root. User instructions take precedence over this workflow. Current pack rules are maintained below. Track work only in `docs/TASKS.md`; completed wave history is in `docs/archive/2026-10/OVERHAUL_2026-10.md` and is not current guidance.
 
 ## Pack rules
 
@@ -36,7 +36,7 @@ Background downloads died silently once (TASK-52). Always foreground with timeou
 
 ## Workflow
 
-1. Add a tracker block to `docs/OVERHAUL_2026-10.md` (parts table + log line) before starting.
+1. Add a task and any slice statuses to `docs/TASKS.md` before starting. Record results there; do not update completed archives.
 2. Slice by folder group or pack range. For large batches, use slices by folder or pack range. Reuse a suitable checkout; create a worktree only when isolation is needed. Base new branches on `feature/online-multiplayer`. Do not launch other agents or chats without authorization.
 3. Slice session edits only its pack files, `assets/*`, `assets/credits/<session>.md`. **Never** `js/packs_catalog.json` or `js/packs_data.js`.
 4. If committing was requested, commit per folder or pack batch: `fix(packs): 05 science — difficulty by cost, 43 media questions (TASK-NN)`, `feat(packs): mixed packs 422–431 (TASK-NN)`.

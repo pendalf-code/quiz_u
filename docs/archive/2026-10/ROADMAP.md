@@ -1,3 +1,5 @@
+> Архив на 2026-10-29. Исторические статусы и правила; актуальные инструкции — [AGENTS.md](../../../AGENTS.md), планы — [TASKS.md](../../TASKS.md).
+
 # 🗺️ Поэтапный план разработки и трекер прогресса (ROADMAP)
 
 > **Статус проекта:** `Этап 6: Выполнено | feature/online-multiplayer: TASK-01..58, BUG-01..57 (299 клиентских + 101 серверный тест, 100% pass)`
@@ -10,7 +12,7 @@
 > * [REVIEW_GUIDE.md](REVIEW_GUIDE.md) — регламент конструктивного ревью и
     план ревью проекта.
 > * [TASKS.md](TASKS.md) — трекер задач, фичей и багов.
-> * [DESIGN_GUIDE.md](DESIGN_GUIDE.md) — Steam Direct, ассеты, вишлисты и
+> * [DESIGN_GUIDE.md](../../DESIGN_GUIDE.md) — Steam Direct, ассеты, вишлисты и
     маркетинг в соцсетях.
 
 ---
@@ -25,13 +27,13 @@
 |      **Этап 4**       | Мобильный веб-пульт (`mobile/` PWA, Buzzer, ввод ответов, виброотклик)        |  `Выполнено`   |   100%   |
 |      **Этап 5**       | Десктоп-сборка для Steam (Tauri, Gamepad API, Steam Deck)                     |  `Выполнено`   |   100%   |
 |      **Этап 6**       | Мобильная сборка (Capacitor), CDN для медиа и релиз                           |  `Выполнено`   |   100%   |
-| **Steam & Маркетинг** | Страница в Steam, ассеты, вишлисты и SMM ([DESIGN_GUIDE.md](DESIGN_GUIDE.md)) | `Запланирован` |    0%    |
+| **Steam & Маркетинг** | Страница в Steam, ассеты, вишлисты и SMM ([DESIGN_GUIDE.md](../../DESIGN_GUIDE.md)) | `Запланирован` |    0%    |
 
 ---
 
 ## 📍 Этап 1: Изоляция ядра (Core Engine) и юнит-тесты
 
-**Цель:** Выделить из монолитного [js/game.js](../js/game.js) чистую
+**Цель:** Выделить из монолитного [js/game.js](../../../js/game.js) чистую
 бизнес-логику (стейт-машину викторины, подсчет очков, управление раундами) в независимые ES-модули без привязки к DOM,
 пригодные для переиспользования на сервере и в автотестах.
 
@@ -48,12 +50,12 @@
     - [x] Создать `js/core/PackParser.js`:
         - Нормализация и валидация структуры пака (перенос логики `normalizeGameData`).
 - [x] **1.2. Написание юнит-тестов:**
-    - [x] Добавить в [tests/](../tests/) тесты на `GameStateMachine`:
+    - [x] Добавить в [tests/](../../../tests) тесты на `GameStateMachine`:
         - Корректная смена фаз игры;
         - Защита от недопустимых переходов (например, ответ после истечения таймера).
     - [x] Добавить тесты на `ScoreManager`:
         - Корректное добавление/вычитание очков с учетом аукциона.
-- [x] **1.3. Обратная интеграция в [js/game.js](../js/game.js):**
+- [x] **1.3. Обратная интеграция в [js/game.js](../../../js/game.js):**
     - [x] Подключить новые модули ядра в `index.html` и `game.js`.
     - [x] Убедиться, что локальная оффлайн-игра работает стабильно.
     - [x] Прогнать команду `npm test` и зафиксировать успешное прохождение.
@@ -81,22 +83,22 @@ npm test
     - [x] Настроена раздача статических файлов по HTTP (с защитой от Path Traversal), эндпоинты `/health` и
       `/api/stats`.
 - [x] **2.2. Реализация
-  `RoomManager.js` ([server/src/RoomManager.js](../server/src/RoomManager.js)):**
+  `RoomManager.js` ([server/src/RoomManager.js](../../../server/src/RoomManager.js)):**
     - [x] Генерация 4-значных алфавитно-цифровых кодов (`ABCDEFGHJKMNPQRSTUVWXYZ` без путаемых символов).
     - [x] Пул комнат (`Map`), создание по запросу хоста, регистронезависимый поиск.
     - [x] Автоматическая очистка неактивных комнат (таймаут 15 мин, фоновый таймер с `.unref()`).
-- [x] **2.3. Реализация `Room.js` ([server/src/Room.js](../server/src/Room.js)) и
-  `protocol.js` ([server/src/protocol.js](../server/src/protocol.js)):**
+- [x] **2.3. Реализация `Room.js` ([server/src/Room.js](../../../server/src/Room.js)) и
+  `protocol.js` ([server/src/protocol.js](../../../server/src/protocol.js)):**
     - [x] Подключение хоста и регистрация игроков (ник, ID, аватар, лимит комнат, токены сессий).
     - [x] Авторитарный арбитраж Buzzer: фиксация первого нажавшего, отклонение повторных нажатий, таймер ответа.
     - [x] Античит: отправка игрокам данных вопроса строго без полей ответа (`question.a` и `question.a_img`).
     - [x] Heartbeat (Ping/Pong) и graceful shutdown при `SIGINT`/`SIGTERM`.
-- [x] **2.4. Тестирование сервера ([server/tests/](../server/tests/)):**
-    - [x] Модульные тесты RoomManager ([server/tests/room_manager.test.js](../server/tests/room_manager.test.js)).
+- [x] **2.4. Тестирование сервера ([server/tests/](../../../server/tests)):**
+    - [x] Модульные тесты RoomManager ([server/tests/room_manager.test.js](../../../server/tests/room_manager.test.js)).
     - [x] Тесты механик комнаты и античита
-      ([server/tests/room_mechanics.test.js](../server/tests/room_mechanics.test.js)).
+      ([server/tests/room_mechanics.test.js](../../../server/tests/room_mechanics.test.js)).
     - [x] Сквозной интеграционный тест реального WebSocket-сервера
-      ([server/tests/server_integration.test.js](../server/tests/server_integration.test.js)).
+      ([server/tests/server_integration.test.js](../../../server/tests/server_integration.test.js)).
 
 ### 🧪 Верификация этапа 2:
 
@@ -111,8 +113,8 @@ cd server && npm test
 
 ## 📍 Этап 3: Host-клиент (Сетевое лобби и QR-код)
 
-**Цель:** Добавить в основной ПК-интерфейс [index.html](../index.html)
-и [js/game.js](../js/game.js) возможность переключения между «Локальной игрой» и
+**Цель:** Добавить в основной ПК-интерфейс [index.html](../../../index.html)
+и [js/game.js](../../../js/game.js) возможность переключения между «Локальной игрой» и
 «Сетевой комнатой», отображение экрана ожидания игроков с кодом комнаты и QR-кодом.
 
 ### 📝 Задачи и подзадачи:
@@ -218,7 +220,7 @@ E2E `server/tests/server_e2e.test.js`.
 
 ---
 
-## 📍 Этап «Steam Direct, Ассеты и Маркетинг» ([DESIGN_GUIDE.md](DESIGN_GUIDE.md))
+## 📍 Этап «Steam Direct, Ассеты и Маркетинг» ([DESIGN_GUIDE.md](../../DESIGN_GUIDE.md))
 
 **Цель:** Регистрация в Steamworks, отрисовка всех форматов капсул, скриншотов, запуск страницы «Скоро выйдет» (Coming
 Soon) и ведение соцсетей для сбора вишлистов.

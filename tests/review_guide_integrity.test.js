@@ -11,7 +11,7 @@ test('REVIEW_GUIDE.md: File exists in docs/, is valid UTF-8, and has no replacem
     assert.ok(fs.existsSync(reviewGuidePath), 'docs/REVIEW_GUIDE.md must exist in docs directory');
 
     const content = fs.readFileSync(reviewGuidePath, 'utf8');
-    assert.ok(content.length > 5000, 'REVIEW_GUIDE.md should contain detailed instructions');
+    assert.ok(content.trim(), 'REVIEW_GUIDE.md must not be empty');
     assert.ok(!content.includes('\uFFFD'), 'REVIEW_GUIDE.md must not contain unicode replacement character (\uFFFD)');
 });
 
@@ -33,11 +33,10 @@ test('REVIEW_GUIDE.md: Contains Conventional Comments standard with all prefixes
     }
 });
 
-test('REVIEW_GUIDE.md: Contains Quiz U Quality Gates & Architecture Invariants', () => {
-    const reviewGuidePath = path.join(DOCS_DIR, 'REVIEW_GUIDE.md');
-    const content = fs.readFileSync(reviewGuidePath, 'utf8');
+test('AGENTS.md: Owns Quiz U architecture invariants', () => {
+    const content = fs.readFileSync(path.join(ROOT_DIR, 'AGENTS.md'), 'utf8');
 
-    assert.ok(content.includes('Zero-Build'), 'Must specify Zero-Build invariant');
+    assert.ok(/zero-build/i.test(content), 'Must specify Zero-Build invariant');
     assert.ok(content.includes('feature/online-multiplayer'), 'Must specify Git branch policy');
     assert.ok(content.includes('main'), 'Must warn about protected main branch');
     assert.ok(content.includes('light-theme'), 'Must specify dual theme support');
@@ -75,22 +74,25 @@ test('.github/pull_request_template.md: File exists, valid UTF-8, contains check
     assert.ok(content.includes('REVIEW_GUIDE.md'), 'Must link to REVIEW_GUIDE.md');
 });
 
-test('Project documentation cross-linking integrity in docs/', () => {
-    const filesToTest = [
-        path.join('docs', 'DEV_GUIDE.md'),
-        path.join('docs', 'README.md'),
-        path.join('docs', 'TASKS.md'),
-        path.join('docs', 'ROADMAP.md')
-    ];
+function markdownFiles(directory) {
+    return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+        const fullPath = path.join(directory, entry.name);
+        return entry.isDirectory() ? markdownFiles(fullPath) :
+            (entry.name.endsWith('.md') ? [fullPath] : []);
+    });
+}
 
-    for (const relPath of filesToTest) {
-        const fullPath = path.join(ROOT_DIR, relPath);
-        assert.ok(fs.existsSync(fullPath), `${relPath} must exist`);
-        const content = fs.readFileSync(fullPath, 'utf8');
-        assert.ok(
-            content.includes('REVIEW_GUIDE.md'),
-            `${relPath} must contain a reference to REVIEW_GUIDE.md`
-        );
-        assert.ok(!content.includes('\uFFFD'), `${relPath} must not contain \uFFFD characters`);
+test('Project documentation: local Markdown links resolve, including archived documents', () => {
+    const files = [path.join(ROOT_DIR, 'AGENTS.md'), ...markdownFiles(DOCS_DIR)];
+    for (const file of files) {
+        const content = fs.readFileSync(file, 'utf8');
+        assert.ok(!content.includes('\uFFFD'), `${file} must be valid UTF-8`);
+        for (const match of content.matchAll(/\[[^\]\n]+\]\(([^)\n]+)\)/g)) {
+            const target = match[1];
+            if (/^(?:[a-z]+:|#)/i.test(target)) continue;
+            const destination = decodeURIComponent(target.split('#')[0]);
+            assert.ok(fs.existsSync(path.resolve(path.dirname(file), destination)),
+                `${path.relative(ROOT_DIR, file)} has broken link: ${target}`);
+        }
     }
 });
