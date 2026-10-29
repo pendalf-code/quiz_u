@@ -34,29 +34,37 @@ function normalizeGameData(data) {
     return [];
 }
 
+function getValidatedGameData(data) {
+    return PackParser.parseValidatedPack(data);
+}
+
 window.normalizeGameData = normalizeGameData;
 
 window.isPackSelected = false;
 let rawSavedPack = null;
 try {
-    rawSavedPack = JSON.parse(localStorage.getItem('jeopardy_pack'));
+    rawSavedPack = JSON.parse(QuizStorage.getItem('jeopardy_pack'));
+    if (rawSavedPack !== null) rawSavedPack = getValidatedGameData(rawSavedPack);
 } catch (e) {
     console.warn("Could not parse saved jeopardy_pack", e);
+    rawSavedPack = null;
 }
 let gameData = normalizeGameData(rawSavedPack);
 if (!gameData || gameData.length === 0 || (gameData[0]?.themes?.[0]?.name === "Гейминг и Мемы" && gameData[0]?.themes?.[0]?.questions?.[0]?.a === "Among Us")) {
     const defaultPackRounds = (typeof AVAILABLE_PACKS !== 'undefined' && AVAILABLE_PACKS.length > 0) ? AVAILABLE_PACKS[0].rounds : null;
     gameData = normalizeGameData(defaultPackRounds);
     try {
-        localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+        QuizStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
     } catch (e) {
     }
 }
 let currentRoundIndex = 0, currentCost = 0, timerInterval = null, timeLeft = 30, isReadingTime = true;
 let currentThemeIdx = 0, currentQuestionIdx = 0;
-let configReadingTime = parseInt(localStorage.getItem('cfg_reading_time')) || 7;
-let configThinkingTime = parseInt(localStorage.getItem('cfg_thinking_time')) || 30;
-let configAnswerTime = parseInt(localStorage.getItem('cfg_answer_time')) || 5;
+const savedReadingTime = QuizStorage.getItem('cfg_reading_time');
+const parsedReadingTime = typeof savedReadingTime === 'string' && savedReadingTime.trim() !== '' ? Number(savedReadingTime) : NaN;
+let configReadingTime = Number.isFinite(parsedReadingTime) && parsedReadingTime >= 0 ? Math.floor(parsedReadingTime) : 7;
+let configThinkingTime = parseInt(QuizStorage.getItem('cfg_thinking_time')) || 30;
+let configAnswerTime = parseInt(QuizStorage.getItem('cfg_answer_time')) || 5;
 let activeTeamIdxForQuestion = null, currentTurnTeamIdx = 0, activeCellOnBoard = null;
 let auctionBets = {};
 let teams = [{name: "Команда 1", score: 0}, {name: "Команда 2", score: 0}];
@@ -67,7 +75,7 @@ window.coreScoreManager = coreScoreManager;
 window.coreGameStateMachine = coreGameStateMachine;
 
 function initTheme() {
-    const saved = localStorage.getItem('quiz_theme') || 'dark';
+    const saved = QuizStorage.getItem('quiz_theme') || 'dark';
     const toggleBtn = document.getElementById('theme-toggle');
     if (saved === 'light') {
         document.body.classList.add('light-theme');
@@ -82,7 +90,7 @@ function toggleTheme() {
     const isLight = document.body.classList.toggle('light-theme');
     const toggleBtn = document.getElementById('theme-toggle');
     if (toggleBtn) toggleBtn.textContent = isLight ? '🌙' : '☀️';
-    localStorage.setItem('quiz_theme', isLight ? 'light' : 'dark');
+    QuizStorage.setItem('quiz_theme', isLight ? 'light' : 'dark');
     if (!isLight) {
         generateStarrySky();
     } else {
@@ -245,11 +253,13 @@ function playAuctionFanfareSound() {
     }
 }
 
+let specialSplashGeneration = 0;
 let catSplashTimer = null;
 let catSplashOnComplete = null;
 let isDismissingCatSplash = false;
 
 function showCatInBagSplash(onComplete) {
+    const generation = ++specialSplashGeneration;
     catSplashOnComplete = onComplete;
     isDismissingCatSplash = false;
     const overlay = document.getElementById('cat-splash-overlay');
@@ -272,17 +282,18 @@ function showCatInBagSplash(onComplete) {
 
     // Play meow sound synchronized with head emergence
     setTimeout(() => {
-        playCatMeowSound();
+        if (generation === specialSplashGeneration) playCatMeowSound();
     }, 550);
 
     // Auto dismiss after 3.2s if not clicked
     if (catSplashTimer) clearTimeout(catSplashTimer);
     catSplashTimer = setTimeout(() => {
-        dismissCatSplash();
+        if (generation === specialSplashGeneration) dismissCatSplash();
     }, 3200);
 }
 
 function dismissCatSplash(event) {
+    const generation = specialSplashGeneration;
     if (event) event.stopPropagation();
     if (isDismissingCatSplash) return;
     isDismissingCatSplash = true;
@@ -304,6 +315,7 @@ function dismissCatSplash(event) {
 
     overlay.classList.add('fade-out');
     setTimeout(() => {
+        if (generation !== specialSplashGeneration) return;
         overlay.style.display = 'none';
         overlay.classList.remove('fade-out');
         isDismissingCatSplash = false;
@@ -320,6 +332,7 @@ let auctionSplashOnComplete = null;
 let isDismissingAuctionSplash = false;
 
 function showAuctionSplash(type, onComplete) {
+    const generation = ++specialSplashGeneration;
     auctionSplashOnComplete = onComplete;
     isDismissingAuctionSplash = false;
     const overlay = document.getElementById('auction-splash-overlay');
@@ -345,10 +358,10 @@ function showAuctionSplash(type, onComplete) {
                 `;
         }
         setTimeout(() => {
-            playGavelStrikeSound();
+            if (generation === specialSplashGeneration) playGavelStrikeSound();
         }, 450);
         setTimeout(() => {
-            playAuctionFanfareSound();
+            if (generation === specialSplashGeneration) playAuctionFanfareSound();
         }, 720);
     } else {
         if (titleElem) titleElem.innerHTML = "\uD83D\uDCB0 \u0412\u041E\u041F\u0420\u041E\u0421 \u0421\u041E \u0421\u0422\u0410\u0412\u041A\u041E\u0419! \uD83D\uDCB0";
@@ -361,7 +374,7 @@ function showAuctionSplash(type, onComplete) {
                 `;
         }
         setTimeout(() => {
-            playAuctionFanfareSound();
+            if (generation === specialSplashGeneration) playAuctionFanfareSound();
         }, 250);
     }
 
@@ -370,11 +383,12 @@ function showAuctionSplash(type, onComplete) {
 
     if (auctionSplashTimer) clearTimeout(auctionSplashTimer);
     auctionSplashTimer = setTimeout(() => {
-        dismissAuctionSplash();
+        if (generation === specialSplashGeneration) dismissAuctionSplash();
     }, 3200);
 }
 
 function dismissAuctionSplash(event) {
+    const generation = specialSplashGeneration;
     if (event) event.stopPropagation();
     if (isDismissingAuctionSplash) return;
     isDismissingAuctionSplash = true;
@@ -396,6 +410,7 @@ function dismissAuctionSplash(event) {
 
     overlay.classList.add('fade-out');
     setTimeout(() => {
+        if (generation !== specialSplashGeneration) return;
         overlay.style.display = 'none';
         overlay.classList.remove('fade-out');
         isDismissingAuctionSplash = false;
@@ -1060,11 +1075,11 @@ function saveGameState() {
         currentTurnTeamIdx: currentTurnTeamIdx,
         gameStats: gameStats
     };
-    localStorage.setItem('quiz_save_state', JSON.stringify(state));
+    QuizStorage.setItem('quiz_save_state', JSON.stringify(state));
 }
 
 function clearGameState() {
-    localStorage.removeItem('quiz_save_state');
+    QuizStorage.removeItem('quiz_save_state');
 }
 
 function checkSavedGame() {
@@ -1073,7 +1088,7 @@ function checkSavedGame() {
         hostNetworkClient.disconnect();
         hostNetworkClient = null;
     }
-    const saved = localStorage.getItem('quiz_save_state');
+    const saved = QuizStorage.getItem('quiz_save_state');
     if (saved) {
         showSystemModal(
             "💾 НАЙДЕНА СОХРАНЕННАЯ ИГРА",
@@ -1098,9 +1113,10 @@ function checkSavedGame() {
 
 function loadGameState() {
     try {
-        const state = JSON.parse(localStorage.getItem('quiz_save_state'));
+        const state = JSON.parse(QuizStorage.getItem('quiz_save_state'));
+        const restoredGameData = getValidatedGameData(state.gameData);
         teams = state.teams;
-        gameData = normalizeGameData(state.gameData);
+        gameData = restoredGameData;
         currentRoundIndex = state.currentRoundIndex;
         currentTurnTeamIdx = state.currentTurnTeamIdx || 0;
         gameStats = state.gameStats || {};
@@ -1143,16 +1159,16 @@ function resetGameStats() {
     });
 }
 
-let configAllowCat = localStorage.getItem('cfg_allow_cat') !== 'false';
-let configAllowAuction = localStorage.getItem('cfg_allow_auction') !== 'false';
-let configAllowAuctionLeader = localStorage.getItem('cfg_allow_auction_leader') !== 'false';
+let configAllowCat = QuizStorage.getItem('cfg_allow_cat') !== 'false';
+let configAllowAuction = QuizStorage.getItem('cfg_allow_auction') !== 'false';
+let configAllowAuctionLeader = QuizStorage.getItem('cfg_allow_auction_leader') !== 'false';
 // Turn order (TASK-48): 'rotation' — teams pick in turn (default); 'winner' — whoever answered right picks next
 let configTurnOrderMode = readTurnOrderSetting();
 let questionWinnerTeamIdx = null; // local game: first team credited with points for the open question
 
 function readTurnOrderSetting() {
     try {
-        return localStorage.getItem('cfg_turn_order') === 'winner' ? 'winner' : 'rotation';
+        return QuizStorage.getItem('cfg_turn_order') === 'winner' ? 'winner' : 'rotation';
     } catch (e) {
         return 'rotation';
     }
@@ -1161,7 +1177,7 @@ function readTurnOrderSetting() {
 function saveTurnOrderSetting(mode) {
     configTurnOrderMode = mode === 'winner' ? 'winner' : 'rotation';
     try {
-        localStorage.setItem('cfg_turn_order', configTurnOrderMode);
+        QuizStorage.setItem('cfg_turn_order', configTurnOrderMode);
     } catch (e) {
     }
 }
@@ -1383,12 +1399,12 @@ window.setGameData = function (newGameData) {
     window.getGameData = function () {
         return gameData;
     };
-    const normalized = normalizeGameData(newGameData);
+    const normalized = getValidatedGameData(newGameData);
     if (normalized && normalized.length > 0) {
         gameData = JSON.parse(JSON.stringify(normalized));
         window.gameData = gameData;
         try {
-            localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+            QuizStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
         } catch (e) {
         }
         const editor = document.getElementById('json-editor');
@@ -1709,17 +1725,17 @@ function saveSettings() {
     configReadingTime = rTime;
     configThinkingTime = tTime;
     configAnswerTime = aTime;
-    localStorage.setItem('cfg_reading_time', rTime);
-    localStorage.setItem('cfg_thinking_time', tTime);
-    localStorage.setItem('cfg_answer_time', aTime);
+    QuizStorage.setItem('cfg_reading_time', rTime);
+    QuizStorage.setItem('cfg_thinking_time', tTime);
+    QuizStorage.setItem('cfg_answer_time', aTime);
 
     configAllowCat = document.getElementById('setting-type-cat').checked;
     configAllowAuction = document.getElementById('setting-type-auction').checked;
     configAllowAuctionLeader = document.getElementById('setting-type-auction-leader').checked;
 
-    localStorage.setItem('cfg_allow_cat', configAllowCat);
-    localStorage.setItem('cfg_allow_auction', configAllowAuction);
-    localStorage.setItem('cfg_allow_auction_leader', configAllowAuctionLeader);
+    QuizStorage.setItem('cfg_allow_cat', configAllowCat);
+    QuizStorage.setItem('cfg_allow_auction', configAllowAuction);
+    QuizStorage.setItem('cfg_allow_auction_leader', configAllowAuctionLeader);
     const turnOrderSelect = document.getElementById('setting-turn-order');
     if (turnOrderSelect) saveTurnOrderSetting(turnOrderSelect.value);
     currentLobbySettings.turnOrderMode = configTurnOrderMode;
@@ -1840,7 +1856,7 @@ function resetQuestionsProgress() {
             }
         }
     });
-    localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+    QuizStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
 }
 
 function saveTeamsFromSetup() {
@@ -1993,14 +2009,14 @@ function executeQuitToMainMenu() {
     showSubScreen('sub-menu-main');
 }
 
-function applyCustomQuestions() {
+function applyCustomQuestions(packTitle = 'Пользовательский пак') {
     try {
         const parsed = JSON.parse(document.getElementById('json-editor').value);
-        gameData = normalizeGameData(parsed);
+        gameData = getValidatedGameData(parsed);
         window.gameData = gameData;
-        window.currentPackTitle = 'Пользовательский пак';
+        window.currentPackTitle = packTitle;
         window.isPackSelected = true;
-        localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+        QuizStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
         currentRoundIndex = 0;
         if (isOnlineGame) {
             if (hostNetworkClient && hostNetworkClient.isConnected) {
@@ -2016,7 +2032,7 @@ function applyCustomQuestions() {
             showSystemModal("📥 ПАК ЗАГРУЖЕН", "Новый пак вопросов успешно импортирован!");
         }
     } catch (e) {
-        showSystemModal("❌ ОШИБКА JSON КОДА", "Не удалось прочитать пак: " + e.message);
+        showSystemModal("❌ ОШИБКА JSON КОДА", "Не удалось прочитать пак: " + escapeHtml(e.message));
     }
 }
 
@@ -2236,6 +2252,7 @@ function initBoard() {
 }
 
 function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overrideQuestion = null, isFromNetwork = false) {
+    if (isOnlineGame && !isFromNetwork && !skipSplash) cancelPendingNetworkQuestionOpen();
     specialQuestionRevealed = false;
     stopTimer();
     stopQuestionAudio();
@@ -3532,8 +3549,7 @@ function uploadPack(event) {
     const reader = new FileReader();
     reader.onload = function (e) {
         document.getElementById('json-editor').value = e.target.result;
-        window.currentPackTitle = file.name.replace(/\.json$/i, '');
-        applyCustomQuestions();
+        applyCustomQuestions(file.name.replace(/\.json$/i, ''));
         event.target.value = '';
     };
     reader.readAsText(file);
@@ -3734,6 +3750,7 @@ function showSystemModal(titleText, descText, customButtons = null) {
 }
 
 function closeSystemModal(shouldCheckRound = false) {
+    cancelPendingNetworkQuestionOpen();
     const modalElem = document.getElementById('question-modal'),
         cardElem = modalElem ? modalElem.querySelector('.modal-card') : null;
     if (cardElem && modalElem) {
@@ -3821,6 +3838,10 @@ let isGameStarted = false;
 const AUCTION_ANSWER_SECONDS = 30;
 let lastServerRoomState = 'LOBBY';
 let pendingNetworkQuestionOpen = false;
+let networkQuestionOpenGeneration = 0;
+let networkQuestionOpenTimer = null;
+let networkQuestionOpenSafetyTimer = null;
+let networkQuestionOpenCell = null;
 const queuedNetworkEvents = [];
 const QUEUED_WHILE_BLINKING = new Set(['buzzer_ready', 'buzz_locked', 'cat_transferred', 'auction_leader_set',
     'auction_answer_start', 'auction_bet_made', 'answer_timeout', 'judge_result', 'show_answer']);
@@ -3832,12 +3853,12 @@ let isLocalHostEnabled = false;
 let activeOnlineBuzzer = null;
 
 let currentLobbySettings = {
-    readingTime: parseInt(localStorage.getItem('cfg_reading_time'), 10) >= 0 ? parseInt(localStorage.getItem('cfg_reading_time'), 10) : 7,
-    thinkingTime: parseInt(localStorage.getItem('cfg_thinking_time'), 10) >= 5 ? parseInt(localStorage.getItem('cfg_thinking_time'), 10) : 30,
-    answerTime: parseInt(localStorage.getItem('cfg_answer_time'), 10) >= 1 ? parseInt(localStorage.getItem('cfg_answer_time'), 10) : 5,
-    penaltyEnabled: localStorage.getItem('cfg_penalty_enabled') === 'true',
-    penaltyMode: localStorage.getItem('cfg_penalty_mode') || 'nominal',
-    penaltyFixedAmount: parseInt(localStorage.getItem('cfg_penalty_fixed_amount'), 10) || 100,
+    readingTime: parseInt(QuizStorage.getItem('cfg_reading_time'), 10) >= 0 ? parseInt(QuizStorage.getItem('cfg_reading_time'), 10) : 7,
+    thinkingTime: parseInt(QuizStorage.getItem('cfg_thinking_time'), 10) >= 5 ? parseInt(QuizStorage.getItem('cfg_thinking_time'), 10) : 30,
+    answerTime: parseInt(QuizStorage.getItem('cfg_answer_time'), 10) >= 1 ? parseInt(QuizStorage.getItem('cfg_answer_time'), 10) : 5,
+    penaltyEnabled: QuizStorage.getItem('cfg_penalty_enabled') === 'true',
+    penaltyMode: QuizStorage.getItem('cfg_penalty_mode') || 'nominal',
+    penaltyFixedAmount: parseInt(QuizStorage.getItem('cfg_penalty_fixed_amount'), 10) || 100,
     turnOrderMode: configTurnOrderMode
 };
 
@@ -3992,12 +4013,12 @@ function saveLobbySettings() {
     configAnswerTime = answerTime;
 
     try {
-        localStorage.setItem('cfg_reading_time', readingTime);
-        localStorage.setItem('cfg_thinking_time', thinkingTime);
-        localStorage.setItem('cfg_answer_time', answerTime);
-        localStorage.setItem('cfg_penalty_enabled', penaltyEnabled ? 'true' : 'false');
-        localStorage.setItem('cfg_penalty_mode', penaltyMode);
-        localStorage.setItem('cfg_penalty_fixed_amount', penaltyFixedAmount);
+        QuizStorage.setItem('cfg_reading_time', readingTime);
+        QuizStorage.setItem('cfg_thinking_time', thinkingTime);
+        QuizStorage.setItem('cfg_answer_time', answerTime);
+        QuizStorage.setItem('cfg_penalty_enabled', penaltyEnabled ? 'true' : 'false');
+        QuizStorage.setItem('cfg_penalty_mode', penaltyMode);
+        QuizStorage.setItem('cfg_penalty_fixed_amount', penaltyFixedAmount);
     } catch (e) {
     }
 
@@ -4190,12 +4211,12 @@ function uploadLobbyCustomPack(event) {
     reader.onload = function (e) {
         try {
             const parsed = JSON.parse(e.target.result);
-            gameData = normalizeGameData(parsed);
+            gameData = getValidatedGameData(parsed);
             window.gameData = gameData;
             window.currentPackTitle = file.name.replace(/\.json$/i, '');
             window.isPackSelected = true;
             try {
-                localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+                QuizStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
             } catch (err) {
             }
             currentRoundIndex = 0;
@@ -4206,7 +4227,7 @@ function uploadLobbyCustomPack(event) {
             showSystemModal("✅ Пакет загружен", `Пакет «${window.currentPackTitle}» успешно загружен и готов к сетевой игре!`);
         } catch (err) {
             console.error("Pack upload error:", err);
-            showSystemModal("⚠️ Ошибка файла", "Не удалось прочитать JSON-файл пака: " + (err && err.message ? err.message : err));
+            showSystemModal("⚠️ Ошибка файла", "Не удалось прочитать JSON-файл пака: " + escapeHtml(err && err.message ? err.message : err));
         }
         if (event.target) event.target.value = '';
     };
@@ -4259,6 +4280,7 @@ function initHostNetwork(overrideUrl = null) {
     let hasFallbackAttempted = false;
 
     function startConnection(targetUrl) {
+        cancelPendingNetworkQuestionOpen();
         if (hostNetworkClient) {
             hostNetworkClient.disconnect();
             hostNetworkClient = null;
@@ -4276,8 +4298,11 @@ function initHostNetwork(overrideUrl = null) {
             return rawEmit(event, payload);
         };
         hostNetworkClient.replayQueuedEvents = () => {
+            const generation = networkQuestionOpenGeneration;
             const queued = queuedNetworkEvents.splice(0);
-            queued.forEach(([event, payload]) => rawEmit(event, payload));
+            queued.forEach(([event, payload]) => {
+                if (generation === networkQuestionOpenGeneration) rawEmit(event, payload);
+            });
         };
 
         hostNetworkClient.on('connected', () => {
@@ -4290,6 +4315,7 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('disconnected', () => {
+            cancelPendingNetworkQuestionOpen();
             if (statusDot) statusDot.className = 'status-indicator status-error';
             if (statusText) statusText.textContent = 'Отключено от сервера';
             const codeElem = document.getElementById('lobby-room-code');
@@ -4702,6 +4728,7 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('question_closed', () => {
+            cancelPendingNetworkQuestionOpen();
             if (window.FinalRound && window.FinalRound.isActive()) {
                 // After the final the server is in GAME_OVER: show the winners
                 window.FinalRound.hide();
@@ -4728,6 +4755,7 @@ function initHostNetwork(overrideUrl = null) {
                 startOnlineGame(true);
             }
             if (payload && payload.questionType === 'final' && window.FinalRound) {
+                cancelPendingNetworkQuestionOpen();
                 window.FinalRound.onQuestionActive(payload);
                 return;
             }
@@ -4769,6 +4797,7 @@ function initHostNetwork(overrideUrl = null) {
             if (isGameStarted && payload.turnPlayerId) syncTurnFromServer(payload.turnPlayerId);
             if (payload.state === 'BOARD') onlineRoundEndShown = false;
             if (payload.state === 'LOBBY') {
+                cancelPendingNetworkQuestionOpen();
                 const wasInGame = isGameStarted;
                 isGameStarted = false;
                 onlineRoundEndShown = false;
@@ -4797,7 +4826,17 @@ function initHostNetwork(overrideUrl = null) {
             }
         });
 
+        hostNetworkClient.on('game_finished', () => {
+            cancelPendingNetworkQuestionOpen();
+            if (window.FinalRound) window.FinalRound.hide();
+            stopTimer();
+            stopOnlineAnswerCountdown();
+            stopQuestionAudio();
+            closeSystemModal(false);
+        });
+
         hostNetworkClient.on('round_changed', (payload) => {
+            cancelPendingNetworkQuestionOpen();
             onlineRoundEndShown = false;
             currentRoundIndex = (payload && payload.roundIndex !== undefined) ? payload.roundIndex : (currentRoundIndex + 1);
             updateTurnDisplay();
@@ -4825,7 +4864,7 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('server_error', (payload) => {
-            showSystemModal("⚠️ Ошибка сервера", payload.message || "Не удалось выполнить действие на сервере.");
+            showSystemModal("⚠️ Ошибка сервера", escapeHtml(payload.message || "Не удалось выполнить действие на сервере."));
         });
 
         hostNetworkClient.connect().catch(() => {
@@ -4835,8 +4874,42 @@ function initHostNetwork(overrideUrl = null) {
     startConnection(initialWsUrl);
 }
 
-function finishNetworkQuestionOpen() {
-    if (!pendingNetworkQuestionOpen) return;
+// Закрытие вопроса отменяет и мигание, и заставку: старый callback не вправе открыть следующий экран.
+function cancelPendingNetworkQuestionOpen() {
+    networkQuestionOpenGeneration++;
+    if (networkQuestionOpenTimer) clearTimeout(networkQuestionOpenTimer);
+    if (networkQuestionOpenSafetyTimer) clearTimeout(networkQuestionOpenSafetyTimer);
+    networkQuestionOpenTimer = null;
+    networkQuestionOpenSafetyTimer = null;
+    if (networkQuestionOpenCell) networkQuestionOpenCell.classList.remove('cell-flash');
+    networkQuestionOpenCell = null;
+    pendingNetworkQuestionOpen = false;
+    queuedNetworkEvents.length = 0;
+    specialSplashGeneration++;
+    if (catSplashTimer) clearTimeout(catSplashTimer);
+    if (auctionSplashTimer) clearTimeout(auctionSplashTimer);
+    catSplashTimer = null;
+    auctionSplashTimer = null;
+    catSplashOnComplete = null;
+    auctionSplashOnComplete = null;
+    isDismissingCatSplash = false;
+    isDismissingAuctionSplash = false;
+    for (const id of ['cat-splash-overlay', 'auction-splash-overlay']) {
+        const overlay = document.getElementById(id);
+        if (overlay) {
+            overlay.style.display = 'none';
+            overlay.classList.remove('fade-out');
+        }
+    }
+}
+
+function finishNetworkQuestionOpen(generation = networkQuestionOpenGeneration) {
+    if (!pendingNetworkQuestionOpen || generation !== networkQuestionOpenGeneration) return;
+    if (networkQuestionOpenTimer) clearTimeout(networkQuestionOpenTimer);
+    if (networkQuestionOpenSafetyTimer) clearTimeout(networkQuestionOpenSafetyTimer);
+    networkQuestionOpenTimer = null;
+    networkQuestionOpenSafetyTimer = null;
+    networkQuestionOpenCell = null;
     pendingNetworkQuestionOpen = false;
     if (hostNetworkClient && typeof hostNetworkClient.replayQueuedEvents === 'function') {
         hostNetworkClient.replayQueuedEvents();
@@ -4847,25 +4920,33 @@ function finishNetworkQuestionOpen() {
  * The host picked a question on the phone: blink the cell on the big board, then open the modal.
  */
 function openQuestionFromHostPhone(themeIdx, questionIdx, cell, question) {
-    if (pendingNetworkQuestionOpen) return;
+    cancelPendingNetworkQuestionOpen();
+    const generation = networkQuestionOpenGeneration;
+    currentThemeIdx = themeIdx;
+    currentQuestionIdx = questionIdx;
     const hasRealCell = Boolean(cell && cell.isConnected && !cell.classList.contains('used'));
+    pendingNetworkQuestionOpen = true;
+    networkQuestionOpenCell = cell || null;
     const open = () => {
+        if (generation !== networkQuestionOpenGeneration || !pendingNetworkQuestionOpen) return;
+        networkQuestionOpenTimer = null;
         if (hasRealCell) cell.classList.remove('cell-flash');
         // Special questions play a splash first: events stay queued until the modal is really on screen
         openQuestion(themeIdx, questionIdx, cell || document.createElement('div'), null, false, question, true);
-        setTimeout(finishNetworkQuestionOpen, 12000); // safety net if the modal never opened
+        if (pendingNetworkQuestionOpen) {
+            networkQuestionOpenSafetyTimer = setTimeout(() => finishNetworkQuestionOpen(generation), 12000); // safety net if the modal never opened
+        }
     };
     if (!hasRealCell) {
         open();
         return;
     }
-    pendingNetworkQuestionOpen = true;
     cell.classList.add('cell-flash');
     try {
         playTickSound();
     } catch (_) {
     }
-    setTimeout(open, 1300);
+    networkQuestionOpenTimer = setTimeout(open, 1300);
 }
 
 /**
@@ -4873,7 +4954,7 @@ function openQuestionFromHostPhone(themeIdx, questionIdx, cell, question) {
  * "round finished" notice or the winners screen that the server state asks for.
  */
 function handleOnlineRoundTransition() {
-    if (!isOnlineGame || !isGameStarted) return;
+    if (!isOnlineGame || !isGameStarted || pendingNetworkQuestionOpen) return;
     if (lastServerRoomState === 'ROUND_END' && !onlineRoundEndShown) {
         onlineRoundEndShown = true;
         showSystemModal("🏁 РАУНД ЗАВЕРШЁН", "Все вопросы раунда разыграны! Ведущий переходит к следующему раунду.");
@@ -5235,7 +5316,7 @@ function onAppReady() {
                         window.gameData = gameData;
                         window.currentPackTitle = firstPack.title;
                         try {
-                            localStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
+                            QuizStorage.setItem('jeopardy_pack', JSON.stringify(gameData));
                         } catch (e) {
                         }
                         updateLobbyPackDisplay();
