@@ -52,23 +52,31 @@
                 };
             }
 
-            rounds.forEach((round, rIdx) => {
+            Array.from(rounds).forEach((round, rIdx) => {
+                if (!round || typeof round !== 'object' || Array.isArray(round)) {
+                    errors.push(`Некорректный раунд #${rIdx + 1}`);
+                    return;
+                }
                 const roundName = round.roundName || `Раунд ${rIdx + 1}`;
                 if (!round.themes || !Array.isArray(round.themes) || round.themes.length === 0) {
                     errors.push(`Раунд "${roundName}" не содержит тем`);
                     return;
                 }
 
-                round.themes.forEach((theme, tIdx) => {
+                Array.from(round.themes).forEach((theme, tIdx) => {
+                    if (!theme || typeof theme !== 'object' || Array.isArray(theme)) {
+                        errors.push(`Некорректная тема #${tIdx + 1} в раунде "${roundName}"`);
+                        return;
+                    }
                     const themeName = theme.name || `Тема ${tIdx + 1}`;
                     if (!theme.questions || !Array.isArray(theme.questions) || theme.questions.length === 0) {
                         errors.push(`Тема "${themeName}" в раунде "${roundName}" не содержит вопросов`);
                         return;
                     }
 
-                    theme.questions.forEach((q, qIdx) => {
+                    Array.from(theme.questions).forEach((q, qIdx) => {
                         totalQuestions++;
-                        if (!q || typeof q !== 'object') {
+                        if (!q || typeof q !== 'object' || Array.isArray(q)) {
                             errors.push(`Некорректный вопрос #${qIdx + 1} в теме "${themeName}"`);
                             return;
                         }
@@ -79,7 +87,7 @@
                             errors.push(`Отсутствует ответ на вопрос #${qIdx + 1} в теме "${themeName}"`);
                         }
                         const costVal = q.cost !== undefined ? q.cost : q.price;
-                        if (typeof costVal !== 'number' || isNaN(costVal) || costVal <= 0) {
+                        if (typeof costVal !== 'number' || !Number.isFinite(costVal) || costVal <= 0) {
                             errors.push(`Некорректная стоимость (${costVal}) вопроса #${qIdx + 1} в теме "${themeName}"`);
                         }
                     });
@@ -92,6 +100,19 @@
                 roundsCount: rounds.length,
                 questionsCount: totalQuestions
             };
+        },
+
+        /**
+         * Проверяет пакет до замены рабочего состояния и возвращает его раунды.
+         */
+        parseValidatedPack: function (data) {
+            const result = this.validatePack(data);
+            if (!result.valid) {
+                const error = new Error('Некорректный пак: ' + result.errors.join('; '));
+                error.code = 'INVALID_PAYLOAD';
+                throw error;
+            }
+            return this.normalizeGameData(data);
         },
 
         /**

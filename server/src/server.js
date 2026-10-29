@@ -10,6 +10,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const net = require('net');
 const {WebSocketServer} = require('ws');
 const {MSG_TYPES, ERROR_CODES, createMessage, parseMessage} = require('./protocol');
 const os = require('os');
@@ -80,8 +81,14 @@ function isAllowedOrigin(origin, host) {
     if (url.protocol !== 'http:' && url.protocol !== 'https:') return true; // tauri:, capacitor:, ionic:, file:
     if (url.host === host) return true;
     const h = url.hostname;
+    // Префикс доменного имени не доказывает принадлежность приватной IP-сети.
+    const octets = net.isIP(h) === 4 ? h.split('.').map(Number) : null;
+    const isLanIpv4 = octets && (octets[0] === 10 || octets[0] === 127
+        || (octets[0] === 192 && octets[1] === 168)
+        || (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31)
+        || (octets[0] === 169 && octets[1] === 254));
     return h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local')
-        || /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.)/.test(h)
+        || Boolean(isLanIpv4)
         || h === '[::1]';
 }
 
@@ -333,15 +340,44 @@ wss.on('connection', (ws, req) => {
 });
 
 function handleClientMessage(ws, message) {
+    if (ws.sessionRevoked || ws.readyState !== 1) return;
     const {type} = message;
     const payload = (message.payload && typeof message.payload === 'object') ? message.payload : {};
+
+    // Флаг роли сам по себе не даёт прав: после реконнекта или кика полномочия имеет только текущий сокет.
+    const attachedRoom = roomManager.getRoom(ws.roomCode);
+    const attachedPlayer = attachedRoom && ws.playerId ? attachedRoom.players.get(ws.playerId) : null;
+    const attachedHost = attachedRoom && attachedRoom.hostPlayer;
+    const isCurrentMobileHost = Boolean(attachedHost && attachedHost.isConnected
+        && attachedHost.ws === ws && attachedHost.id === ws.playerId);
+    const isCurrentHost = Boolean(attachedRoom && (attachedRoom.hostWs === ws || isCurrentMobileHost));
+    const isCurrentPlayer = Boolean(attachedPlayer && attachedPlayer.isConnected && attachedPlayer.ws === ws);
+    const hostAction = (type.startsWith('HOST_') && type !== MSG_TYPES.HOST_CREATE_ROOM)
+        || type === MSG_TYPES.GAME_FINISHED || type === MSG_TYPES.ANSWER_TIMEOUT;
+    const playerAction = type.startsWith('PLAYER_') && type !== MSG_TYPES.PLAYER_JOIN;
+    if ((hostAction && !isCurrentHost) || (playerAction && !isCurrentPlayer)) {
+        if (ws.readyState === 1) ws.send(createMessage(MSG_TYPES.ERROR, {
+            code: ERROR_CODES.NOT_AUTHORIZED,
+            message: 'Сессия больше не управляет этим участником'
+        }));
+        return;
+    }
 
     switch (type) {
         // --- HOST ACTIONS ---
         case MSG_TYPES.HOST_CREATE_ROOM: {
             if (ws.roomCode) {
-                roomManager.deleteRoom(ws.roomCode);
+                const previousRoom = roomManager.getRoom(ws.roomCode);
+                // Участник не может удалить общую комнату, создавая свою на том же сокете.
+                if (previousRoom && previousRoom.hostWs !== ws) {
+                    return ws.send(createMessage(MSG_TYPES.ERROR, {
+                        code: ERROR_CODES.NOT_AUTHORIZED,
+                        message: 'Сначала отключитесь от текущей комнаты'
+                    }));
+                }
+                if (previousRoom) roomManager.deleteRoom(previousRoom.code);
             }
+            ws.playerId = null;
             let room;
             try {
                 room = roomManager.createRoom(ws, payload.options || {});
@@ -374,7 +410,14 @@ function handleClientMessage(ws, message) {
                     message: 'Пак вопросов не указан'
                 }));
             }
-            room.setPack(payload.pack);
+            try {
+                room.setPack(payload.pack);
+            } catch (error) {
+                return ws.send(createMessage(MSG_TYPES.ERROR, {
+                    code: ERROR_CODES.INVALID_PAYLOAD,
+                    message: error.message || 'Некорректный пак вопросов'
+                }));
+            }
             ws.send(createMessage(MSG_TYPES.ROOM_STATE, room.getStateSnapshot(false)));
             break;
         }
@@ -660,6 +703,19 @@ function handleClientMessage(ws, message) {
             }
 
             const requestedRole = payload.role === 'host' ? 'host' : 'player';
+            if (attachedRoom && (isCurrentHost || isCurrentPlayer)) {
+                const currentParticipant = isCurrentMobileHost ? attachedHost : attachedPlayer;
+                const sameParticipant = currentParticipant && room === attachedRoom
+                    && requestedRole === (isCurrentMobileHost ? 'host' : 'player')
+                    && payload.sessionToken && payload.sessionToken === currentParticipant.sessionToken;
+                if (!sameParticipant) {
+                    return ws.send(createMessage(MSG_TYPES.ERROR, {
+                        code: ERROR_CODES.NOT_AUTHORIZED,
+                        message: 'Сначала отключитесь от текущего участника'
+                    }));
+                }
+            }
+
             const joinResult = room.addPlayer(payload.name, payload.avatar, ws, payload.sessionToken, requestedRole);
             if (!joinResult.success) {
                 ws.send(createMessage(MSG_TYPES.ERROR, {
