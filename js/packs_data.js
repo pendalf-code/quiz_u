@@ -10,7 +10,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Золотая классика Союзмультфильма'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -1436,7 +1436,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Дискотека 90-х - Руки Вверх и Иванушки'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -1610,7 +1610,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Детские песенки Шаинского и Гладкова'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -1752,7 +1752,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Золотые хиты 80-х - Modern Talking и ABBA'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -1820,7 +1820,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Саундтреки к видеоиграм - От Tetris до Doom'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -1854,7 +1854,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'История Евровидения - Триумфы и рекорды'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3352,7 +3352,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Хищники саванны - Львы, гепарды и леопарды'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -3794,7 +3794,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Голоса и звуки живой природы'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -6684,7 +6684,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Кто как говорит - Голоса зверят'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -7024,7 +7024,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": false,
     "description": "Увлекательная викторина по теме 'Птичий двор - Курочка, петушок и гуси'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -7695,7 +7695,7 @@ window.AVAILABLE_PACKS = [
     "categoryFolder": "02_Кино_и_Сериалы",
     "categoryIcon": "🎬",
     "difficulty": "medium",
-    "roundsCount": 2,
+    "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Киновселенная Marvel - Сага Бесконечности'. Прекрасно подходит для игры любой компанией!",
     "hasMedia": true,
@@ -8462,7 +8462,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Увлекательная викторина по теме 'Гранж и альтернатива 90-х - Nirvana, Linkin Park, RHCP'. Прекрасно подходит для игры любой компанией!",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -18100,7 +18100,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 3,
     "hasFinal": true,
     "description": "Промышленная революция, Романовы, благородные газы, киты и велосипеды в первом раунде; меркурианские вехи, цветочные символы, братья Гримм, Маяковский и неореализм во втором; Марк Твен, романсы, иконопись, бурятская кухня и алфавит в третьем, а в финале шифр древнего полководца.",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [
@@ -20343,7 +20343,7 @@ window.AVAILABLE_PACKS = [
     "roundsCount": 1,
     "hasFinal": true,
     "description": "Бумажные деньги, серые хищники, нарды, московские скульптуры и церковнославянский язык, а в финале — самый маленький океан.",
-    "hasMedia": false,
+    "hasMedia": true,
     "hasCat": true,
     "hasAuction": true,
     "tags": [

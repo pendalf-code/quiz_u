@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const PackParser = require('../js/core/PackParser');
 
 const PACKS_DIR = path.join(__dirname, '..', 'паки вопросов');
 const OUTPUT_FILE = path.join(__dirname, '..', 'js', 'packs_data.js');
@@ -60,17 +61,10 @@ function main() {
       const cleanTitle = match ? match[2] : file.replace('.json', '');
 
       // Normalize rounds array for metadata extraction
-      let roundsArray = [];
-      if (Array.isArray(data)) {
-        roundsArray = data;
-      } else if (Array.isArray(data.rounds)) {
-        roundsArray = data.rounds;
-      } else if (data.roundName || data.themes) {
-        roundsArray = [data];
-      }
-
-      const hasFinal = roundsArray.some(r => r.roundName && r.roundName.toLowerCase().includes('финал'));
-      const nonFinalRounds = roundsArray.filter(r => !r.roundName || !r.roundName.toLowerCase().includes('финал'));
+      const roundsArray = PackParser.normalizeGameData(data);
+      const finalFlags = roundsArray.map((round, index) => PackParser.isFinalRound(round, index, roundsArray.length));
+      const hasFinal = finalFlags.some(Boolean);
+      const nonFinalRounds = roundsArray.filter((round, index) => !finalFlags[index]);
       const roundsCount = nonFinalRounds.length > 0 ? nonFinalRounds.length : roundsArray.length;
 
       const themeNames = [];
@@ -86,7 +80,7 @@ function main() {
             if (t.questions && Array.isArray(t.questions)) {
               questionsCount += t.questions.length;
               t.questions.forEach(q => {
-                if (q.img || q.audio || q.video || q.q_img || q.a_img) {
+                if (q.img || q.audio || q.video || q.q_img || q.a_img || q.music || q.a_video || q.answer_img || q.answer_video) {
                   hasMedia = true;
                 }
               });
@@ -150,12 +144,12 @@ function main() {
   });
 
   // 1. Output lightweight packs_catalog.json (~80 KB instead of 9.6 MB!)
-  const jsonCatalogStr = JSON.stringify(allPacks, null, 2);
+  const jsonCatalogStr = JSON.stringify(allPacks, null, 2).replace(/\r?\n/g, '\r\n');
   fs.writeFileSync(OUTPUT_JSON, jsonCatalogStr, 'utf8');
 
   // 2. Output lightweight JS metadata manifest (window.AVAILABLE_PACKS) for instant offline catalog rendering
   const jsContent = `// Auto-generated question packs catalog metadata (points to individual JSON files in 'паки вопросов/')\nwindow.AVAILABLE_PACKS = ${jsonCatalogStr};\n`;
-  fs.writeFileSync(OUTPUT_FILE, jsContent, 'utf8');
+  fs.writeFileSync(OUTPUT_FILE, jsContent.replace(/\r?\n/g, '\r\n'), 'utf8');
 
   console.log(`Synced ${allPacks.length} packs to:`);
   console.log(` - ${OUTPUT_JSON} (${Math.round(jsonCatalogStr.length / 1024)} KB)`);
