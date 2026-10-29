@@ -1,11 +1,11 @@
 ---
 name: lan-change
-description: Checklist for any change to LAN/online logic: server/src/Room.js, protocol, NetworkClient, js/game.js network code, mobile/mobile.js, timers, buzzer, special questions (cat, auction), snapshots. Use before and after editing these, or when fixing a LAN bug.
+description: 'Checklist for any change to LAN/online logic: server/src/Room.js, protocol, NetworkClient, js/game.js network code, mobile/mobile.js, timers, buzzer, special questions (cat, auction), snapshots. Use before and after editing these, or when fixing a LAN bug.'
 ---
 
 # LAN change checklist
 
-Invariants live in `CLAUDE.md` ("Инварианты"). This skill is the procedure. Past bugs it prevents: BUG-29 (double score), 38 (restart loop), 41 (message ignored), 48-54 (special questions, reconnect).
+Resolve repository paths below from the project root. User instructions take precedence over this workflow. Invariants live in `AGENTS.md` ("Инварианты"). This skill is the procedure. Past bugs it prevents: BUG-29 (double score), 38 (restart loop), 41 (message ignored), 48-54 (special questions, reconnect).
 
 ## Before editing
 
@@ -49,9 +49,9 @@ cd server && npm start
 ```
 
 ```bash
-PORT=8080 node tools/lan_demo.js
+node tools/lan_demo.js
 ```
 
 PowerShell: `npm.cmd`. Manual run: `http://localhost:8080/` → «LAN игра»; phone `http://<IP>:8080/mobile/?room=XXXX`.
 
-Then use the `task-close` skill.
+When finishing implementation, follow the sibling `task-close` skill at `../task-close/SKILL.md`.

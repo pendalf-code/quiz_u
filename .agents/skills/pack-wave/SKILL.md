@@ -1,11 +1,11 @@
 ---
 name: pack-wave
-description: Create, review or rework question packs in "паки вопросов/" (difficulty by cost, media questions, mixed packs, dedupe, catalog rebuild). Use for any batch edit of pack JSON files, TASK-5x style waves, or "add/fix packs".
+description: 'Create, review or rework question packs in "паки вопросов/" (difficulty by cost, media questions, mixed packs, dedupe, catalog rebuild). Use for any batch edit of pack JSON files, TASK-5x style waves, or "add/fix packs".'
 ---
 
 # Pack wave
 
-Source of truth for rules: `docs/OVERHAUL_2026-10.md` (wave 1 + wave 2). Read it first if a rule below looks stale.
+Resolve repository paths below from the project root. User instructions take precedence over this workflow. Source of truth for rules: `docs/OVERHAUL_2026-10.md` (wave 1 + wave 2). Read it first if a rule below looks stale.
 
 ## Pack rules
 
@@ -37,17 +37,17 @@ Background downloads died silently once (TASK-52). Always foreground with timeou
 ## Workflow
 
 1. Add a tracker block to `docs/OVERHAUL_2026-10.md` (parts table + log line) before starting.
-2. Slice by folder group or pack range. One session = one slice = own worktree/branch off `feature/online-multiplayer`. Run slices one at a time if usage limits bite.
+2. Slice by folder group or pack range. For large batches, use slices by folder or pack range. Reuse a suitable checkout; create a worktree only when isolation is needed. Base new branches on `feature/online-multiplayer`. Do not launch other agents or chats without authorization.
 3. Slice session edits only its pack files, `assets/*`, `assets/credits/<session>.md`. **Never** `js/packs_catalog.json` or `js/packs_data.js`.
-4. Commit per folder or pack batch: `fix(packs): 05 science — difficulty by cost, 43 media questions (TASK-NN)`, `feat(packs): mixed packs 422–431 (TASK-NN)`.
+4. If committing was requested, commit per folder or pack batch: `fix(packs): 05 science — difficulty by cost, 43 media questions (TASK-NN)`, `feat(packs): mixed packs 422–431 (TASK-NN)`.
 5. Integration (coordinator, not slice sessions):
    - merge slice branches into `feature/online-multiplayer` (no push);
    - `node tools/dedupe_questions.js` — fix exact duplicates, then near duplicates;
    - `node tools/validate_spoiler_answers.js`;
-   - `node tools/sync_all_catalog.js`, commit `chore(catalog): rebuild after ...`;
+   - `node tools/sync_all_catalog.js`, if committing was requested, use `chore(catalog): rebuild after ...`;
    - drop unreferenced assets;
    - `npm test` and `cd server && npm test`, both green.
-6. Close the task with the `task-close` skill.
+6. Close the task using the sibling `task-close` skill at `../task-close/SKILL.md`.
 
 ## Tests that guard packs
 
