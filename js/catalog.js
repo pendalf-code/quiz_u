@@ -483,7 +483,7 @@ async function loadPackJsonData(pack) {
 
     // If rounds are already loaded into memory
     if (pack.rounds && Array.isArray(pack.rounds) && pack.rounds.length > 0) {
-        return pack.rounds;
+        return PackParser.parseValidatedPack(pack.rounds);
     }
 
     const filePath = pack.filePath || pack.path;
@@ -501,9 +501,7 @@ async function loadPackJsonData(pack) {
             raw = raw.slice(1);
         }
         const parsed = JSON.parse(raw);
-        const normalized = (typeof normalizeGameData === 'function')
-            ? normalizeGameData(parsed)
-            : (Array.isArray(parsed) ? parsed : [parsed]);
+        const normalized = PackParser.parseValidatedPack(parsed);
 
         pack.rounds = normalized;
         return normalized;
@@ -548,14 +546,14 @@ async function selectPackToPlay(packId) {
         if (typeof clearGameState === 'function') {
             clearGameState();
         } else {
-            localStorage.removeItem('quiz_save_state');
+            QuizStorage.removeItem('quiz_save_state');
         }
 
         // Set game data into game engine
         if (typeof window.setGameData === 'function') {
             window.setGameData(roundsData);
         } else {
-            localStorage.setItem('jeopardy_pack', JSON.stringify(roundsData));
+            QuizStorage.setItem('jeopardy_pack', JSON.stringify(roundsData));
             const editor = document.getElementById('json-editor');
             if (editor) editor.value = JSON.stringify(roundsData, null, 4);
         }
@@ -593,7 +591,7 @@ async function selectPackToPlay(packId) {
     } catch (err) {
         console.error('Error loading pack:', err);
         if (typeof showSystemModal === 'function') {
-            showSystemModal('Ошибка загрузки JSON', err.message);
+            showSystemModal('Ошибка загрузки JSON', escapeHtml(err.message));
         } else {
             alert('Ошибка загрузки: ' + err.message);
         }

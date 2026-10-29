@@ -28,9 +28,10 @@
             if (this._localBaseUrl === '/') this._localBaseUrl = '';
             
             // Если в браузере есть сохраненный конфиг в localStorage
-            if (!this._cdnBaseUrl && typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            if (!this._cdnBaseUrl && typeof window !== 'undefined') {
                 try {
-                    const savedCdn = localStorage.getItem('quiz_cdn_base_url');
+                    const storage = typeof QuizStorage !== 'undefined' ? QuizStorage : window.localStorage;
+                    const savedCdn = storage ? storage.getItem('quiz_cdn_base_url') : null;
                     if (savedCdn) {
                         this._cdnBaseUrl = savedCdn.trim().replace(/\/+$/, '');
                     }
@@ -49,15 +50,17 @@
         setCdnBaseUrl(url) {
             this._cdnBaseUrl = (url || '').trim().replace(/\/+$/, '');
             this._enabled = !!this._cdnBaseUrl;
-            if (typeof localStorage !== 'undefined') {
-                try {
+            try {
+                const storage = typeof QuizStorage !== 'undefined' ? QuizStorage
+                    : (typeof globalThis !== 'undefined' ? globalThis.localStorage : null);
+                if (storage) {
                     if (this._cdnBaseUrl) {
-                        localStorage.setItem('quiz_cdn_base_url', this._cdnBaseUrl);
+                        storage.setItem('quiz_cdn_base_url', this._cdnBaseUrl);
                     } else {
-                        localStorage.removeItem('quiz_cdn_base_url');
+                        storage.removeItem('quiz_cdn_base_url');
                     }
-                } catch (e) {}
-            }
+                }
+            } catch (e) {}
         }
 
         /**

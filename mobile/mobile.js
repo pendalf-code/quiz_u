@@ -286,7 +286,7 @@
     // Theme Management
     // =========================================================================
     function initTheme() {
-        const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || 'dark';
+        const savedTheme = QuizStorage.getItem(STORAGE_KEYS.THEME) || 'dark';
         if (savedTheme === 'light') {
             document.body.classList.add('light-theme');
             elements.themeIcon.textContent = '🌙';
@@ -298,7 +298,7 @@
         elements.themeToggleBtn.addEventListener('click', () => {
             document.body.classList.toggle('light-theme');
             const isLight = document.body.classList.contains('light-theme');
-            localStorage.setItem(STORAGE_KEYS.THEME, isLight ? 'light' : 'dark');
+            QuizStorage.setItem(STORAGE_KEYS.THEME, isLight ? 'light' : 'dark');
             elements.themeIcon.textContent = isLight ? '🌙' : '☀️';
         });
     }
@@ -1271,22 +1271,22 @@
             if (payload.self) {
                 state.selfPlayer = Object.assign({}, state.selfPlayer || {}, payload.self);
                 updatePlayerBadge(payload.self);
-                localStorage.setItem(STORAGE_KEYS.NAME, payload.self.name);
-                localStorage.setItem(STORAGE_KEYS.AVATAR, payload.self.avatar);
+                QuizStorage.setItem(STORAGE_KEYS.NAME, payload.self.name);
+                QuizStorage.setItem(STORAGE_KEYS.AVATAR, payload.self.avatar);
                 if (payload.self.role) {
                     state.selectedRole = payload.self.role;
-                    localStorage.setItem(STORAGE_KEYS.ROLE, payload.self.role);
+                    QuizStorage.setItem(STORAGE_KEYS.ROLE, payload.self.role);
                 }
             }
 
             if (payload.role) {
                 state.selectedRole = payload.role;
-                localStorage.setItem(STORAGE_KEYS.ROLE, payload.role);
+                QuizStorage.setItem(STORAGE_KEYS.ROLE, payload.role);
             }
 
             if (payload.sessionToken) {
                 state.sessionToken = payload.sessionToken;
-                localStorage.setItem(STORAGE_KEYS.TOKEN, payload.sessionToken);
+                QuizStorage.setItem(STORAGE_KEYS.TOKEN, payload.sessionToken);
             }
 
             const roomCost = payload.cost || payload.currentCost;
@@ -2042,7 +2042,7 @@
     // Role Selection Helper (available in outer scope)
     function selectRole(role) {
         state.selectedRole = role === 'host' ? 'host' : 'player';
-        localStorage.setItem(STORAGE_KEYS.ROLE, state.selectedRole);
+        QuizStorage.setItem(STORAGE_KEYS.ROLE, state.selectedRole);
 
         if (elements.btnRolePlayer && elements.btnRoleHost) {
             if (state.selectedRole === 'host') {
@@ -2102,8 +2102,8 @@
         state.auctionSubmittedAnswers = {};
         if (elements.hostPlayersList) elements.hostPlayersList.innerHTML = '';
         if (elements.hostBoardGrid) elements.hostBoardGrid.innerHTML = '';
-        localStorage.removeItem(STORAGE_KEYS.TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.ROOM);
+        QuizStorage.removeItem(STORAGE_KEYS.TOKEN);
+        QuizStorage.removeItem(STORAGE_KEYS.ROOM);
 
         if (elements.headerRoomBadge) elements.headerRoomBadge.classList.add('hidden');
         if (elements.headerPlayerBadge) elements.headerPlayerBadge.classList.add('hidden');
@@ -2340,7 +2340,7 @@
             document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             state.selectedAvatar = btn.dataset.avatar;
-            localStorage.setItem(STORAGE_KEYS.AVATAR, state.selectedAvatar);
+            QuizStorage.setItem(STORAGE_KEYS.AVATAR, state.selectedAvatar);
         });
 
         // Join Form Submit
@@ -2369,10 +2369,10 @@
                 score: 0
             };
 
-            localStorage.setItem(STORAGE_KEYS.ROOM, roomCode);
-            localStorage.setItem(STORAGE_KEYS.NAME, playerName);
-            localStorage.setItem(STORAGE_KEYS.ROLE, state.selectedRole);
-            localStorage.setItem(STORAGE_KEYS.AVATAR, state.selectedAvatar);
+            QuizStorage.setItem(STORAGE_KEYS.ROOM, roomCode);
+            QuizStorage.setItem(STORAGE_KEYS.NAME, playerName);
+            QuizStorage.setItem(STORAGE_KEYS.ROLE, state.selectedRole);
+            QuizStorage.setItem(STORAGE_KEYS.AVATAR, state.selectedAvatar);
 
             elements.joinError.classList.add('hidden');
             updateRoomBadge(roomCode);
@@ -2395,11 +2395,11 @@
 
         // Quick Reconnect Button
         elements.btnReconnectQuick.addEventListener('click', () => {
-            const savedRoom = localStorage.getItem(STORAGE_KEYS.ROOM);
-            const savedName = localStorage.getItem(STORAGE_KEYS.NAME);
-            const savedRole = localStorage.getItem(STORAGE_KEYS.ROLE) || 'player';
-            const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-            const savedAvatar = localStorage.getItem(STORAGE_KEYS.AVATAR) || '🐱';
+            const savedRoom = QuizStorage.getItem(STORAGE_KEYS.ROOM);
+            const savedName = QuizStorage.getItem(STORAGE_KEYS.NAME);
+            const savedRole = QuizStorage.getItem(STORAGE_KEYS.ROLE) || 'player';
+            const savedToken = QuizStorage.getItem(STORAGE_KEYS.TOKEN);
+            const savedAvatar = QuizStorage.getItem(STORAGE_KEYS.AVATAR) || '🐱';
 
             if (savedRoom && savedName) {
                 state.roomCode = savedRoom;
@@ -2608,11 +2608,11 @@
         const urlRoom = getRoomCodeFromUrl();
 
         // Restore saved player preferences
-        const savedRoom = localStorage.getItem(STORAGE_KEYS.ROOM);
-        const savedName = localStorage.getItem(STORAGE_KEYS.NAME);
-        const savedRole = localStorage.getItem(STORAGE_KEYS.ROLE);
-        const savedAvatar = localStorage.getItem(STORAGE_KEYS.AVATAR);
-        const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        const savedRoom = QuizStorage.getItem(STORAGE_KEYS.ROOM);
+        const savedName = QuizStorage.getItem(STORAGE_KEYS.NAME);
+        const savedRole = QuizStorage.getItem(STORAGE_KEYS.ROLE);
+        const savedAvatar = QuizStorage.getItem(STORAGE_KEYS.AVATAR);
+        const savedToken = QuizStorage.getItem(STORAGE_KEYS.TOKEN);
 
         if (savedRole) {
             selectRole(savedRole);
@@ -2634,12 +2634,12 @@
             if (elements.roomCodeInput) elements.roomCodeInput.value = urlRoom;
             state.roomCode = urlRoom;
             updateRoomBadge(urlRoom);
-            localStorage.setItem(STORAGE_KEYS.ROOM, urlRoom);
+            QuizStorage.setItem(STORAGE_KEYS.ROOM, urlRoom);
 
             // If scanned QR code is for a different room, clear old token
             if (savedRoom && savedRoom !== urlRoom) {
                 state.sessionToken = null;
-                localStorage.removeItem(STORAGE_KEYS.TOKEN);
+                QuizStorage.removeItem(STORAGE_KEYS.TOKEN);
             }
         } else if (savedRoom) {
             if (elements.roomCodeInput) elements.roomCodeInput.value = savedRoom;

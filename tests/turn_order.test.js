@@ -54,7 +54,16 @@ test('Turn order: local game', async (t) => {
         const gameJs = read('js', 'game.js');
         const html = read('index.html');
         assert.ok(extractFunction(gameJs, 'readTurnOrderSetting').includes('try {'));
-        assert.ok(extractFunction(gameJs, 'saveTurnOrderSetting').includes("localStorage.setItem('cfg_turn_order'"));
+        const values = new Map();
+        const settingContext = vm.createContext({
+            configTurnOrderMode: 'rotation',
+            localStorage: { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, String(value)) }
+        });
+        vm.runInContext(read('js', 'storage.js'), settingContext);
+        vm.runInContext(extractFunction(gameJs, 'readTurnOrderSetting') + '\n' + extractFunction(gameJs, 'saveTurnOrderSetting'), settingContext);
+        vm.runInContext('saveTurnOrderSetting("winner")', settingContext);
+        assert.equal(values.get('cfg_turn_order'), 'winner');
+        assert.equal(vm.runInContext('readTurnOrderSetting()', settingContext), 'winner');
         assert.ok(html.includes('id="setting-turn-order"'));
         assert.ok(html.includes('id="lobby-setting-turn-order"'));
         assert.ok(html.includes('Ходит ответивший верно'));
