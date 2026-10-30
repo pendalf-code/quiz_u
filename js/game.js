@@ -1622,7 +1622,7 @@ function testLaunchFinalRoundMock() {
 
 function testWinnerScreenMock() {
     let maxScore = Math.floor(Math.random() * 3000) + 1000;
-    let winnerDesc = `<div style="font-size:26px; font-weight:800; color:#ffffff; margin: 20px 0;">
+    let winnerDesc = `<div style="font-size:26px; font-weight:800; color:var(--surface-text); margin: 20px 0;">
             Победила команда: <b style="color:var(--gold-accent); font-size:36px;">"Альфа-Тест"</b><br><br>
             С результатом: <b style="color:var(--gold-accent); font-size:36px;">${maxScore}</b> очков! 🎆
         </div>`;
@@ -1647,7 +1647,7 @@ function testWinnerScreenMock() {
 
 function testCssOverflow() {
     const testHtml = `
-            <div style="margin-bottom: 20px; font-size: 18px; color: var(--lavender-light);">
+            <div style="margin-bottom: 20px; font-size: 18px; color: var(--surface-muted);">
                 Проверка обрезки текста многоточием. Карточки должны сохранять ровный размер (220px).
             </div>
 
@@ -3432,14 +3432,14 @@ function showWinnerCelebration() {
     if (winners.length > 1) {
         let names = winners.map(w => `<b>"${escapeHtml(w.name)}"</b>`).join(', ');
         winnerText = "⚖️ БОЕВАЯ НИЧЬЯ! ⚖️";
-        winnerDesc = `<div style="font-size:24px; font-weight:800; color:#ffffff; margin: 15px 0;">
+        winnerDesc = `<div style="font-size:24px; font-weight:800; color:var(--surface-text); margin: 15px 0;">
                 Победили команды: ${names}<br><br>
                 Каждая из них набрала по <b style="color:var(--gold-accent); font-size:32px;">${maxScore}</b> очков! Поздравляем чемпионов! 🎉
             </div>`;
     } else {
         let winner = winners[0];
         winnerText = "🏆 ПОБЕДИТЕЛЬ ВИКТОРИНЫ! 🏆";
-        winnerDesc = `<div style="font-size:26px; font-weight:800; color:#ffffff; margin: 20px 0;">
+        winnerDesc = `<div style="font-size:26px; font-weight:800; color:var(--surface-text); margin: 20px 0;">
                 Победила команда: <b style="color:var(--gold-accent); font-size:36px;">"${escapeHtml(winner.name)}"</b><br><br>
                 С прекрасным результатом: <b style="color:var(--gold-accent); font-size:36px;">${winner.score}</b> очков! 🎆
             </div>`;
@@ -4235,6 +4235,44 @@ function uploadLobbyCustomPack(event) {
 }
 
 function initHostNetwork(overrideUrl = null) {
+
+    // Состав ПК дополняется по серверному ID без перестановки команд:
+    // индексы уже используются ходом, статистикой и открытыми вопросами.
+    function syncOnlineRoster(players) {
+        if (!isOnlineGame || !isGameStarted || !Array.isArray(players)) return;
+        let changed = false;
+        players.forEach(player => {
+            if (!player || !player.id || player.role === 'host') return;
+            const team = teams.find(item => item.id === player.id);
+            if (team) {
+                if (typeof player.name === 'string' && team.name !== player.name) {
+                    team.name = player.name;
+                    changed = true;
+                }
+                if (player.avatar && team.avatar !== player.avatar) {
+                    team.avatar = player.avatar;
+                    changed = true;
+                }
+                return;
+            }
+            const index = teams.length;
+            const score = Number(player.score);
+            teams.push({
+                id: player.id,
+                name: player.name,
+                score: Number.isFinite(score) ? score : 0,
+                avatar: player.avatar || '🎮'
+            });
+            gameStats[index] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
+            changed = true;
+        });
+        if (!changed) return;
+        updateTeamsPanel();
+        renderModalTeamsList();
+        saveGameState();
+        if (window.FinalRound) window.FinalRound.refresh();
+    }
+
     const statusDot = document.getElementById('lobby-status-dot');
     const statusText = document.getElementById('lobby-status-text');
     const urlInput = document.getElementById('lobby-server-url-input');
@@ -4385,7 +4423,8 @@ function initHostNetwork(overrideUrl = null) {
             renderLobbyPlayers();
         });
 
-        hostNetworkClient.on('player_joined', () => {
+        hostNetworkClient.on('player_joined', (payload) => {
+            syncOnlineRoster(payload && payload.player ? [payload.player] : []);
             renderLobbyPlayers();
         });
 
@@ -4771,6 +4810,7 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('room_state', (payload) => {
+            syncOnlineRoster(payload && payload.players);
             if (payload && payload.isHostOnPC !== undefined) {
                 isLocalHostEnabled = Boolean(payload.isHostOnPC);
             }

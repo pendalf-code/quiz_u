@@ -1787,3 +1787,31 @@ body.light-theme .editor-textarea:focus {
     border-color: #5b21b6;
     box-shadow: 0 0 18px rgba(91, 33, 182, 0.15);
 }
+/* Дополнительные подписи каталога на белых карточках. */
+body.light-theme .prepare-card-badge { color: #92400e; }
+body.light-theme .badge-custom-flag { color: #6b21a8; }
+body.light-theme .catalog-counter-pill b,
+body.light-theme .pagination-info-text b { color: #92400e; }
+
+body.light-theme .catalog-sort-text,
+body.light-theme .prepare-screen-subtitle,
+body.light-theme .catalog-search-field::placeholder {
+    color: var(--surface-muted);
+}
+
+body.light-theme .catalog-search-field::placeholder { opacity: 1; }
+body.light-theme .btn-catalog-reset { color: #991b1b; }
+body.light-theme .btn-catalog-reset:hover {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+body.light-theme .catalog-chip.is-active,
+body.light-theme .page-btn.is-active-page {
+    background: #b45309 !important;
+}
+
+body.light-theme .catalog-empty-state {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+}
