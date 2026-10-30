@@ -4235,6 +4235,44 @@ function uploadLobbyCustomPack(event) {
 }
 
 function initHostNetwork(overrideUrl = null) {
+
+    // Состав ПК дополняется по серверному ID без перестановки команд:
+    // индексы уже используются ходом, статистикой и открытыми вопросами.
+    function syncOnlineRoster(players) {
+        if (!isOnlineGame || !isGameStarted || !Array.isArray(players)) return;
+        let changed = false;
+        players.forEach(player => {
+            if (!player || !player.id || player.role === 'host') return;
+            const team = teams.find(item => item.id === player.id);
+            if (team) {
+                if (typeof player.name === 'string' && team.name !== player.name) {
+                    team.name = player.name;
+                    changed = true;
+                }
+                if (player.avatar && team.avatar !== player.avatar) {
+                    team.avatar = player.avatar;
+                    changed = true;
+                }
+                return;
+            }
+            const index = teams.length;
+            const score = Number(player.score);
+            teams.push({
+                id: player.id,
+                name: player.name,
+                score: Number.isFinite(score) ? score : 0,
+                avatar: player.avatar || '🎮'
+            });
+            gameStats[index] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
+            changed = true;
+        });
+        if (!changed) return;
+        updateTeamsPanel();
+        renderModalTeamsList();
+        saveGameState();
+        if (window.FinalRound) window.FinalRound.refresh();
+    }
+
     const statusDot = document.getElementById('lobby-status-dot');
     const statusText = document.getElementById('lobby-status-text');
     const urlInput = document.getElementById('lobby-server-url-input');
@@ -4385,7 +4423,8 @@ function initHostNetwork(overrideUrl = null) {
             renderLobbyPlayers();
         });
 
-        hostNetworkClient.on('player_joined', () => {
+        hostNetworkClient.on('player_joined', (payload) => {
+            syncOnlineRoster(payload && payload.player ? [payload.player] : []);
             renderLobbyPlayers();
         });
 
@@ -4771,6 +4810,7 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('room_state', (payload) => {
+            syncOnlineRoster(payload && payload.players);
             if (payload && payload.isHostOnPC !== undefined) {
                 isLocalHostEnabled = Boolean(payload.isHostOnPC);
             }
