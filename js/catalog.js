@@ -318,7 +318,7 @@ function buildPaginationHtml(totalItems, totalPages) {
 
     if (startPage > 1) {
         buttonsHtml += `<button type="button" class="page-btn" onclick="goToCatalogPage(1)">1</button>`;
-        if (startPage > 2) buttonsHtml += `<span style="color: rgba(255,255,255,0.4); padding: 0 4px;">...</span>`;
+        if (startPage > 2) buttonsHtml += `<span style="color: var(--surface-muted); padding: 0 4px;">...</span>`;
     }
 
     for (let p = startPage; p <= endPage; p++) {
@@ -327,7 +327,7 @@ function buildPaginationHtml(totalItems, totalPages) {
     }
 
     if (endPage < totalPages) {
-        if (endPage < totalPages - 1) buttonsHtml += `<span style="color: rgba(255,255,255,0.4); padding: 0 4px;">...</span>`;
+        if (endPage < totalPages - 1) buttonsHtml += `<span style="color: var(--surface-muted); padding: 0 4px;">...</span>`;
         buttonsHtml += `<button type="button" class="page-btn" onclick="goToCatalogPage(${totalPages})">${totalPages}</button>`;
     }
 
@@ -366,10 +366,10 @@ function renderCatalogPacks() {
 
     if (totalItems === 0) {
         grid.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 24px; background: rgba(0,0,0,0.25); border-radius: 24px; border: 2px dashed rgba(255,255,255,0.2);">
+            <div class="catalog-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 60px 24px; background: rgba(0,0,0,0.25); border-radius: 24px; border: 2px dashed rgba(255,255,255,0.2);">
                 <div style="font-size: 60px; margin-bottom: 16px;">🔍</div>
-                <h3 style="color: #ffffff; font-size: 24px; margin-bottom: 12px; font-weight: 800;">Паки не найдены</h3>
-                <p style="color: var(--lavender-light); font-size: 17px; margin-bottom: 24px; line-height: 1.5;">Попробуйте смягчить фильтры или очистить поисковый запрос</p>
+                <h3 style="color: var(--surface-text); font-size: 24px; margin-bottom: 12px; font-weight: 800;">Паки не найдены</h3>
+                <p style="color: var(--surface-muted); font-size: 17px; margin-bottom: 24px; line-height: 1.5;">Попробуйте смягчить фильтры или очистить поисковый запрос</p>
                 <button type="button" class="btn btn-check" onclick="resetAllCatalogFilters()" style="font-size: 16px; padding: 12px 28px;">🔄 Сбросить все фильтры</button>
             </div>
         `;
@@ -646,7 +646,7 @@ async function previewPack(packId) {
         roundsContainer.innerHTML = `
             <div class="preview-round-box">
                 <div class="preview-round-name">📁 Темы викторины</div>
-                <div class="preview-themes-grid">${initialThemesHtml || '<p style="color: rgba(255,255,255,0.6)">Загрузка структуры пака...</p>'}</div>
+                <div class="preview-themes-grid">${initialThemesHtml || '<p style="color: var(--surface-muted)">Загрузка структуры пака...</p>'}</div>
             </div>
         `;
 

@@ -42,6 +42,8 @@
     --gold-accent: #fdd835;
     --gold-hover: #fbc02d;
     --text-light: #ffffff;
+    --surface-text: #ffffff;
+    --surface-muted: #f1ebff;
     --text-dark: #22105c;
     --card-bg: #ffffff;
     --disabled-gray: #dfe6e9;
@@ -97,6 +99,9 @@ body.light-theme {
     --gold-accent: #d97706;
     --gold-hover: #b45309;
     --text-dark: #1e1b4b;
+    --surface-text: #1e1b4b;
+    --surface-muted: #475569;
+    --success-green: #007a63;
 
     --settings-text-color: #1e1b4b;
     --settings-box-bg: rgba(109, 40, 217, 0.06);
@@ -8888,3 +8893,57 @@ body.light-theme .lobby-setting-value {
         gap: 8px;
     }
 }
+
+/* Читаемый текст на светлых поверхностях; белый текст тёмных кнопок сохраняется. */
+body.light-theme .btn-rules-nav-next,
+body.light-theme .btn-rules-nav-prev {
+    color: var(--surface-text);
+}
+
+body.light-theme .rules-tag-green { color: #065f46; }
+body.light-theme .rules-tag-red { color: #991b1b; }
+body.light-theme .rules-tag-gold { color: #78350f; }
+body.light-theme .rules-tag-blue { color: #1e40af; }
+
+body.light-theme .timer.reading {
+    background: #007a78;
+}
+
+body.light-theme .timer.answering,
+body.light-theme .timer.frozen {
+    color: #1e1b4b !important;
+}
+
+body.light-theme .btn-menu-wan:disabled {
+    background: #e2e8f0 !important;
+    color: #475569 !important;
+    border-color: #94a3b8 !important;
+    opacity: 1 !important;
+}
+
+body.light-theme .badge-soon {
+    color: #78350f;
+    background: #fef3c7;
+    border-color: #d97706;
+}
+
+/* Контраст динамического LAN-лобби и игровых подписей. */
+body.light-theme .lobby-settings-header-label { color: #1e1b4b; }
+body.light-theme .lobby-pack-status-badge,
+body.light-theme .lobby-player-status.status-online { color: #065f46; }
+body.light-theme .lobby-pack-status-badge.badge-unselected,
+body.light-theme .lobby-pack-name,
+body.light-theme .lobby-start-hint { color: #78350f; }
+body.light-theme .lobby-empty-sub,
+body.light-theme .lobby-player-ping,
+body.light-theme .settings-subtext { color: #475569 !important; }
+body.light-theme .btn-kick-host,
+body.light-theme .btn-kick-player { color: #991b1b; background: #fee2e2; }
+body.light-theme .btn-kick-host:hover,
+body.light-theme .btn-kick-player:hover { color: #ffffff; background: #991b1b; }
+body.light-theme .turn-label { color: #fef08a; }
+body.light-theme #teams-block-title { color: #78350f; }
+
+body.light-theme .stats-table td:nth-child(2) { color: #78350f !important; }
+
+body.light-theme .lobby-pack-title-box { background: #f5f3ff; }

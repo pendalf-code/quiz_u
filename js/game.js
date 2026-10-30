@@ -1622,7 +1622,7 @@ function testLaunchFinalRoundMock() {
 
 function testWinnerScreenMock() {
     let maxScore = Math.floor(Math.random() * 3000) + 1000;
-    let winnerDesc = `<div style="font-size:26px; font-weight:800; color:#ffffff; margin: 20px 0;">
+    let winnerDesc = `<div style="font-size:26px; font-weight:800; color:var(--surface-text); margin: 20px 0;">
             Победила команда: <b style="color:var(--gold-accent); font-size:36px;">"Альфа-Тест"</b><br><br>
             С результатом: <b style="color:var(--gold-accent); font-size:36px;">${maxScore}</b> очков! 🎆
         </div>`;
@@ -1647,7 +1647,7 @@ function testWinnerScreenMock() {
 
 function testCssOverflow() {
     const testHtml = `
-            <div style="margin-bottom: 20px; font-size: 18px; color: var(--lavender-light);">
+            <div style="margin-bottom: 20px; font-size: 18px; color: var(--surface-muted);">
                 Проверка обрезки текста многоточием. Карточки должны сохранять ровный размер (220px).
             </div>
 
@@ -3432,14 +3432,14 @@ function showWinnerCelebration() {
     if (winners.length > 1) {
         let names = winners.map(w => `<b>"${escapeHtml(w.name)}"</b>`).join(', ');
         winnerText = "⚖️ БОЕВАЯ НИЧЬЯ! ⚖️";
-        winnerDesc = `<div style="font-size:24px; font-weight:800; color:#ffffff; margin: 15px 0;">
+        winnerDesc = `<div style="font-size:24px; font-weight:800; color:var(--surface-text); margin: 15px 0;">
                 Победили команды: ${names}<br><br>
                 Каждая из них набрала по <b style="color:var(--gold-accent); font-size:32px;">${maxScore}</b> очков! Поздравляем чемпионов! 🎉
             </div>`;
     } else {
         let winner = winners[0];
         winnerText = "🏆 ПОБЕДИТЕЛЬ ВИКТОРИНЫ! 🏆";
-        winnerDesc = `<div style="font-size:26px; font-weight:800; color:#ffffff; margin: 20px 0;">
+        winnerDesc = `<div style="font-size:26px; font-weight:800; color:var(--surface-text); margin: 20px 0;">
                 Победила команда: <b style="color:var(--gold-accent); font-size:36px;">"${escapeHtml(winner.name)}"</b><br><br>
                 С прекрасным результатом: <b style="color:var(--gold-accent); font-size:36px;">${winner.score}</b> очков! 🎆
             </div>`;

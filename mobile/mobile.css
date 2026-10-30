@@ -55,8 +55,20 @@ body.light-theme {
 
     --text-primary: #111827;
     --text-secondary: #4b5563;
-    --text-muted: #9ca3af;
+    --text-muted: #4b5563;
+    --accent-blue: #1d4ed8;
+    --accent-green: #047857;
+    --accent-red: #b91c1c;
+    --accent-gold: #92400e;
+    --accent-blue-hover: #1e40af;
+    --accent-green-hover: #065f46;
+    --accent-red-hover: #991b1b;
+    --accent-gold-hover: #78350f;
 
+    --buzzer-ready-start: #be123c;
+    --buzzer-ready-end: #9f1239;
+    --buzzer-success-start: #047857;
+    --buzzer-success-end: #065f46;
     --buzzer-locked-start: #e5e7eb;
     --buzzer-locked-end: #d1d5db;
 
@@ -2483,3 +2495,56 @@ body.light-theme .btn-pass-question.confirm { color: #b91c1c; border-color: #b91
 body.light-theme .score-step-btn.plus-cost, body.light-theme .host-score-n-wrap .score-step-btn.plus { color: #15803d; }
 body.light-theme .score-step-btn.minus-cost, body.light-theme .host-score-n-wrap .score-step-btn.minus { color: #b91c1c; }
 body.light-theme .host-score-n-wrap { background: rgba(0, 0, 0, 0.02); }
+
+/* Контраст светлой темы: табло ведущего, судейство и состояния баззера. */
+body.light-theme .host-cost-btn {
+    color: var(--accent-blue);
+    background: #eff6ff;
+    border-color: var(--accent-blue);
+}
+
+body.light-theme .host-cost-btn:active:not(:disabled) {
+    color: #ffffff;
+    background: var(--accent-blue);
+}
+
+body.light-theme .host-cost-btn.used,
+body.light-theme .host-cost-btn:disabled {
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+}
+
+body.light-theme .btn-host-score-add,
+body.light-theme .host-auction-btn-plus { color: #065f46; }
+body.light-theme .btn-host-score-sub,
+body.light-theme .host-auction-btn-minus { color: #991b1b; }
+
+body.light-theme .giant-buzzer-btn.state-locked .buzzer-subtext {
+    color: var(--text-primary);
+}
+
+/* Обычное уведомление имеет тёмный фон и должно сохранять светлый текст. */
+.mobile-toast { color: #f0f6fc; }
+
+/* Цифры прозрачного кольцевого таймера лежат на светлой карточке. */
+body.light-theme .answer-timer-ring-container .timer-countdown {
+    color: var(--text-primary);
+}
+body.light-theme .score-step-btn.plus-cost,
+body.light-theme .host-score-n-wrap .score-step-btn.plus { color: #065f46; }
+
+body.light-theme .submitted-text { color: var(--text-primary); }
+body.light-theme .btn-warning { color: #ffffff; }
+body.light-theme .btn-warning:hover { background: var(--accent-gold-hover); }
+
+body.light-theme .host-player-row.offline,
+body.light-theme .host-special-item.offline { opacity: 1; }
+
+body.light-theme .giant-buzzer-btn.state-locked,
+body.light-theme .giant-buzzer-btn.state-locked-out,
+body.light-theme .giant-buzzer-btn.state-other-buzzed { opacity: 1; }
+body.light-theme .buzzer-subtext { color: #ffffff; }
+body.light-theme .btn-judge-accept { background: linear-gradient(135deg, var(--accent-green), var(--accent-green-hover)); }
+body.light-theme .btn-judge-reject { background: linear-gradient(135deg, var(--accent-red), var(--accent-red-hover)); }
+body.light-theme .mobile-pause-banner { background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover)); }
