@@ -21,6 +21,8 @@ const MIX_ICON = '🎲';
 const FINAL_COST = 1500;
 const MEDIA_KEYS = ['img', 'music', 'audio', 'video'];
 const MAX_MEDIA_PER_PACK = 2;
+const TASK_70_FIRST_PACK = 492;
+const TASK_70_LAST_PACK = 691;
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const MEDIA_WORDS = /(на фото|фотограф[иі]и? изображ|изображ[её]н|изображени|на картинке|на снимке|на экране|послушайте|прослушайте|звучит мелоди|на видео|на рисунке|покажите)/i;
 
@@ -197,6 +199,7 @@ function checkPack(file, data, ctx) {
     });
 
     let mediaCount = 0;
+    const mediaTypes = new Set();
     rounds.forEach(r => (r.themes || []).forEach(t => (t.questions || []).forEach((q, i) => {
         const where = `"${t.name}" Q${i + 1}`;
         const qt = String(q.q || '').trim();
@@ -206,6 +209,9 @@ function checkPack(file, data, ctx) {
         if (at.length > 70) warnings.push(`${where}: long answer (${at.length} chars)`);
         const withMedia = hasQuestionMedia(q);
         if (withMedia) mediaCount++;
+        if (q.img) mediaTypes.add('img');
+        if (q.music) mediaTypes.add('music');
+        if (q.video) mediaTypes.add('video');
         if (MEDIA_WORDS.test(qt) && !withMedia) errors.push(`${where}: references media that does not exist`);
         if (q.type) errors.push(`${where}: do not set "type" (special types are assigned at runtime)`);
         if (q.a_img || q.a_video) errors.push(`${where}: answer media are not used in mixed packs`);
@@ -220,7 +226,14 @@ function checkPack(file, data, ctx) {
         const hit = stems(at.replace(/\([^)]*\)/g, ' '), 5).filter(s => qStems.has(s));
         if (hit.length) warnings.push(`${where}: answer stem(s) [${hit.join(', ')}] appear in question | Q: ${qt} | A: ${at}`);
     })));
-    if (mediaCount > MAX_MEDIA_PER_PACK) errors.push(`${mediaCount} media questions, max ${MAX_MEDIA_PER_PACK} per pack`);
+    const packNumber = parseInt(file, 10);
+    if (packNumber >= TASK_70_FIRST_PACK && packNumber <= TASK_70_LAST_PACK) {
+        for (const type of ['img', 'music', 'video']) {
+            if (!mediaTypes.has(type)) errors.push(`missing required media type: ${type}`);
+        }
+    } else if (mediaCount > MAX_MEDIA_PER_PACK) {
+        errors.push(`${mediaCount} media questions, max ${MAX_MEDIA_PER_PACK} per pack`);
+    }
     if (data.hasMedia !== (mediaCount > 0)) errors.push('hasMedia flag out of sync (run normalize)');
     return { errors, warnings, questions: v.questionsCount, media: mediaCount };
 }

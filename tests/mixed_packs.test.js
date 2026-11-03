@@ -12,6 +12,8 @@ const FIRST_PACK = 407;
 const MIXED_PACKS = 85;
 const EXPECTED_SHAPES = { 1: 17, 2: 24, 3: 17, '1+F': 9, '2+F': 9, '3+F': 9 };
 const MAX_MEDIA_PER_PACK = 2;
+const TASK_70_FIRST_PACK = 492;
+const TASK_70_LAST_PACK = 691;
 
 function readPack(file) {
   let raw = fs.readFileSync(path.join(MIX_DIR, file), 'utf8');
@@ -53,14 +55,14 @@ describe('TASK-46: mixed-topic packs (Микс и Эрудиция)', () => {
     assert.ok(src.includes(`'${MIX_FOLDER}': 'Микс и Эрудиция'`));
   });
 
-  it(`folder has exactly ${MIXED_PACKS} mixed packs numbered 407-491`, () => {
-    const nums = mixFiles().map(f => parseInt(f, 10));
+  it(`original wave has exactly ${MIXED_PACKS} mixed packs numbered 407-491`, () => {
+    const nums = mixFiles().map(f => parseInt(f, 10)).filter(num => num < TASK_70_FIRST_PACK);
     assert.deepStrictEqual(nums, Array.from({ length: MIXED_PACKS }, (_, i) => FIRST_PACK + i));
   });
 
   it('round shapes: 15 original + 70 new packs keep the 1/2/3 rounds ± final proportions', () => {
     const shapes = {};
-    mixFiles().forEach(file => {
+    mixFiles().filter(file => parseInt(file, 10) < TASK_70_FIRST_PACK).forEach(file => {
       const rounds = PackParser.normalizeGameData(readPack(file));
       const finals = rounds.filter((r, i) => PackParser.isFinalRound(r, i, rounds.length));
       const key = `${rounds.length - finals.length}${finals.length ? '+F' : ''}`;
@@ -90,12 +92,23 @@ describe('TASK-46: mixed-topic packs (Микс и Эрудиция)', () => {
       assert.ok(regular.length >= 1 && regular.length <= 3, `${file}: 1-3 regular rounds`);
       regular.forEach(r => assert.ok(r.themes.length >= 5 && r.themes.length <= 6, `${file}: 5-6 themes per round`));
       let media = 0;
+      const mediaTypes = new Set();
       rounds.forEach(r => r.themes.forEach(t => t.questions.forEach(q => {
         assert.ok(q.q.trim().endsWith('?'), `${file}: question without "?": ${q.q}`);
         assert.ok(!q.type, `${file}: special types are assigned at runtime`);
         if (q.img || q.music || q.audio || q.video) media++;
+        if (q.img) mediaTypes.add('img');
+        if (q.music) mediaTypes.add('music');
+        if (q.video) mediaTypes.add('video');
       })));
-      assert.ok(media <= MAX_MEDIA_PER_PACK, `${file}: ${media} media questions, max ${MAX_MEDIA_PER_PACK}`);
+      const packNumber = parseInt(file, 10);
+      if (packNumber >= TASK_70_FIRST_PACK && packNumber <= TASK_70_LAST_PACK) {
+        for (const type of ['img', 'music', 'video']) {
+          assert.ok(mediaTypes.has(type), `${file}: missing ${type}`);
+        }
+      } else {
+        assert.ok(media <= MAX_MEDIA_PER_PACK, `${file}: ${media} media questions, max ${MAX_MEDIA_PER_PACK}`);
+      }
       assert.strictEqual(!!data.hasMedia, media > 0, `${file}: hasMedia flag`);
     });
   });

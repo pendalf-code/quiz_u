@@ -6,7 +6,7 @@
 |:---|:---|:---|:---|
 | `assets/music/w2a_m_201.mp3` | [MicroKORG Demo.ogg](https://commons.wikimedia.org/wiki/File:MicroKORG_Demo.ogg) | Autojak234 | CC BY-SA 4.0 |
 | `assets/music/w2a_m_210.mp3` | [Xylophone jingle.wav](https://commons.wikimedia.org/wiki/File:Xylophone_jingle.wav) | spazzo_1493 | CC BY 3.0 |
-| `assets/music/w2a_m_217.mp3` | [Subsynth-arpeggios.ogg](https://commons.wikimedia.org/wiki/File:Subsynth-arpeggios.ogg) | Public domainPublic domainfalsefalse This work has been released into the public domain by its author, Wji, at the Engli | Public domain |
+| `assets/music/w2a_m_217.mp3` | [Subsynth-arpeggios.ogg](https://commons.wikimedia.org/wiki/File:Subsynth-arpeggios.ogg) | Wji | Public domain |
 | `assets/music/w2a_m_218.mp3` | [Jugando con un theremin creado con arduino.wav](https://commons.wikimedia.org/wiki/File:Jugando_con_un_theremin_creado_con_arduino.wav) | Luis Alvaz | CC BY-SA 4.0 |
 | `assets/music/w2a_m_220.mp3` | [Nikolaj Alekseevič Nekrasov - Korobeiniki.ogg](https://commons.wikimedia.org/wiki/File:Nikolaj_Alekseevi%C4%8D_Nekrasov_-_Korobeiniki.ogg) | Pracchia-78 | Public domain |
 | `assets/music/w2a_m_221.mp3` | [Charpentier, Te Deum (Prelude).ogg](https://commons.wikimedia.org/wiki/File:Charpentier,_Te_Deum_(Prelude).ogg) | Ian Dollins | CC0 |
