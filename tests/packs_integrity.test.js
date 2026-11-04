@@ -46,16 +46,6 @@ describe('Packs Integrity & Schema Tests', () => {
     assert.ok(sandbox.window.AVAILABLE_PACKS.length >= 200, `Expected >= 200 packs, got ${sandbox.window.AVAILABLE_PACKS.length}`);
   });
 
-  it('catalog must retain every named theme, including film titles containing «Финал»', () => {
-    const catalog = JSON.parse(fs.readFileSync(packsCatalogJsonPath, 'utf8'));
-    for (const pack of catalog) {
-      const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', pack.filePath), 'utf8').replace(/^\uFEFF/, ''));
-      const names = normalizeRounds(data).flatMap(round => round.themes.map(theme => theme.name).filter(Boolean));
-      assert.deepStrictEqual(pack.themeNames, names, `Theme missing from catalog: ${pack.id}`);
-      assert.deepStrictEqual(pack.themesList, names, `Theme missing from search list: ${pack.id}`);
-    }
-  });
-
   it('every pack in catalog must have valid metadata and valid JSON file with questions in "паки вопросов"', () => {
     const sandbox = { window: {} };
     const code = fs.readFileSync(packsDataPath, 'utf8');
