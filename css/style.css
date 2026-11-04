@@ -8947,3 +8947,19 @@ body.light-theme #teams-block-title { color: #78350f; }
 body.light-theme .stats-table td:nth-child(2) { color: #78350f !important; }
 
 body.light-theme .lobby-pack-title-box { background: #f5f3ff; }
+
+/* Единая крупная область иллюстраций: исходные пропорции и весь кадр сохранены.
+   На узком экране область сжимается по ширине, модальное окно прокручивается. */
+#modal-question-img,
+#modal-answer-img,
+.final-question-img,
+.final-answer-img {
+    width: min(800px, 100%);
+    height: auto;
+    aspect-ratio: 4 / 3;
+    max-width: 100%;
+    max-height: none !important;
+    object-fit: contain;
+    margin-left: auto;
+    margin-right: auto;
+}
