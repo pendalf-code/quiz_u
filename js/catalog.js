@@ -579,7 +579,7 @@ async function selectPackToPlay(packId) {
             }
         } else {
             if (typeof showTeamSetup === 'function') {
-                showTeamSetup();
+                showTeamSetup(true);
             } else if (typeof showSubScreen === 'function') {
                 showSubScreen('team-setup-container');
             }

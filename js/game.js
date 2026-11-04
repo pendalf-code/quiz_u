@@ -1752,8 +1752,8 @@ function saveSettings() {
     ]);
 }
 
-function showTeamSetup() {
-    clearTeamInputs();
+function showTeamSetup(preserveNames = false) {
+    if (!preserveNames) clearTeamInputs();
     showSubScreen('team-setup-container');
 }
 
@@ -2026,9 +2026,7 @@ function applyCustomQuestions(packTitle = 'Пользовательский па
             showSubScreen('sub-menu-online-lobby');
             showSystemModal("📥 ПАК ЗАГРУЖЕН", "Новый пак вопросов успешно импортирован для онлайн-игры!");
         } else {
-            teams = [{name: "Команда 1", score: 0}, {name: "Команда 2", score: 0}];
-            clearTeamInputs();
-            showSubScreen('team-setup-container');
+            showTeamSetup(true);
             showSystemModal("📥 ПАК ЗАГРУЖЕН", "Новый пак вопросов успешно импортирован!");
         }
     } catch (e) {

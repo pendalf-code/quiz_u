@@ -74,7 +74,7 @@ function main() {
       roundsArray.forEach(r => {
         if (r.themes && Array.isArray(r.themes)) {
           r.themes.forEach(t => {
-            if (t.name && !t.name.toLowerCase().includes('финал')) {
+            if (t.name) {
               themeNames.push(t.name);
             }
             if (t.questions && Array.isArray(t.questions)) {
