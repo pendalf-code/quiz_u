@@ -23,6 +23,8 @@ const MEDIA_KEYS = ['img', 'music', 'audio', 'video'];
 const MAX_MEDIA_PER_PACK = 2;
 const TASK_70_FIRST_PACK = 492;
 const TASK_70_LAST_PACK = 691;
+const TASK_73_FIRST_PACK = 692;
+const TASK_73_LAST_PACK = 891;
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const MEDIA_WORDS = /(на фото|фотограф[иі]и? изображ|изображ[её]н|изображени|на картинке|на снимке|на экране|послушайте|прослушайте|звучит мелоди|на видео|на рисунке|покажите)/i;
 
@@ -82,7 +84,7 @@ function normalizePack(data, num) {
     const themeNames = [];
     let questionsCount = 0;
     rounds.forEach(r => (r.themes || []).forEach(t => {
-        if (!isFinalRound(r)) themeNames.push(t.name);
+        themeNames.push(t.name);
         questionsCount += (t.questions || []).length;
     }));
     const numStr = String(num).padStart(3, '0');
@@ -227,7 +229,8 @@ function checkPack(file, data, ctx) {
         if (hit.length) warnings.push(`${where}: answer stem(s) [${hit.join(', ')}] appear in question | Q: ${qt} | A: ${at}`);
     })));
     const packNumber = parseInt(file, 10);
-    if (packNumber >= TASK_70_FIRST_PACK && packNumber <= TASK_70_LAST_PACK) {
+    if ((packNumber >= TASK_70_FIRST_PACK && packNumber <= TASK_70_LAST_PACK) ||
+        (packNumber >= TASK_73_FIRST_PACK && packNumber <= TASK_73_LAST_PACK)) {
         for (const type of ['img', 'music', 'video']) {
             if (!mediaTypes.has(type)) errors.push(`missing required media type: ${type}`);
         }

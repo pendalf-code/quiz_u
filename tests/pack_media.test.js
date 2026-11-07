@@ -82,7 +82,7 @@ test('costs grow within every theme (difficulty follows the cost, TASK-57)', () 
     assert.deepEqual(bad.slice(0, 20), []);
 });
 
-test('media questions stay balanced: at most 2 per pack outside the art category and TASK-70', () => {
+test('media questions stay balanced: at most 2 per pack outside the art category and requested multimedia waves', () => {
     const over = [];
     for (const folder of fs.readdirSync(packsDir)) {
         const folderPath = path.join(packsDir, folder);
@@ -98,7 +98,8 @@ test('media questions stay balanced: at most 2 per pack outside the art category
             }
             const packNumber = parseInt(file, 10);
             const isTask70 = folder === '19_Микс_и_Эрудиция' && packNumber >= 492 && packNumber <= 691;
-            if (!isTask70 && media > 2) over.push(`${folder}/${file}: ${media}`);
+            const isTask73 = folder === '19_Микс_и_Эрудиция' && packNumber >= 692 && packNumber <= 891;
+            if (!isTask70 && !isTask73 && media > 2) over.push(`${folder}/${file}: ${media}`);
         }
     }
     assert.deepEqual(over, []);

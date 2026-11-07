@@ -14,6 +14,8 @@ const EXPECTED_SHAPES = { 1: 17, 2: 24, 3: 17, '1+F': 9, '2+F': 9, '3+F': 9 };
 const MAX_MEDIA_PER_PACK = 2;
 const TASK_70_FIRST_PACK = 492;
 const TASK_70_LAST_PACK = 691;
+const TASK_73_FIRST_PACK = 692;
+const TASK_73_LAST_PACK = 891;
 
 function readPack(file) {
   let raw = fs.readFileSync(path.join(MIX_DIR, file), 'utf8');
@@ -102,7 +104,8 @@ describe('TASK-46: mixed-topic packs (Микс и Эрудиция)', () => {
         if (q.video) mediaTypes.add('video');
       })));
       const packNumber = parseInt(file, 10);
-      if (packNumber >= TASK_70_FIRST_PACK && packNumber <= TASK_70_LAST_PACK) {
+      if ((packNumber >= TASK_70_FIRST_PACK && packNumber <= TASK_70_LAST_PACK) ||
+        (packNumber >= TASK_73_FIRST_PACK && packNumber <= TASK_73_LAST_PACK)) {
         for (const type of ['img', 'music', 'video']) {
           assert.ok(mediaTypes.has(type), `${file}: missing ${type}`);
         }
