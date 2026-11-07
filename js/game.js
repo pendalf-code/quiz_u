@@ -860,6 +860,14 @@ function pauseTimer() {
     const modalElem = document.getElementById('question-modal');
     if (!modalElem || !modalElem.classList.contains('active')) return;
 
+    if (waitingForQuestionMedia) {
+        isGlobalTimerPaused = true;
+        ['modal-question-audio', 'modal-question-video'].forEach(id => {
+            const media = document.getElementById(id);
+            if (media) media.pause();
+        });
+        return;
+    }
     if (timerInterval || answerCountdownInterval) {
         pausedTimerData = {
             hadTimerInterval: Boolean(timerInterval),
@@ -891,6 +899,11 @@ function pauseTimer() {
 function resumeTimer() {
     if (!isGlobalTimerPaused) return;
     isGlobalTimerPaused = false;
+    if (waitingForQuestionMedia) {
+        retryQuestionMedia();
+        finishQuestionMedia();
+        return;
+    }
     const modalElem = document.getElementById('question-modal');
     if (!modalElem || !modalElem.classList.contains('active')) return;
 
@@ -1235,9 +1248,66 @@ function resolveMediaPath(url) {
     return trimmed;
 }
 
+let waitingForQuestionMedia = false;
+let questionMediaGeneration = 0;
+
+function retryQuestionMedia() {
+    ['modal-question-audio', 'modal-question-video', 'modal-answer-video'].forEach(id => {
+        const media = document.getElementById(id);
+        if (media && media.getAttribute('src') && !media.ended) playQuestionMedia(media);
+    });
+}
+
+function playQuestionMedia(media) {
+    const generation = questionMediaGeneration;
+    const button = document.getElementById('question-media-play');
+    media.onerror = () => {
+        if (generation !== questionMediaGeneration) return;
+        if (button) button.hidden = false;
+        const hint = document.getElementById('timer-hint');
+        if (hint) hint.textContent = 'Медиа не загрузилось. Повторите воспроизведение или пропустите его.';
+    };
+    media.play().then(() => {
+        if (generation === questionMediaGeneration && button) button.hidden = true;
+    }).catch(() => {
+        if (generation === questionMediaGeneration && button) button.hidden = false;
+    });
+}
+
+function handleQuestionAudio(question) {
+    const audio = document.getElementById('modal-question-audio');
+    const visualizer = document.getElementById('question-audio-visualizer');
+    const url = question && (question.audio || question.music);
+    const hasAudio = typeof url === 'string' && Boolean(url.trim());
+    if (visualizer) visualizer.hidden = !hasAudio;
+    if (!audio || !hasAudio) return false;
+    audio.style.display = 'none';
+    audio.src = resolveMediaPath(url.trim());
+    audio.onplaying = () => { if (visualizer) visualizer.classList.add('is-playing'); };
+    audio.onpause = audio.onwaiting = () => { if (visualizer) visualizer.classList.remove('is-playing'); };
+    audio.onended = finishQuestionMedia;
+    playQuestionMedia(audio);
+    return true;
+}
+
+function finishQuestionMedia() {
+    const stillPlaying = ['modal-question-audio', 'modal-question-video'].some(id => {
+        const media = document.getElementById(id);
+        return media && media.getAttribute('src') && !media.ended;
+    });
+    if (!stillPlaying) startTimerAfterVideo();
+}
+
 function stopQuestionAudio() {
+    waitingForQuestionMedia = false;
+    questionMediaGeneration++;
+    const visualizer = document.getElementById('question-audio-visualizer');
+    if (visualizer) { visualizer.hidden = true; visualizer.classList.remove('is-playing'); }
+    const playButton = document.getElementById('question-media-play');
+    if (playButton) playButton.hidden = true;
     const audioElement = document.getElementById('modal-question-audio');
     if (audioElement) {
+        audioElement.onended = null;
         audioElement.pause();
         audioElement.currentTime = 0;
         audioElement.src = "";
@@ -1290,19 +1360,17 @@ function handleQuestionVideo(question, isAnswer = false) {
             } else if (url.includes('youtu.be/')) {
                 embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
             }
+            embedUrl += (embedUrl.includes('?') ? '&' : '?') + 'controls=0&playsinline=1';
             iframeElem.src = embedUrl;
             iframeContainer.style.display = 'block';
             return true;
         } else {
             videoElem.src = resolveMediaPath(url);
             videoElem.style.display = 'block';
-            videoElem.play().catch(e => {
-            });
+            playQuestionMedia(videoElem);
 
             if (!isAnswer) {
-                videoElem.onended = () => {
-                    startTimerAfterVideo();
-                };
+                videoElem.onended = finishQuestionMedia;
             }
             return true;
         }
@@ -1311,6 +1379,13 @@ function handleQuestionVideo(question, isAnswer = false) {
 }
 
 function startTimerAfterVideo() {
+    if (!waitingForQuestionMedia || isGlobalTimerPaused) return;
+    if (isOnlineGame && hostNetworkClient) {
+        if (!hostNetworkClient.isConnected) return;
+        if (lastServerRoomState === 'QUESTION_READING') hostNetworkClient.activateBuzzer();
+        return;
+    }
+    stopQuestionAudio();
     const timerElem = document.getElementById('timer');
     const hintElem = document.getElementById('timer-hint');
     const btnArea = document.getElementById('modal-buttons-area');
@@ -2389,15 +2464,8 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
 
         hasVideoInQuestion = handleQuestionVideo(question, false);
 
-        const qAudio = question.audio || question.music;
-        if (qAudio && typeof qAudio === 'string' && qAudio.trim().length > 0) {
-            if (audioElement) {
-                audioElement.style.display = 'block';
-                audioElement.src = resolveMediaPath(qAudio.trim());
-                audioElement.play().catch(e => {
-                });
-            }
-        } else if (audioElement) audioElement.style.display = 'none';
+        const hasAudio = handleQuestionAudio(question);
+        hasVideoInQuestion = hasVideoInQuestion || hasAudio;
     }
 
     const oldBadge = document.getElementById('modal-special-badge');
@@ -2531,6 +2599,7 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
         if (btnArea) btnArea.innerHTML = '<button class="btn btn-success" onclick="confirmAllAuctionBets()">💰 Подтвердить ставки и открыть вопрос</button>';
     } else {
         if (hasVideoInQuestion) {
+            waitingForQuestionMedia = true;
             stopTimer();
             if (timerElem) {
                 timerElem.style.display = 'flex';
@@ -2538,10 +2607,10 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
                 timerElem.className = "timer paused";
             }
             if (hintElem) {
-                hintElem.textContent = "🎬 Внимание на видео! Таймер запустится после просмотра";
+                hintElem.textContent = "Слушаем и смотрим. Таймер начнётся после окончания";
                 hintElem.style.color = "#81ecec";
             }
-            if (btnArea) btnArea.innerHTML = '<button class="btn btn-check" onclick="startTimerAfterVideo()">▶️ Пропустить видео и запустить таймер</button>';
+            if (btnArea) btnArea.innerHTML = '<button class="btn btn-check" onclick="startTimerAfterVideo()">Пропустить медиа и начать обсуждение</button>';
         } else {
             isReadingTime = (configReadingTime > 0);
             timeLeft = isReadingTime ? configReadingTime : configThinkingTime;
@@ -2848,17 +2917,10 @@ function startPausedSpecialTimer() {
 
     const hasVideo = handleQuestionVideo(question, false);
 
-    const qAudio = question && (question.audio || question.music);
-    if (qAudio && typeof qAudio === 'string' && qAudio.trim().length > 0) {
-        if (audioElement) {
-            audioElement.style.display = 'block';
-            audioElement.src = resolveMediaPath(qAudio.trim());
-            audioElement.play().catch(e => {
-            });
-        }
-    }
+    const hasAudio = handleQuestionAudio(question);
 
-    if (hasVideo) {
+    if ((hasVideo || hasAudio) && (!isOnlineGame || !['auction', 'auction_all'].includes(question.type))) {
+        waitingForQuestionMedia = true;
         stopTimer();
         if (timerElem) {
             timerElem.style.display = 'flex';
@@ -2866,10 +2928,10 @@ function startPausedSpecialTimer() {
             timerElem.className = "timer paused";
         }
         if (hintElem) {
-            hintElem.textContent = "🎬 Внимание на видео! Таймер запустится после просмотра";
+            hintElem.textContent = "Слушаем и смотрим. Таймер начнётся после окончания";
             hintElem.style.color = "#81ecec";
         }
-        if (btnArea) btnArea.innerHTML = '<button class="btn btn-check" onclick="startTimerAfterVideo()">▶️ Пропустить видео и запустить таймер</button>';
+        if (btnArea) btnArea.innerHTML = '<button class="btn btn-check" onclick="startTimerAfterVideo()">Пропустить медиа и начать обсуждение</button>';
     } else {
         stopTimer();
         const isOnlineAuctionAnswers = Boolean(isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected
@@ -4530,6 +4592,15 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('buzzer_ready', (payload) => {
+            lastServerRoomState = 'BUZZ_ACTIVE';
+            if (waitingForQuestionMedia) {
+                stopQuestionAudio();
+                isReadingTime = false;
+                isAnswerTimerActive = true;
+                savedThinkingTime = payload.remainingThinkingTime ?? configThinkingTime;
+                const buttons = document.getElementById('modal-buttons-area');
+                if (buttons) buttons.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
+            }
             activeOnlineBuzzer = null;
             stopOnlineAnswerCountdown();
             const answeringModal = document.getElementById('answering-player-modal');
@@ -4587,6 +4658,7 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('cat_transferred', (payload) => {
+            lastServerRoomState = 'QUESTION_READING';
             const targetIdx = teams.findIndex(t => t.id === payload.toPlayerId || t.name === payload.toPlayerName);
             // our own choice on this screen echoes back: nothing to do twice
             if (targetIdx !== -1 && activeTeamIdxForQuestion !== targetIdx) {
@@ -4595,6 +4667,7 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('auction_leader_set', (payload) => {
+            lastServerRoomState = 'QUESTION_READING';
             const idx = teams.findIndex(t => t.id === payload.leaderPlayerId);
             if (idx === -1 || activeTeamIdxForQuestion === idx) return;
             onlineAuctionLeaderChosen(idx, payload.bet);
@@ -4788,6 +4861,7 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('question_active', (payload) => {
+            if (payload && payload.state) lastServerRoomState = payload.state;
             if (!isGameStarted && typeof startOnlineGame === 'function') {
                 startOnlineGame(true);
             }

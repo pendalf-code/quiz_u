@@ -1015,21 +1015,25 @@
             <img alt="Иллюстрация" id="modal-question-img"
                  onerror="this.classList.add('img-error'); this.style.display='none';"
                  src="" style="display: none;">
-            <video controls id="modal-question-video"
+            <video playsinline id="modal-question-video"
                    style="display: none; width: 100%; max-width: 880px; max-height: 500px; border-radius: 20px; margin: 0 auto 20px auto; box-shadow: 0 6px 20px rgba(0,0,0,0.4);"></video>
             <div id="modal-question-iframe-container"
                  style="display: none; width: 100%; max-width: 880px; aspect-ratio: 16/9; margin: 0 auto 20px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.4);">
                 <iframe allow="autoplay; encrypted-media; fullscreen" allowfullscreen id="modal-question-iframe"
                         src="" style="width:100%; height:100%; border:none;"></iframe>
             </div>
-            <audio controls id="modal-question-audio"
+            <div id="question-audio-visualizer" class="question-audio-visualizer" hidden role="img" aria-label="Аудиовопрос">
+                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <button id="question-media-play" class="btn btn-check" hidden type="button" onclick="retryQuestionMedia()">▶ Воспроизвести</button>
+            <audio id="modal-question-audio"
                    style="display: none; width: 100%; max-width: 400px; margin: 0 auto 20px auto; outline: none;"></audio>
 
             <div class="modal-answer" id="modal-answer-text">Ответ: Правильный ответ</div>
             <img alt="Иллюстрация ответа" id="modal-answer-img"
                  onerror="this.classList.add('img-error'); this.style.display='none';"
                  src="" style="display: none;">
-            <video controls id="modal-answer-video"
+            <video playsinline id="modal-answer-video"
                    style="display: none; width: 100%; max-width: 880px; max-height: 500px; border-radius: 20px; margin: 0 auto 20px auto; box-shadow: 0 6px 20px rgba(0,0,0,0.4);"></video>
             <div id="modal-answer-iframe-container"
                  style="display: none; width: 100%; max-width: 880px; aspect-ratio: 16/9; margin: 0 auto 20px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.4);">

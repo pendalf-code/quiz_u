@@ -199,7 +199,7 @@ test('BUG-77: прямой выбор с ПК отменяет прежнее о
     const stale = state.scheduled.find(timer => timer.delay === 1300).callback;
     Object.assign(state.context, {
         isTestMode: false, teams: [], configReadingTime: 7, configThinkingTime: 30,
-        configAnswerTime: 5, handleQuestionVideo: () => false, startTimer() {},
+        configAnswerTime: 5, handleQuestionVideo: () => false, handleQuestionAudio: () => false, startTimer() {},
         playStartThinkingSound() {}, specialQuestionRevealed: false
     });
     state.client.selectQuestion = () => {};

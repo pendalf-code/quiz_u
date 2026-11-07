@@ -31,7 +31,7 @@ function load(savedReadingTime) {
         localStorage: { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, String(value)), removeItem: key => values.delete(key) },
         document: { getElementById: node }, setTimeout() {},
         stopTimer() {}, stopQuestionAudio() {}, saveGameState() {},
-        handleQuestionVideo: () => false, playStartThinkingSound() {},
+        handleQuestionVideo: () => false, handleQuestionAudio: () => false, playStartThinkingSound() {},
         startTimer() { context.timerStarts++; }, timerStarts: 0,
         isOnlineGame: false, hostNetworkClient: null,
         teams: [{ name: 'Команда', score: 0 }], activeTeamIdxForQuestion: null,
