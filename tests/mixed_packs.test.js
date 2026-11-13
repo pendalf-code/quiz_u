@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const PackParser = require('../js/core/PackParser.js');
+const { checkPack, normalizePack } = require('../tools/mixed_packs.js');
 
 const ROOT = path.join(__dirname, '..');
 const MIX_FOLDER = '19_Микс_и_Эрудиция';
@@ -26,6 +27,52 @@ function readPack(file) {
 function mixFiles() {
   return fs.readdirSync(MIX_DIR).filter(f => f.endsWith('.json')).sort();
 }
+
+function checkWithFreshContext(file, data) {
+  return checkPack(file, data, { titles: new Map(), descs: new Map() });
+}
+
+it('the mixed-pack checker accepts the existing TASK-77 answer image in pack 850', () => {
+  const file = mixFiles().find(name => name.startsWith('850_'));
+  const data = readPack(file);
+  const questions = data.rounds.flatMap(round => round.themes.flatMap(theme => theme.questions));
+  assert.ok(questions.some(q => q.a_img === 'assets/a_img/creation_of_adam.jpg'));
+  assert.deepStrictEqual(checkWithFreshContext(file, data).errors.filter(error => /answer media/.test(error)), []);
+});
+
+it('the checker validates answer files and keeps them separate from question media', () => {
+  const title = 'Проверка медиа ответа';
+  const data = normalizePack({
+    title, difficulty: 'medium', description: 'Пак для проверки медиа вопроса и медиа ответа.',
+    tags: ['медиа', 'вопрос', 'ответ'], rounds: [{ roundName: 'Раунд 1',
+      themes: Array.from({ length: 5 }, (_, theme) => ({ name: `Тема ${theme + 1}`,
+        questions: Array.from({ length: 5 }, (_, i) => ({
+          q: 'Как называется документ для посадки на поезд?', a: 'Билет', cost: (i + 1) * 100
+        })) })) }]
+  }, 492);
+  const [picture, video, legacyPicture, legacyVideo] = data.rounds[0].themes[0].questions;
+  picture.q = 'Что изображено на фото?';
+  picture.a_img = 'assets/a_img/creation_of_adam.jpg';
+  video.a_video = 'assets/video/flower.mp4';
+  legacyPicture.answer_img = 'assets/q_img/123.jpg';
+  legacyVideo.answer_video = 'assets/video/friday.mp4';
+  const file = `492_${title}.json`;
+  assert.strictEqual(data.hasMedia, false);
+  assert.deepStrictEqual(checkWithFreshContext(file, data).errors, [
+    '"Тема 1" Q1: references media that does not exist',
+    'missing required media type: img', 'missing required media type: music', 'missing required media type: video'
+  ]);
+
+  picture.img = 'assets/q_img/123.jpg';
+  video.video = 'assets/video/flower.mp4';
+  legacyPicture.music = 'assets/music/horse.mp3';
+  data.hasMedia = true;
+  assert.deepStrictEqual(checkWithFreshContext(file, data).errors, []);
+  legacyVideo.answer_video = 'assets/video/nonexistent-answer.mp4';
+  assert.deepStrictEqual(checkWithFreshContext(file, data).errors, [
+    '"Тема 1" Q4: missing answer media file answer_video: assets/video/nonexistent-answer.mp4'
+  ]);
+});
 
 function loadCatalogContext() {
   const ctx = {

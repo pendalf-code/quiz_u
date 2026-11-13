@@ -126,4 +126,6 @@ function main() {
     if (exact + near > 0) process.exitCode = 1;
 }
 
-main();
+if (require.main === module) main();
+
+module.exports = { normText, normAnswer };

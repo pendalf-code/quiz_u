@@ -20,6 +20,7 @@ const MIX_CATEGORY = 'Микс и Эрудиция';
 const MIX_ICON = '🎲';
 const FINAL_COST = 1500;
 const MEDIA_KEYS = ['img', 'music', 'audio', 'video'];
+const ANSWER_MEDIA_KEYS = ['a_img', 'a_video', 'answer_img', 'answer_video'];
 const MAX_MEDIA_PER_PACK = 2;
 const TASK_70_FIRST_PACK = 492;
 const TASK_70_LAST_PACK = 691;
@@ -59,6 +60,12 @@ function listMixFiles(from, to) {
 
 function hasQuestionMedia(q) {
     return MEDIA_KEYS.some(k => typeof q[k] === 'string' && q[k].length > 0);
+}
+
+function requiredMediaTypes(num) {
+    const hasRequiredMedia = (num >= TASK_70_FIRST_PACK && num <= TASK_70_LAST_PACK) ||
+        (num >= TASK_73_FIRST_PACK && num <= TASK_73_LAST_PACK);
+    return hasRequiredMedia ? ['img', 'music', 'video'] : [];
 }
 
 function isFinalRound(round) {
@@ -216,10 +223,18 @@ function checkPack(file, data, ctx) {
         if (q.video) mediaTypes.add('video');
         if (MEDIA_WORDS.test(qt) && !withMedia) errors.push(`${where}: references media that does not exist`);
         if (q.type) errors.push(`${where}: do not set "type" (special types are assigned at runtime)`);
-        if (q.a_img || q.a_video) errors.push(`${where}: answer media are not used in mixed packs`);
         MEDIA_KEYS.forEach(k => {
             if (q[k] && !fs.existsSync(path.join(ROOT, q[k]))) errors.push(`${where}: missing media file ${q[k]}`);
         });
+        for (const key of ANSWER_MEDIA_KEYS) {
+            if (!Object.hasOwn(q, key)) continue;
+            const reference = q[key];
+            if (typeof reference !== 'string' || !reference.trim()) {
+                errors.push(`${where}: invalid answer media reference ${key}`);
+            } else if (!fs.statSync(path.join(ROOT, reference), { throwIfNoEntry: false })?.isFile()) {
+                errors.push(`${where}: missing answer media file ${key}: ${reference}`);
+            }
+        }
         const nq = ' ' + normText(qt) + ' ';
         answerVariants(at).forEach(av => {
             if (av.length >= 3 && nq.includes(' ' + av + ' ')) errors.push(`${where}: answer "${at}" is contained in the question`);
@@ -228,10 +243,9 @@ function checkPack(file, data, ctx) {
         const hit = stems(at.replace(/\([^)]*\)/g, ' '), 5).filter(s => qStems.has(s));
         if (hit.length) warnings.push(`${where}: answer stem(s) [${hit.join(', ')}] appear in question | Q: ${qt} | A: ${at}`);
     })));
-    const packNumber = parseInt(file, 10);
-    if ((packNumber >= TASK_70_FIRST_PACK && packNumber <= TASK_70_LAST_PACK) ||
-        (packNumber >= TASK_73_FIRST_PACK && packNumber <= TASK_73_LAST_PACK)) {
-        for (const type of ['img', 'music', 'video']) {
+    const required = requiredMediaTypes(num);
+    if (required.length) {
+        for (const type of required) {
             if (!mediaTypes.has(type)) errors.push(`missing required media type: ${type}`);
         }
     } else if (mediaCount > MAX_MEDIA_PER_PACK) {
@@ -299,10 +313,14 @@ function cmdCheck(args) {
     if (errCount > 0) process.exitCode = 1;
 }
 
-const args = parseArgs(process.argv.slice(2));
-if (args.cmd === 'normalize') cmdNormalize(args);
-else if (args.cmd === 'check') cmdCheck(args);
-else {
-    console.log('Usage: node tools/mixed_packs.js normalize|check [--from N] [--to M]');
-    process.exitCode = 2;
+if (require.main === module) {
+    const args = parseArgs(process.argv.slice(2));
+    if (args.cmd === 'normalize') cmdNormalize(args);
+    else if (args.cmd === 'check') cmdCheck(args);
+    else {
+        console.log('Usage: node tools/mixed_packs.js normalize|check [--from N] [--to M]');
+        process.exitCode = 2;
+    }
 }
+
+module.exports = { MIX_DIR, MEDIA_KEYS, ANSWER_MEDIA_KEYS, checkPack, normalizePack, requiredMediaTypes, safeFileTitle };
