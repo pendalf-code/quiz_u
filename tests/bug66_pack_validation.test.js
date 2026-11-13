@@ -103,6 +103,34 @@ test('BUG-66: обычная загрузка файла не меняет на�
     assertOldPack(state);
 });
 
+test('BUG-80: редактор и импорт отклоняют 25 символов и перенос строки', () => {
+    for (const name of ['я'.repeat(25), 'Первая\nстрока']) {
+        const pack = valid();
+        pack[0].themes[0].name = name;
+        for (const upload of [
+            state => state.context.applyCustomQuestions(),
+            state => state.context.uploadPack({ target: { files: [{ name: 'пак.json' }] } }),
+            state => state.context.uploadLobbyCustomPack({ target: { files: [{ name: 'пак.json' }] } })
+        ]) {
+            const state = browser();
+            state.editor.value = JSON.stringify(pack);
+            upload(state);
+            assertOldPack(state);
+            assert.match(state.notices[0][1], /Название темы #1.*(?:25 симв\., максимум 24|в одну строку)/);
+        }
+    }
+});
+
+test('BUG-80: 24 символа допустимы, длинные названия в финале и ранее загруженном паке читаются', () => {
+    const pack = valid();
+    pack[0].themes[0].name = '🌍'.repeat(24);
+    pack.push({ ...valid()[0], roundName: 'Финал' });
+    pack[1].themes[0].name = 'Я'.repeat(25);
+    assert.equal(PackParser.parseValidatedPack(pack, { checkThemeNames: true }), pack);
+    pack[0].themes[0].name += 'я';
+    assert.equal(PackParser.parseValidatedPack(pack), pack);
+});
+
 test('BUG-66: валидный файл сохраняет выбранное название и рабочие вопросы', () => {
     const state = browser();
     const replacement = valid();

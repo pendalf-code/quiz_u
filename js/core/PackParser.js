@@ -7,6 +7,8 @@
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     'use strict';
 
+    const MAX_BOARD_THEME_NAME_LENGTH = 24;
+
     /**
      * PackParser: модуль валидации, нормализации и античит-фильтрации паков вопросов.
      */
@@ -36,9 +38,10 @@
         /**
          * Валидирует структуру пакета вопросов.
          * @param {*} data
+         * @param {{checkThemeNames?: boolean}} [options]
          * @returns {{valid: boolean, errors: string[], roundsCount: number, questionsCount: number}}
          */
-        validatePack: function (data) {
+        validatePack: function (data, { checkThemeNames = false } = {}) {
             const errors = [];
             const rounds = this.normalizeGameData(data);
             let totalQuestions = 0;
@@ -63,12 +66,22 @@
                     return;
                 }
 
+                const checkBoardNames = checkThemeNames && !this.isFinalRound(round, rIdx, rounds.length);
                 Array.from(round.themes).forEach((theme, tIdx) => {
                     if (!theme || typeof theme !== 'object' || Array.isArray(theme)) {
                         errors.push(`Некорректная тема #${tIdx + 1} в раунде "${roundName}"`);
                         return;
                     }
                     const themeName = theme.name || `Тема ${tIdx + 1}`;
+                    if (checkBoardNames && typeof theme.name === 'string') {
+                        const length = Array.from(theme.name).length;
+                        const label = `Название темы #${tIdx + 1} в раунде "${roundName}"`;
+                        if (length > MAX_BOARD_THEME_NAME_LENGTH) {
+                            errors.push(`${label}: ${length} симв., максимум ${MAX_BOARD_THEME_NAME_LENGTH}`);
+                        } else if (/[\r\n\u2028\u2029]/u.test(theme.name)) {
+                            errors.push(`${label} должно быть в одну строку`);
+                        }
+                    }
                     if (!theme.questions || !Array.isArray(theme.questions) || theme.questions.length === 0) {
                         errors.push(`Тема "${themeName}" в раунде "${roundName}" не содержит вопросов`);
                         return;
@@ -105,8 +118,8 @@
         /**
          * Проверяет пакет до замены рабочего состояния и возвращает его раунды.
          */
-        parseValidatedPack: function (data) {
-            const result = this.validatePack(data);
+        parseValidatedPack: function (data, options) {
+            const result = this.validatePack(data, options);
             if (!result.valid) {
                 const error = new Error('Некорректный пак: ' + result.errors.join('; '));
                 error.code = 'INVALID_PAYLOAD';

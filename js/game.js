@@ -34,8 +34,8 @@ function normalizeGameData(data) {
     return [];
 }
 
-function getValidatedGameData(data) {
-    return PackParser.parseValidatedPack(data);
+function getValidatedGameData(data, options) {
+    return PackParser.parseValidatedPack(data, options);
 }
 
 window.normalizeGameData = normalizeGameData;
@@ -2087,7 +2087,7 @@ function executeQuitToMainMenu() {
 function applyCustomQuestions(packTitle = 'Пользовательский пак') {
     try {
         const parsed = JSON.parse(document.getElementById('json-editor').value);
-        gameData = getValidatedGameData(parsed);
+        gameData = getValidatedGameData(parsed, { checkThemeNames: true });
         window.gameData = gameData;
         window.currentPackTitle = packTitle;
         window.isPackSelected = true;
@@ -2290,7 +2290,12 @@ function initBoard() {
         const themeNameDiv = document.createElement('div');
         themeNameDiv.classList.add('theme-name');
         themeNameDiv.id = `theme-title-${themeIdx}`;
-        themeNameDiv.textContent = theme.name;
+        themeNameDiv.title = theme.name;
+
+        const themeNameText = document.createElement('span');
+        themeNameText.className = 'theme-name-text';
+        themeNameText.textContent = theme.name;
+        themeNameDiv.appendChild(themeNameText);
 
         const isAllQuestionsUsed = theme.questions && theme.questions.every(q => q.used);
         if (isAllQuestionsUsed) {
@@ -4271,7 +4276,7 @@ function uploadLobbyCustomPack(event) {
     reader.onload = function (e) {
         try {
             const parsed = JSON.parse(e.target.result);
-            gameData = getValidatedGameData(parsed);
+            gameData = getValidatedGameData(parsed, { checkThemeNames: true });
             window.gameData = gameData;
             window.currentPackTitle = file.name.replace(/\.json$/i, '');
             window.isPackSelected = true;
