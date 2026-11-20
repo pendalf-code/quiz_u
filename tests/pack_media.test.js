@@ -99,7 +99,14 @@ test('media questions stay balanced: at most 2 per pack outside the art category
             const packNumber = parseInt(file, 10);
             const isTask70 = folder === '19_Микс_и_Эрудиция' && packNumber >= 492 && packNumber <= 691;
             const isTask73 = folder === '19_Микс_и_Эрудиция' && packNumber >= 692 && packNumber <= 891;
-            if (!isTask70 && !isTask73 && media > 2) over.push(`${folder}/${file}: ${media}`);
+            const isPartyPack = folder === '20_Семейная_вечеринка' && packNumber >= 892 && packNumber <= 894;
+            if (isPartyPack) {
+                const questions = rounds.flatMap(round => round.themes.flatMap(theme => theme.questions));
+                for (const key of ['img', 'music', 'video']) {
+                    assert.ok(questions.filter(q => q[key]).length >= 2, `${file}: требуется несколько ${key}`);
+                }
+            }
+            if (!isTask70 && !isTask73 && !isPartyPack && media > 2) over.push(`${folder}/${file}: ${media}`);
         }
     }
     assert.deepEqual(over, []);
