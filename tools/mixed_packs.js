@@ -69,8 +69,8 @@ function requiredMediaTypes(num) {
 }
 
 function mixedPackMediaLimit(num) {
-    // TASK-81: «Для семьи» содержит 25 иллюстраций, из них 19 показываются с вопросами.
-    return num === 895 ? 19 : MAX_MEDIA_PER_PACK;
+    // TASK-81: «Для семьи» содержит 23 иллюстрации, из них 17 показываются с вопросами.
+    return num === 895 ? 17 : MAX_MEDIA_PER_PACK;
 }
 
 function isFinalRound(round) {
