@@ -112,6 +112,34 @@ test('media questions stay balanced: at most 2 per pack outside the art category
     assert.deepEqual(over, []);
 });
 
+test('семейная вечеринка: три табло 5×5 с ростом цен и отдельный финал', () => {
+    const folder = path.join(packsDir, '20_Семейная_вечеринка');
+    for (let number = 1; number <= 3; number++) {
+        const file = path.join(folder, `${891 + number}_пак ${number}.json`);
+        const { rounds } = JSON.parse(fs.readFileSync(file, 'utf8'));
+        assert.equal(rounds.length, 4, file);
+        const boards = rounds.slice(0, 3);
+        boards.forEach((round, index) => {
+            assert.ok(!round.isFinal, file);
+            assert.equal(round.themes.length, 5, file);
+            for (const theme of round.themes) {
+                assert.deepEqual(theme.questions.map(q => q.cost),
+                    [100, 200, 300, 400, 500].map(cost => cost * (index + 1)), theme.name);
+            }
+        });
+        const hybrids = boards.flatMap(r => r.themes).filter(t => t.name === 'Шлакоблокунь');
+        assert.equal(hybrids.length, 1, file);
+        const pictures = hybrids[0].questions.map(q => q.img);
+        assert.ok(pictures.every(Boolean), file);
+        assert.equal(new Set(pictures).size, 5, file);
+        const final = rounds[3];
+        assert.equal(final.roundName, 'ФИНАЛ', file);
+        assert.equal(final.isFinal, true, file);
+        assert.equal(final.themes.length, 1, file);
+        assert.equal(final.themes[0].questions.length, 1, file);
+    }
+});
+
 test('every pack question ends with a question mark', () => {
     const bad = [];
     forEachQuestion((q, where) => {
