@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const PackParser = require('../js/core/PackParser.js');
-const { checkPack, normalizePack } = require('../tools/mixed_packs.js');
+const { checkPack, normalizePack, mixedPackMediaLimit } = require('../tools/mixed_packs.js');
 
 const ROOT = path.join(__dirname, '..');
 const MIX_FOLDER = '19_Микс_и_Эрудиция';
@@ -12,7 +12,6 @@ const MIX_DIR = path.join(ROOT, 'паки вопросов', MIX_FOLDER);
 const FIRST_PACK = 407;
 const MIXED_PACKS = 85;
 const EXPECTED_SHAPES = { 1: 17, 2: 24, 3: 17, '1+F': 9, '2+F': 9, '3+F': 9 };
-const MAX_MEDIA_PER_PACK = 2;
 const TASK_70_FIRST_PACK = 492;
 const TASK_70_LAST_PACK = 691;
 const TASK_73_FIRST_PACK = 692;
@@ -157,7 +156,8 @@ describe('TASK-46: mixed-topic packs (Микс и Эрудиция)', () => {
           assert.ok(mediaTypes.has(type), `${file}: missing ${type}`);
         }
       } else {
-        assert.ok(media <= MAX_MEDIA_PER_PACK, `${file}: ${media} media questions, max ${MAX_MEDIA_PER_PACK}`);
+        const mediaLimit = mixedPackMediaLimit(packNumber);
+        assert.ok(media <= mediaLimit, `${file}: ${media} media questions, max ${mediaLimit}`);
       }
       assert.strictEqual(!!data.hasMedia, media > 0, `${file}: hasMedia flag`);
     });

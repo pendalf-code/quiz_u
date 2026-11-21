@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
+const { mixedPackMediaLimit } = require('../tools/mixed_packs.js');
 
 const rootDir = path.join(__dirname, '..');
 const packsDir = path.join(rootDir, 'паки вопросов');
@@ -82,7 +83,7 @@ test('costs grow within every theme (difficulty follows the cost, TASK-57)', () 
     assert.deepEqual(bad.slice(0, 20), []);
 });
 
-test('media questions stay balanced: at most 2 per pack outside the art category and requested multimedia waves', () => {
+test('media questions stay balanced: at most 2 per pack outside the art category and requested multimedia packs', () => {
     const over = [];
     for (const folder of fs.readdirSync(packsDir)) {
         const folderPath = path.join(packsDir, folder);
@@ -106,7 +107,8 @@ test('media questions stay balanced: at most 2 per pack outside the art category
                     assert.ok(questions.filter(q => q[key]).length >= 2, `${file}: требуется несколько ${key}`);
                 }
             }
-            if (!isTask70 && !isTask73 && !isPartyPack && media > 2) over.push(`${folder}/${file}: ${media}`);
+            const mediaLimit = folder === '19_Микс_и_Эрудиция' ? mixedPackMediaLimit(packNumber) : 2;
+            if (!isTask70 && !isTask73 && !isPartyPack && media > mediaLimit) over.push(`${folder}/${file}: ${media}`);
         }
     }
     assert.deepEqual(over, []);

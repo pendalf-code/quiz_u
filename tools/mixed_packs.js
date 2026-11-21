@@ -68,6 +68,11 @@ function requiredMediaTypes(num) {
     return hasRequiredMedia ? ['img', 'music', 'video'] : [];
 }
 
+function mixedPackMediaLimit(num) {
+    // TASK-81: «Для семьи» содержит 25 иллюстраций, из них 19 показываются с вопросами.
+    return num === 895 ? 19 : MAX_MEDIA_PER_PACK;
+}
+
 function isFinalRound(round) {
     return !!round.isFinal || /^s*финалs*$/i.test(round.roundName || '');
 }
@@ -244,12 +249,13 @@ function checkPack(file, data, ctx) {
         if (hit.length) warnings.push(`${where}: answer stem(s) [${hit.join(', ')}] appear in question | Q: ${qt} | A: ${at}`);
     })));
     const required = requiredMediaTypes(num);
+    const mediaLimit = mixedPackMediaLimit(num);
     if (required.length) {
         for (const type of required) {
             if (!mediaTypes.has(type)) errors.push(`missing required media type: ${type}`);
         }
-    } else if (mediaCount > MAX_MEDIA_PER_PACK) {
-        errors.push(`${mediaCount} media questions, max ${MAX_MEDIA_PER_PACK} per pack`);
+    } else if (mediaCount > mediaLimit) {
+        errors.push(`${mediaCount} media questions, max ${mediaLimit} per pack`);
     }
     if (data.hasMedia !== (mediaCount > 0)) errors.push('hasMedia flag out of sync (run normalize)');
     return { errors, warnings, questions: v.questionsCount, media: mediaCount };
@@ -323,4 +329,4 @@ if (require.main === module) {
     }
 }
 
-module.exports = { MIX_DIR, MEDIA_KEYS, ANSWER_MEDIA_KEYS, checkPack, normalizePack, requiredMediaTypes, safeFileTitle };
+module.exports = { MIX_DIR, MEDIA_KEYS, ANSWER_MEDIA_KEYS, checkPack, normalizePack, requiredMediaTypes, mixedPackMediaLimit, safeFileTitle };
