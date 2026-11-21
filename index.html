@@ -933,7 +933,7 @@
                         title="Передать право выбора вопроса другой команде">
                     🔄 Передать ход
                 </button>
-                <button class="btn btn-check" onclick="promptScoreForAll()"
+                <button class="btn btn-check" id="btn-score-for-all" onclick="promptScoreForAll()"
                         style="font-size: 14px; padding: 8px 14px; border-radius: 12px; box-shadow: none; min-width: auto; background: var(--gold-accent); color: var(--purple-dark);">
                     ⚡ Очки всем
                 </button>
@@ -1064,7 +1064,7 @@
             <div id="teams-modal-list" style="width: 100%; margin-top: 20px;"></div>
 
             <div class="modal-controls" id="modal-buttons-area">
-                <button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>
+                <button class="btn btn-check" id="btn-show-answer" onclick="requestShowAnswer()">Проверить ответ</button>
             </div>
         </div>
         <!-- Боковая модалка: Отвечает игрок N (появляется рядом с окном вопроса) -->

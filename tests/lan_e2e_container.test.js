@@ -976,7 +976,7 @@ describe('LAN Mode Containerized Integration Test Suite (Testcontainers-style)',
     });
 
     test('2P Flow 15: Answer timer expiration - P1 times out, no penalty, P2 gets buzzer', async () => {
-        const { hostWs, p1Ws, p2Ws, p1Id, p2Id } = await setupTwoPlayerRoom({ answerTime: 1 });
+        const { hostWs, p1Ws, p2Ws, p1Id, p2Id } = await setupTwoPlayerRoom({ answerTime: 1, penaltyEnabled: false });
         container.sendMessage(hostWs, MSG_TYPES.HOST_START_GAME, {});
         await container.waitForMessage(p1Ws, MSG_TYPES.ROOM_STATE);
 
@@ -1848,6 +1848,10 @@ describe('LAN Mode Containerized Integration Test Suite (Testcontainers-style)',
         container.sendMessage(hostWs, MSG_TYPES.HOST_SHOW_ANSWER, {});
         const showAns = await showAnsPromise;
         assert.equal(showAns.payload.answer, 'Ответ 100');
+
+        const buzzDenied = container.waitForMessage(players[0].ws, MSG_TYPES.ERROR);
+        container.sendMessage(players[0].ws, MSG_TYPES.PLAYER_BUZZ, {});
+        assert.equal((await buzzDenied).payload.code, ERROR_CODES.INVALID_ACTION);
 
         // 2. Host tests Pause
         const pausePromises = players.map(p => container.waitForMessage(p.ws, MSG_TYPES.GAME_PAUSED));

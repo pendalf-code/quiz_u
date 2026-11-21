@@ -7578,6 +7578,7 @@ body.pc-judges .answering-controls-row { display: flex; }
 /* "Проверить ответ" and an empty button area are not needed on a pure display */
 body.phone-host-online #modal-buttons-area:has(#btn-show-answer:only-child) { display: none; }
 body.phone-host-online #teams-modal-list:empty { display: none; }
+body.phone-host-online #btn-score-for-all { display: none; }
 
 /* ===== Final round screen (TASK-47) ===== */
 .final-screen {

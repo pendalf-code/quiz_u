@@ -125,3 +125,15 @@ test('BUG-78: лобби и локальная игра не меняют сос
     dispatch('PLAYER_JOINED', { player: bob });
     assert.equal(context.teams.length, 1);
 });
+
+test('массовые очки отражают серверный счёт даже при повторе события и позднем подключении', () => {
+    const { context, dispatch } = app();
+    const payload = { isAll: true, delta: 75, players: [{ ...alice, score: 175 }, { ...bob, score: 75 }] };
+    dispatch('SCORE_UPDATED', payload);
+    dispatch('SCORE_UPDATED', payload);
+    assert.equal(context.teams.length, 2);
+    assert.equal(context.teams[0].score, 175);
+    assert.equal(context.teams[1].score, 75);
+    assert.equal(context.gameStats[0].correct, 2);
+    assert.equal(context.gameStats[1].correct, 0);
+});

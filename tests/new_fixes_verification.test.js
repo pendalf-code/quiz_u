@@ -61,22 +61,21 @@ describe('Verification of 7 Host, Mobile & Freeze Mechanics Fixes', () => {
         assert.ok(gameJs.includes("hostNetworkClient.on('score_updated'"), 'Big screen updates modal list when score updated');
     });
 
-    test('Fix 4: No automatic score deduction upon buzzer timer expiration', () => {
-        // Room.js does not deduct penalty automatically in handleAnswerTimeout
-        const timeoutFunc = Room.prototype.handleAnswerTimeout.toString();
-        assert.ok(!timeoutFunc.includes('this.updatePlayerScore(timedOutPlayerId, -penalty)'), 'handleAnswerTimeout must NOT auto-deduct points');
-
-        // In test room: player score remains intact when buzzer times out
-        const mockHostWs = { messages: [], readyState: 1, send(d) { this.messages.push(JSON.parse(d)); } };
-        const testRoom = new Room('NOAT', mockHostWs, { penaltyEnabled: true, penaltyMode: 'nominal' });
-        const pWs = { messages: [], readyState: 1, send(d) {} };
-        const p = testRoom.addPlayer('Игрок 1', '🦊', pWs).player;
-        testRoom.updatePlayerScore(p.id, 500);
-
-        testRoom.currentCost = 200;
-        testRoom.activeBuzzerPlayerId = p.id;
-        testRoom.handleAnswerTimeout();
-        assert.equal(testRoom.players.get(p.id).score, 500, 'Score must remain 500 after timeout without deduction');
+    test('Fix 4: The shared buzzer timer does not deduct points', () => {
+        const ws = { readyState: 1, send() {} };
+        const room = new Room('NOAT', ws, { readingTime: 0, penaltyEnabled: true });
+        try {
+            room.setPack([{ roundName: 'Раунд', themes: [{ name: 'Тема', questions: [{ q: 'Вопрос', a: 'Ответ', cost: 200 }] }] }]);
+            const player = room.addPlayer('Игрок', '🦊', { ...ws }).player;
+            room.startGame();
+            room.updatePlayerScore(player.id, 500);
+            room.selectQuestion(0, 0);
+            assert.equal(room.stateMachine.state, 'BUZZ_ACTIVE');
+            room.handleThinkingTimeout();
+            assert.equal(player.score, 500);
+        } finally {
+            room.destroy();
+        }
     });
 
     test('Fix 5 & 6: Timer yellow circle on buzzer and freeze removed', () => {

@@ -629,7 +629,7 @@
                 'CAT_CHOOSING': 'Кот в мешке',
                 'ROUND_END': 'Конец раунда',
                 'AUCTION_ANSWERING': 'Ответы аукциона',
-                'QUESTION_CLOSED': 'Время вышло',
+                'QUESTION_CLOSED': 'Вопрос завершён',
                 'GAME_OVER': 'Игра завершена'
             };
             elements.hostStateBadge.textContent = stateLabels[currentRoomState] || currentRoomState;
@@ -709,7 +709,7 @@
         else if (currentRoomState === 'ROUND_END') hostPhase = 'round_end';
         else if (isQuestionActive) {
             if (state.activeAnsweringPlayer) hostPhase = 'answering';
-            else if (currentRoomState === 'BOARD') hostPhase = 'finished';
+            else if (currentRoomState === 'BOARD' || currentRoomState === 'QUESTION_CLOSED') hostPhase = 'finished';
             else hostPhase = 'question';
         }
         if (elements.screens.host) elements.screens.host.dataset.phase = hostPhase;
@@ -727,7 +727,8 @@
             elements.btnHostCloseQuestion.classList.toggle('attention', currentRoomState === 'BOARD' && isQuestionActive);
         }
 
-        if (elements.btnHostShowAnswer) elements.btnHostShowAnswer.disabled = !isQuestionActive;
+        if (elements.btnHostShowAnswer) elements.btnHostShowAnswer.disabled = !isQuestionActive
+            || currentRoomState === 'QUESTION_CLOSED' || state.questionType === 'final';
         if (elements.btnHostCloseQuestion) elements.btnHostCloseQuestion.disabled = !isQuestionActive;
 
         // Question text and secret answer card
@@ -1322,6 +1323,7 @@
             }
 
             if (state.selectedRole === 'host') {
+                if (payload.state === 'QUESTION_CLOSED') state.activeAnsweringPlayer = null;
                 if (payload.auctionBets) {
                     state.liveBets = Object.assign({}, payload.auctionBets);
                     state.betPlaced = {};
@@ -1373,6 +1375,13 @@
                 case 'ROUND_END':
                     stopAnswerTimer();
                     setWaitingTexts('🏁 Раунд завершён', 'Ожидайте начала следующего раунда...');
+                    showScreen('waiting');
+                    break;
+
+                case 'QUESTION_CLOSED':
+                    stopAnswerTimer();
+                    state.isEligibleForBuzzer = false;
+                    setWaitingTexts('Вопрос завершён', 'Ожидайте ведущего...');
                     showScreen('waiting');
                     break;
 
@@ -1466,7 +1475,7 @@
                         startAnswerTimer(Math.max(1, payload.answerSecondsLeft || 1));
                     } else if (selfId && bidding.includes(selfId)) {
                         stopAnswerTimer();
-                        setWaitingTexts('Ответ отправлен', 'Ведущий проверит ответы и начислит или спишет ставку.');
+                        setWaitingTexts(answered ? 'Ответ отправлен' : 'Ответы закрыты', 'Ведущий проверит ответы и начислит или спишет ставку.');
                         showScreen('waiting');
                     } else if (payload.isFinal) {
                         stopAnswerTimer();

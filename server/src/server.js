@@ -572,7 +572,7 @@ function handleClientMessage(ws, message) {
         case MSG_TYPES.HOST_SHOW_ANSWER: {
             const room = roomManager.getRoom(ws.roomCode);
             if (!room || !ws.isHost) return;
-            room.showAnswer();
+            room.revealQuestion();
             break;
         }
 

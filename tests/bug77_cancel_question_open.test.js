@@ -84,6 +84,19 @@ function app() {
     return { context, client, node, timers, scheduled, opened, send, question, run };
 }
 
+test('переход раунда отменяет отложенное раскрытие аукциона', () => {
+    const { context, send, scheduled, timers } = app();
+    let reveals = 0;
+    context.startPausedSpecialTimer = () => { reveals++; };
+    vm.runInContext('scheduleOnlineSpecialReveal(1000, true);', context);
+    const reveal = scheduled.at(-1);
+
+    send('round_changed', { roundIndex: 1 });
+    assert.equal(timers.has(reveal.id), false);
+    reveal.callback();
+    assert.equal(reveals, 0);
+});
+
 for (const event of ['question_closed', 'round_changed', 'round_skipped', 'game_finished']) {
     test('BUG-77: ' + event + ' отменяет открытие после мигания и поздний callback', () => {
         const state = app();

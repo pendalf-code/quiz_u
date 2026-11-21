@@ -123,6 +123,57 @@ test('LAN fixes: pause / disconnect / scoring / rounds', async (t) => {
         room.destroy();
     });
 
+    await t.test('a personal timeout applies the configured penalty once and reopens the buzzer for others', () => {
+        for (const [options, expectedPenalty] of [
+            [{ penaltyEnabled: true }, 200],
+            [{ penaltyEnabled: true, penaltyMode: 'fixed', penaltyFixedAmount: 75 }, 75],
+            [{ penaltyEnabled: false }, 0]
+        ]) {
+            const { room, hostWs } = makeRoom(options);
+            try {
+                const first = room.addPlayer('Алиса', '🦊', mockWs()).player;
+                const second = room.addPlayer('Боб', '🐼', mockWs()).player;
+                room.startGame();
+                room.selectQuestion(0, 1);
+                room.handleBuzz(first.id);
+
+                room.handleAnswerTimeout();
+                room.handleAnswerTimeout();
+
+                assert.equal(first.score, 0 - expectedPenalty);
+                assert.equal(second.score, 0);
+                assert.equal(hostWs.messages.filter(m => m.type === MSG_TYPES.SCORE_UPDATED).length, expectedPenalty > 0 ? 1 : 0);
+                assert.deepEqual(room.getStateSnapshot(true).buzzerOpenFor, [second.id]);
+            } finally {
+                room.destroy();
+            }
+        }
+    });
+
+    await t.test('a stale auction start leaves the next regular question and its reading timer intact', () => {
+        const { room, hostWs } = makeRoom({ readingTime: 5 });
+        try {
+            const player = room.addPlayer('Алиса', '🦊', mockWs()).player;
+            room.currentPack[0].themes[0].questions[0].type = 'auction';
+            room.startGame();
+            room.selectQuestion(0, 0);
+            room.handleAuctionBet(player.id, 100);
+            assert.equal(room.startAuctionAnswer().success, true);
+            room.closeQuestion();
+            room.selectQuestion(0, 1);
+            const timer = room.readingTimer;
+            const messageCount = hostWs.messages.length;
+
+            assert.equal(room.startAuctionAnswer([player.id]).success, false);
+            assert.equal(room.stateMachine.state, 'QUESTION_READING');
+            assert.equal(room.readingTimer, timer);
+            assert.ok(timer);
+            assert.equal(hostWs.messages.length, messageCount);
+        } finally {
+            room.destroy();
+        }
+    });
+
     await t.test('skipping the last round ends the game', () => {
         const { room } = makeRoom({}, 1);
         room.addPlayer('Алиса', '🦊', mockWs());

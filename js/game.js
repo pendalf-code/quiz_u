@@ -868,7 +868,7 @@ function pauseTimer() {
         });
         return;
     }
-    if (timerInterval || answerCountdownInterval) {
+    if (timerInterval || answerCountdownInterval || onlineAnswerCountdownInterval) {
         pausedTimerData = {
             hadTimerInterval: Boolean(timerInterval),
             hadAnswerCountdown: Boolean(answerCountdownInterval),
@@ -887,7 +887,7 @@ function pauseTimer() {
         isGlobalTimerPaused = true;
         const hintElem = document.getElementById('timer-hint');
         if (hintElem) {
-            hintElem.textContent = '⏸️ Пауза (нажмите Y или кнопку для продолжения)';
+            hintElem.textContent = !isOnlineGame || isLocalHostEnabled ? '⏸️ Пауза (нажмите P для продолжения)' : '⏸️ Пауза';
             hintElem.style.color = '#ffeaa7';
         }
         if (window.gamepadManager) {
@@ -909,15 +909,19 @@ function resumeTimer() {
 
     const hintElem = document.getElementById('timer-hint');
     if (hintElem) {
-        hintElem.textContent = isReadingTime ? '📖 Чтение вопроса...' : '🔥 Время пошло! Обсуждение';
+        hintElem.textContent = onlineAnswerCountdownInterval
+            ? 'Отвечает игрок'
+            : (isReadingTime ? '📖 Чтение вопроса...' : '🔥 Время пошло! Обсуждение');
         hintElem.style.color = isReadingTime ? '#81ecec' : '#ff7675';
     }
 
-    if (pausedTimerData && pausedTimerData.hadAnswerCountdown) {
-        isAnswerTimerActive = false;
-        toggleAnswerPause();
-    } else {
-        startTimer();
+    if (!onlineAnswerCountdownInterval) {
+        if (pausedTimerData && pausedTimerData.hadAnswerCountdown) {
+            isAnswerTimerActive = false;
+            toggleAnswerPause();
+        } else {
+            startTimer();
+        }
     }
 
     if (window.gamepadManager) {
@@ -927,6 +931,10 @@ function resumeTimer() {
 }
 
 function toggleTimerPause() {
+    if (isOnlineGame) {
+        if (isLocalHostEnabled && hostNetworkClient?.isConnected) hostNetworkClient.togglePause();
+        return;
+    }
     if (isGlobalTimerPaused) {
         resumeTimer();
     } else {
@@ -1020,6 +1028,7 @@ function startOnlineAnswerCountdown(seconds) {
     let currentStep = totalSteps;
 
     onlineAnswerCountdownInterval = setInterval(() => {
+        if (isGlobalTimerPaused) return;
         currentStep--;
         const progress = Math.max(0, currentStep / totalSteps);
         const secsLeft = Math.ceil(progress * seconds);
@@ -1406,7 +1415,7 @@ function startTimerAfterVideo() {
     }
 
     if (btnArea) {
-        btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
+        btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="requestShowAnswer()">Проверить ответ</button>';
     }
 
     startTimer();
@@ -2227,9 +2236,13 @@ function applyScoreChangeForAll(multiplier) {
         return;
     }
     const delta = val * multiplier;
-    teams.forEach(t => t.score += delta);
-    updateTeamsPanel();
-    saveGameState();
+    if (isOnlineGame) {
+        if (!isLocalHostEnabled || !hostNetworkClient?.updateAllScores(delta)) return;
+    } else {
+        teams.forEach(t => t.score += delta);
+        updateTeamsPanel();
+        saveGameState();
+    }
     showSystemModal("✅ ОЧКИ ОБНОВЛЕНЫ", `Всем командам успешно ${delta > 0 ? 'начислено' : 'списано'}: <b>${Math.abs(delta)}</b> очков!`);
 }
 
@@ -2633,7 +2646,7 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
                     playStartThinkingSound();
                 }
             }
-            if (btnArea) btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
+            if (btnArea) btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="requestShowAnswer()">Проверить ответ</button>';
             startTimer();
         }
     }
@@ -2810,7 +2823,7 @@ function onlineAuctionLeaderChosen(idx, bet) {
     if (hintElem) hintElem.textContent = `Отвечает «${teams[idx].name}» · ставка ${currentCost}`;
     const btnArea = document.getElementById('modal-buttons-area');
     if (btnArea) btnArea.innerHTML = '';
-    setTimeout(startPausedSpecialTimer, 1500);
+    scheduleOnlineSpecialReveal(1500);
 }
 
 /**
@@ -2834,7 +2847,7 @@ function onlineAuctionAnswersStarted(payload) {
     if (badge) badge.innerHTML = '💰 Ставки приняты<span>Команды вводят ответы на телефонах</span>';
     const btnArea = document.getElementById('modal-buttons-area');
     if (btnArea) btnArea.innerHTML = '';
-    setTimeout(startPausedSpecialTimer, 1000);
+    scheduleOnlineSpecialReveal(1000, true);
 }
 
 function selectTeamForCatInBag(teamIdx, fromServer = false) {
@@ -2859,7 +2872,7 @@ function selectTeamForCatInBag(teamIdx, fromServer = false) {
     if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
         // LAN: the server already started the question, reveal it without waiting for a click
         if (btnArea) btnArea.innerHTML = '';
-        setTimeout(startPausedSpecialTimer, 1500);
+        scheduleOnlineSpecialReveal(1500);
         return;
     }
     if (btnArea) {
@@ -2868,35 +2881,11 @@ function selectTeamForCatInBag(teamIdx, fromServer = false) {
     }
 }
 
-let specialQuestionRevealed = false;
-
-function startPausedSpecialTimer() {
-    if (specialQuestionRevealed) return;
-    specialQuestionRevealed = true;
+function revealSpecialQuestionContent(question) {
     const oldCatAnim = document.getElementById('modal-cat-animation');
     if (oldCatAnim) oldCatAnim.remove();
-    const timerElem = document.getElementById('timer'), hintElem = document.getElementById('timer-hint'),
-        btnArea = document.getElementById('modal-buttons-area');
-    const question = currentActiveQuestion || (gameData[currentRoundIndex]?.themes?.[currentThemeIdx]?.questions?.[currentQuestionIdx]);
-
-    if (question) {
-        question.used = true;
-        saveGameState();
-    }
-    if (activeCellOnBoard) {
-        activeCellOnBoard.classList.add('used');
-        activeCellOnBoard.onclick = null;
-    }
-
-    const currentTheme = gameData[currentRoundIndex]?.themes[currentThemeIdx];
-    if (currentTheme && currentTheme.questions.every(q => q.used)) {
-        const themeTitleElem = document.getElementById(`theme-title-${currentThemeIdx}`);
-        if (themeTitleElem) themeTitleElem.classList.add('used');
-    }
-
     const qTextElem = document.getElementById('modal-question-text'),
-        imgElement = document.getElementById('modal-question-img'),
-        audioElement = document.getElementById('modal-question-audio');
+        imgElement = document.getElementById('modal-question-img');
 
     if (qTextElem) {
         if (question && question.q && question.q.trim().length > 0) {
@@ -2919,6 +2908,33 @@ function startPausedSpecialTimer() {
             imgElement.style.display = 'none';
         }
     }
+}
+
+let specialQuestionRevealed = false;
+
+function startPausedSpecialTimer(auctionAlreadyStarted = false) {
+    if (specialQuestionRevealed) return;
+    specialQuestionRevealed = true;
+    const timerElem = document.getElementById('timer'), hintElem = document.getElementById('timer-hint'),
+        btnArea = document.getElementById('modal-buttons-area');
+    const question = currentActiveQuestion || (gameData[currentRoundIndex]?.themes?.[currentThemeIdx]?.questions?.[currentQuestionIdx]);
+
+    if (question) {
+        question.used = true;
+        saveGameState();
+    }
+    if (activeCellOnBoard) {
+        activeCellOnBoard.classList.add('used');
+        activeCellOnBoard.onclick = null;
+    }
+
+    const currentTheme = gameData[currentRoundIndex]?.themes[currentThemeIdx];
+    if (currentTheme && currentTheme.questions.every(q => q.used)) {
+        const themeTitleElem = document.getElementById(`theme-title-${currentThemeIdx}`);
+        if (themeTitleElem) themeTitleElem.classList.add('used');
+    }
+
+    revealSpecialQuestionContent(question);
 
     const hasVideo = handleQuestionVideo(question, false);
 
@@ -2941,7 +2957,7 @@ function startPausedSpecialTimer() {
         stopTimer();
         const isOnlineAuctionAnswers = Boolean(isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected
             && question && (question.type === 'auction' || question.type === 'auction_all'));
-        if (isOnlineAuctionAnswers) {
+        if (isOnlineAuctionAnswers && !auctionAlreadyStarted) {
             // Teams type their answers on phones: fixed window, no reading phase
             const biddingIds = Object.keys(auctionBets)
                 .filter(idx => auctionBets[idx] && !auctionBets[idx].isPassed && auctionBets[idx].val > 0)
@@ -2975,7 +2991,7 @@ function startPausedSpecialTimer() {
                 }
             }
         }
-        if (btnArea) btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
+        if (btnArea) btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="requestShowAnswer()">Проверить ответ</button>';
         startTimer();
     }
 }
@@ -3220,9 +3236,10 @@ window.addEventListener('keydown', function (event) {
 
     if (event.code === 'KeyP' || event.key === 'p' || event.key === 'P' || event.key === 'з' || event.key === 'З') {
         const modalElem = document.getElementById('question-modal');
-        if (modalElem && modalElem.classList.contains('active')) {
+        const lanFinalAnswering = isOnlineGame && window.FinalRound?.getStage() === 'question';
+        if (modalElem?.classList.contains('active') || lanFinalAnswering) {
             event.preventDefault();
-            toggleTimerPause();
+            if (!event.repeat) toggleTimerPause();
             return;
         }
     }
@@ -3324,8 +3341,19 @@ function renderModalTeamsList() {
     }
 }
 
+function requestShowAnswer() {
+    if (isOnlineGame) {
+        if (isLocalHostEnabled && hostNetworkClient?.isConnected) hostNetworkClient.showAnswer();
+    } else {
+        showAnswer();
+    }
+}
+
 function showAnswer() {
+    cancelOnlineSpecialReveal();
     stopTimer();
+    stopOnlineAnswerCountdown();
+    activeOnlineBuzzer = null;
     const answeringModal = document.getElementById('answering-player-modal');
     if (answeringModal) answeringModal.classList.add('hidden');
     stopQuestionAudio();
@@ -3342,6 +3370,10 @@ function showAnswer() {
     document.getElementById('modal-answer-text').style.display = 'block';
 
     const currentQuestionObj = currentActiveQuestion || (gameData[currentRoundIndex]?.themes?.[currentThemeIdx]?.questions?.[currentQuestionIdx]);
+    if (!specialQuestionRevealed && ['cat', 'auction', 'auction_all', 'auction_leader'].includes(currentQuestionObj?.type)) {
+        revealSpecialQuestionContent(currentQuestionObj);
+        specialQuestionRevealed = true;
+    }
     const ansImgElement = document.getElementById('modal-answer-img');
 
     if (ansImgElement) {
@@ -3905,6 +3937,7 @@ let lastServerRoomState = 'LOBBY';
 let pendingNetworkQuestionOpen = false;
 let networkQuestionOpenGeneration = 0;
 let networkQuestionOpenTimer = null;
+let onlineSpecialRevealTimer = null;
 let networkQuestionOpenSafetyTimer = null;
 let networkQuestionOpenCell = null;
 const queuedNetworkEvents = [];
@@ -4498,13 +4531,16 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('score_updated', (data) => {
-            if (data && data.isAll && data.delta) {
-                if (teams && Array.isArray(teams)) {
-                    teams.forEach(t => t.score += data.delta);
-                    updateTeamsPanel();
-                    renderModalTeamsList();
-                    saveGameState();
-                }
+            if (data && data.isAll && Array.isArray(data.players)) {
+                syncOnlineRoster(data.players);
+                const scores = new Map(data.players.map(player => [player.id, player.score]));
+                teams.forEach(team => {
+                    if (scores.has(team.id)) team.score = scores.get(team.id);
+                });
+                updateTeamsPanel();
+                renderModalTeamsList();
+                saveGameState();
+                if (window.FinalRound) window.FinalRound.refresh();
                 return;
             }
             if (teams && Array.isArray(teams)) {
@@ -4604,7 +4640,7 @@ function initHostNetwork(overrideUrl = null) {
                 isAnswerTimerActive = true;
                 savedThinkingTime = payload.remainingThinkingTime ?? configThinkingTime;
                 const buttons = document.getElementById('modal-buttons-area');
-                if (buttons) buttons.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
+                if (buttons) buttons.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="requestShowAnswer()">Проверить ответ</button>';
             }
             activeOnlineBuzzer = null;
             stopOnlineAnswerCountdown();
@@ -4779,7 +4815,7 @@ function initHostNetwork(overrideUrl = null) {
 
                     const btnArea = document.getElementById('modal-buttons-area');
                     if (btnArea) {
-                        btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
+                        btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="requestShowAnswer()">Проверить ответ</button>';
                     }
 
                     // Resume common question countdown if time remains (TASK-02)
@@ -4991,8 +5027,24 @@ function initHostNetwork(overrideUrl = null) {
     startConnection(initialWsUrl);
 }
 
+function cancelOnlineSpecialReveal() {
+    clearTimeout(onlineSpecialRevealTimer);
+    onlineSpecialRevealTimer = null;
+}
+
+function scheduleOnlineSpecialReveal(delay, auctionAlreadyStarted = false) {
+    cancelOnlineSpecialReveal();
+    const timer = setTimeout(() => {
+        if (onlineSpecialRevealTimer !== timer) return;
+        onlineSpecialRevealTimer = null;
+        startPausedSpecialTimer(auctionAlreadyStarted);
+    }, delay);
+    onlineSpecialRevealTimer = timer;
+}
+
 // Закрытие вопроса отменяет и мигание, и заставку: старый callback не вправе открыть следующий экран.
 function cancelPendingNetworkQuestionOpen() {
+    cancelOnlineSpecialReveal();
     networkQuestionOpenGeneration++;
     if (networkQuestionOpenTimer) clearTimeout(networkQuestionOpenTimer);
     if (networkQuestionOpenSafetyTimer) clearTimeout(networkQuestionOpenSafetyTimer);
@@ -5074,7 +5126,12 @@ function handleOnlineRoundTransition() {
     if (!isOnlineGame || !isGameStarted || pendingNetworkQuestionOpen) return;
     if (lastServerRoomState === 'ROUND_END' && !onlineRoundEndShown) {
         onlineRoundEndShown = true;
-        showSystemModal("🏁 РАУНД ЗАВЕРШЁН", "Все вопросы раунда разыграны! Ведущий переходит к следующему раунду.");
+        const buttons = isLocalHostEnabled ? [{
+            text: 'Следующий раунд', class: 'btn-success', action: (event) => {
+                if (hostNetworkClient?.isConnected && hostNetworkClient.nextRound()) event.currentTarget.disabled = true;
+            }
+        }] : undefined;
+        showSystemModal("🏁 РАУНД ЗАВЕРШЁН", "Все вопросы раунда разыграны!", buttons);
     } else if (lastServerRoomState === 'GAME_OVER' && !onlineGameOverShown) {
         onlineGameOverShown = true;
         hideGameLayout();
@@ -5335,51 +5392,8 @@ function startOnlineGame(fromServer = false) {
 
 function judgeOnlineAnswer(isCorrect) {
     if (!isOnlineGame || !hostNetworkClient) return;
-    stopOnlineAnswerCountdown();
-
-    // The server applies the score (and the penalty from room settings) and broadcasts `score_updated`
+    // Сервер начисляет очки и решает, переоткрыть баззер или показать ответ.
     hostNetworkClient.judgeAnswer(isCorrect, Boolean(!isCorrect && currentLobbySettings && currentLobbySettings.penaltyEnabled));
-
-    if (isCorrect) {
-        showAnswer();
-    } else {
-        const banner = document.getElementById('online-buzzer-banner');
-        const icon = document.getElementById('online-buzzer-icon');
-        const avatar = document.getElementById('online-buzzer-avatar');
-        const status = document.getElementById('online-buzzer-status');
-        const ring = document.getElementById('online-buzzer-ring-wrap');
-        const text = document.getElementById('online-buzzer-text');
-
-        if (banner) {
-            banner.className = 'online-buzzer-banner';
-            banner.style.display = 'flex';
-        }
-        if (icon) icon.style.display = 'block';
-        if (avatar) avatar.style.display = 'none';
-        if (status) status.style.display = 'none';
-        if (ring) ring.style.display = 'none';
-        if (text) text.textContent = 'Неверно — кнопка снова активна';
-
-        const btnArea = document.getElementById('modal-buttons-area');
-        if (btnArea) {
-            btnArea.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="showAnswer()">Проверить ответ</button>';
-        }
-
-        // Resume common question countdown if time remains (TASK-02)
-        isAnswerTimerActive = false;
-        const timerElem = document.getElementById('timer');
-        const hintElem = document.getElementById('timer-hint');
-        if (timerElem) timerElem.classList.remove('paused');
-        if (hintElem) {
-            hintElem.textContent = '🔥 Время пошло! Обсуждение';
-            hintElem.style.color = '#ff7675';
-        }
-
-        if (savedThinkingTime > 0) {
-            timeLeft = savedThinkingTime;
-            startTimer();
-        }
-    }
 }
 
 // Expose online functions to window
