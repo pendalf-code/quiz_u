@@ -15,7 +15,7 @@ function setup(online = false) {
     const ctx = { document: { getElementById: node }, isOnlineGame: online, isGlobalTimerPaused: false,
         lastServerRoomState: 'QUESTION_READING', configThinkingTime: 30,
         hostNetworkClient: { isConnected: true, activateBuzzer() { ctx.requests++; } },
-        stopTimer() {}, startTimer() { ctx.starts++; }, playStartThinkingSound() {},
+        stopTimer() {}, updateManualReadingButton() {}, startTimer() { ctx.starts++; }, playStartThinkingSound() {},
         resolveMediaPath: x => x, requests: 0, starts: 0 };
     vm.createContext(ctx);
     vm.runInContext(source.slice(source.indexOf('let waitingForQuestionMedia'), source.indexOf('function hideGameLayout')), ctx);
@@ -44,6 +44,21 @@ test('Одновременные медиа: ждём оба; LAN отправл
     ctx.finishQuestionMedia();
     assert.equal(ctx.requests, 1);
     assert.equal(ctx.starts, 0);
+});
+test('Ручное чтение ждёт ведущего даже после окончания медиа', () => {
+    for (const online of [false, true]) {
+        const { ctx, node } = setup(online);
+        ctx.handleQuestionAudio({ audio: 'test.mp3' });
+        ctx.showManualReading(true);
+        node('modal-question-audio').ended = true;
+        ctx.finishQuestionMedia();
+        assert.equal(ctx.starts, 0);
+        assert.equal(ctx.requests, 0);
+        if (!online) {
+            ctx.startManualThinking();
+            assert.equal(ctx.starts, 1);
+        }
+    }
 });
 test('Закрытие, пауза и поздний ended не открывают баззер', () => {
     const { ctx } = setup(true);

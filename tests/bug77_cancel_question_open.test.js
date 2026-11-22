@@ -84,17 +84,38 @@ function app() {
     return { context, client, node, timers, scheduled, opened, send, question, run };
 }
 
-test('переход раунда отменяет отложенное раскрытие аукциона', () => {
+test('переход раунда отменяет отложенное раскрытие спецвопроса', () => {
     const { context, send, scheduled, timers } = app();
     let reveals = 0;
     context.startPausedSpecialTimer = () => { reveals++; };
-    vm.runInContext('scheduleOnlineSpecialReveal(1000, true);', context);
+    vm.runInContext('scheduleOnlineSpecialReveal(1000);', context);
     const reveal = scheduled.at(-1);
 
     send('round_changed', { roundIndex: 1 });
     assert.equal(timers.has(reveal.id), false);
     reveal.callback();
     assert.equal(reveals, 0);
+});
+
+test('TASK-86: общий аукцион начинает отсчёт ПК сразу по событию сервера', () => {
+    const { context, send } = app();
+    context.isTestMode = false;
+    context.specialQuestionRevealed = false;
+    context.currentActiveQuestion = { type: 'auction' };
+    context.teams = [];
+    context.currentCost = 100;
+    const starts = [];
+    context.startPausedSpecialTimer = (auctionAlreadyStarted) => {
+        starts.push(auctionAlreadyStarted);
+        context.specialQuestionRevealed = true;
+    };
+    vm.runInContext(section('function onlineAuctionAnswersStarted(', 'function selectTeamForCatInBag('), context);
+
+    send('auction_answer_start', { answerTime: 30 });
+    assert.deepEqual(starts, [true]);
+
+    send('auction_answer_start', { answerTime: 30 });
+    assert.deepEqual(starts, [true]);
 });
 
 for (const event of ['question_closed', 'round_changed', 'round_skipped', 'game_finished']) {
@@ -211,7 +232,7 @@ test('BUG-77: прямой выбор с ПК отменяет прежнее о
     state.question('Первый?');
     const stale = state.scheduled.find(timer => timer.delay === 1300).callback;
     Object.assign(state.context, {
-        isTestMode: false, teams: [], configReadingTime: 7, configThinkingTime: 30,
+        isTestMode: false, teams: [], configReadingMode: 'fixed', configReadingTime: 7, configThinkingTime: 30,
         configAnswerTime: 5, handleQuestionVideo: () => false, handleQuestionAudio: () => false, startTimer() {},
         playStartThinkingSound() {}, specialQuestionRevealed: false
     });

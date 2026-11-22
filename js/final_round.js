@@ -394,9 +394,9 @@
 
         box.querySelectorAll('.final-bet-input').forEach(input => {
             input.addEventListener('input', () => {
-                const v = parseInt(input.value, 10);
-                if (isNaN(v)) delete st.bets[input.dataset.key];
-                else st.bets[input.dataset.key] = v;
+                const key = input.dataset.key;
+                if (input.value === '' && !input.validity.badInput) delete st.bets[key];
+                else st.bets[key] = input.valueAsNumber;
                 input.classList.remove('is-invalid');
                 renderActions();
             });
@@ -536,7 +536,7 @@
             const v = st.bets[k];
             const input = document.querySelector(`.final-bet-input[data-key="${k}"]`);
             if (v === undefined) return; // no bet: the team sits the final out
-            if (isNaN(v) || v < lim.min || v > lim.max) {
+            if (!Number.isInteger(v) || v < lim.min || v > lim.max) {
                 hasErrors = true;
                 if (input) input.classList.add('is-invalid');
             } else {
@@ -546,7 +546,7 @@
         if (hasErrors) {
             st.placed = {};
             if (typeof showSystemModal === 'function') {
-                showSystemModal('❌ Недопустимая ставка', 'Ставка в финале — от 1 до текущего счёта команды.');
+                showSystemModal('❌ Недопустимая ставка', 'Введите целое число в диапазоне ставки команды.');
             }
             return;
         }

@@ -20,6 +20,7 @@ const DEFAULT_MSG_TYPES = {
     HOST_SELECT_QUESTION: 'HOST_SELECT_QUESTION',
     HOST_SPECIAL_INTRO_SHOWN: 'HOST_SPECIAL_INTRO_SHOWN',
     HOST_ACTIVATE_BUZZER: 'HOST_ACTIVATE_BUZZER',
+    HOST_START_THINKING: 'HOST_START_THINKING',
     HOST_JUDGE_ANSWER: 'HOST_JUDGE_ANSWER',
     HOST_SHOW_ANSWER: 'HOST_SHOW_ANSWER',
     HOST_TOGGLE_PAUSE: 'HOST_TOGGLE_PAUSE',
@@ -541,6 +542,10 @@ class NetworkClient {
 
     confirmSpecialIntro(specialIntroId) {
         return this.send(MSG.HOST_SPECIAL_INTRO_SHOWN, { specialIntroId });
+    }
+
+    startThinking(manualReadingId) {
+        return this.send(MSG.HOST_START_THINKING, { manualReadingId });
     }
 
     activateBuzzer(allowedPlayerIds = null) {

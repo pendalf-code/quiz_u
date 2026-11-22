@@ -122,6 +122,7 @@
         btnHostJudgeWrongPenalty: document.getElementById('btn-host-judge-wrong-penalty'),
         btnHostJudgeWrongPenaltyText: document.getElementById('btn-host-judge-wrong-penalty-text'),
         btnHostPause: document.getElementById('btn-host-pause'),
+        btnHostStartThinking: document.getElementById('btn-host-start-thinking'),
         hostPauseIcon: document.getElementById('host-pause-icon'),
         hostPauseText: document.getElementById('host-pause-text'),
         btnHostPassTurn: document.getElementById('btn-host-pass-turn'),
@@ -180,6 +181,7 @@
         selectedCatTargetId: null,
         toastTimeout: null,
         activeQuestion: null,
+        manualReadingId: null,
         awaitingSpecialIntro: false,
         activeAnsweringPlayer: null,
         isPaused: false,
@@ -616,6 +618,12 @@
     function updateHostScreen(roomState, meta = {}) {
         if (roomState) state.roomState = roomState;
         const currentRoomState = state.roomState || 'LOBBY';
+        const canStartThinking = currentRoomState === 'QUESTION_READING'
+            && Boolean(state.manualReadingId) && !state.awaitingSpecialIntro;
+        if (elements.btnHostStartThinking) {
+            elements.btnHostStartThinking.classList.toggle('hidden', !canStartThinking);
+            elements.btnHostStartThinking.disabled = state.isPaused;
+        }
 
         // State Badge
         if (elements.hostStateBadge) {
@@ -685,7 +693,7 @@
         }
 
         // Toggle Question card vs Board panel
-        const isQuestionActive = Boolean(state.activeQuestion && (state.activeQuestion.q || state.activeQuestion.text));
+        const isQuestionActive = canStartThinking || Boolean(state.activeQuestion && (state.activeQuestion.q || state.activeQuestion.text));
         const isBoardState = (currentRoomState === 'BOARD') && !isQuestionActive;
 
         if (elements.hostBoardPanel) {
@@ -1333,6 +1341,8 @@
             }
 
             if (state.selectedRole === 'host') {
+                const newManualQuestion = Boolean(payload.manualReadingId && payload.manualReadingId !== state.manualReadingId);
+                state.manualReadingId = payload.manualReadingId || null;
                 state.awaitingSpecialIntro = Number.isInteger(payload.specialIntroId);
                 if (payload.state === 'QUESTION_CLOSED') state.activeAnsweringPlayer = null;
                 if (payload.auctionBets) {
@@ -1343,7 +1353,7 @@
                 if (payload.currentQuestion) {
                     state.questionType = payload.currentQuestion.type || state.questionType;
                 }
-                if (payload.currentQuestion && !state.activeQuestion) {
+                if (payload.currentQuestion && (!state.activeQuestion || newManualQuestion)) {
                     // Page reload / reconnect in the middle of a question
                     state.activeQuestion = payload.currentQuestion;
                     state.activeThemeName = payload.themeName || state.activeThemeName;
@@ -1526,6 +1536,7 @@
             state.currentCost = payload.cost || 100;
             state.isEligibleForBuzzer = true;
             state.activeQuestion = payload.question || null;
+            state.manualReadingId = payload.manualReadingId || null;
             state.awaitingSpecialIntro = Number.isInteger(payload.specialIntroId);
             state.activeThemeName = payload.themeName || (payload.question && (payload.question.theme || payload.question.themeName)) || null;
             state.activeAnsweringPlayer = null;
@@ -1971,7 +1982,10 @@
         });
 
         netClient.on('cat_transferred', (payload) => {
-            if (state.selectedRole === 'host') return;
+            if (state.selectedRole === 'host') {
+                if (state.manualReadingId) updateHostScreen('QUESTION_READING');
+                return;
+            }
             const isTarget = state.selfPlayer && payload.toPlayerId === state.selfPlayer.id;
             if (isTarget) {
                 state.mustAnswer = true;
@@ -1991,7 +2005,8 @@
             if (state.selectedRole === 'host') {
                 state.liveBets = state.liveBets || {};
                 state.hostLeaderId = payload.leaderPlayerId;
-                renderHostSpecialPanel();
+                if (state.manualReadingId) updateHostScreen('QUESTION_READING');
+                else renderHostSpecialPanel();
                 showToast(`Лидер торгов: ${payload.leaderPlayerName} (${payload.bet})`, 'info');
                 return;
             }
@@ -2273,6 +2288,13 @@
                 closeAllScoresModal();
                 haptic('buzz_press');
                 showToast(`Всем командам начислено +${delta} очков!`, 'success');
+            });
+        }
+
+        if (elements.btnHostStartThinking) {
+            elements.btnHostStartThinking.addEventListener('click', () => {
+                if (state.roomState !== 'QUESTION_READING' || !state.manualReadingId || state.isPaused) return;
+                if (netClient?.isConnected) netClient.startThinking(state.manualReadingId);
             });
         }
 

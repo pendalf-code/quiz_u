@@ -421,7 +421,7 @@ function renderCatalogPacks() {
                 <div class="pack-card-badges-row">
                     <span class="pack-mini-pill">⏱️ ${roundsBadgeText}</span>
                     ${pack.hasFinal ? '<span class="pack-mini-pill pill-final">🏆 С финалом</span>' : ''}
-                    ${pack.hasMedia ? '<span class="pack-mini-pill pill-media">🎬 Аудио/Видео</span>' : ''}
+                    ${pack.hasMedia ? '<span class="pack-mini-pill pill-media">🎬 Медиа</span>' : ''}
                     ${pack.hasCatInBag || pack.hasCat ? '<span class="pack-mini-pill pill-cat">🐱 Кот</span>' : ''}
                     ${pack.hasAuction ? '<span class="pack-mini-pill pill-auction">💰 Аукцион</span>' : ''}
                 </div>

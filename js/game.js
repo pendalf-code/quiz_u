@@ -61,6 +61,7 @@ if (!gameData || gameData.length === 0 || (gameData[0]?.themes?.[0]?.name === "�
 let currentRoundIndex = 0, currentCost = 0, timerInterval = null, timeLeft = 30, isReadingTime = true;
 let currentThemeIdx = 0, currentQuestionIdx = 0;
 const savedReadingTime = QuizStorage.getItem('cfg_reading_time');
+let configReadingMode = QuizStorage.getItem('cfg_reading_mode') === 'manual' ? 'manual' : 'fixed';
 const parsedReadingTime = typeof savedReadingTime === 'string' && savedReadingTime.trim() !== '' ? Number(savedReadingTime) : NaN;
 let configReadingTime = Number.isFinite(parsedReadingTime) && parsedReadingTime >= 0 ? Math.floor(parsedReadingTime) : 7;
 let configThinkingTime = parseInt(QuizStorage.getItem('cfg_thinking_time')) || 30;
@@ -853,7 +854,23 @@ function triggerFireworksAnimation() {
 }
 
 let isGlobalTimerPaused = false;
-let pausedTimerData = null;
+function renderLocalTimerControls(visible) {
+    const controls = document.getElementById('local-question-timer-controls');
+    if (!controls) return;
+    controls.hidden = !visible || isOnlineGame;
+    if (controls.hidden) return;
+
+    const answerButton = document.getElementById('btn-start-local-answer');
+    if (answerButton) {
+        answerButton.textContent = isAnswerTimerActive ? 'К обсуждению' : 'Ответ команды';
+        answerButton.disabled = isGlobalTimerPaused || isReadingTime;
+    }
+    const pauseButton = document.getElementById('btn-local-timer-pause');
+    if (pauseButton) {
+        pauseButton.textContent = isGlobalTimerPaused ? 'Продолжить' : 'Пауза';
+        pauseButton.disabled = !isGlobalTimerPaused && !timerInterval && !answerCountdownInterval;
+    }
+}
 
 function pauseTimer() {
     if (isGlobalTimerPaused) return;
@@ -869,22 +886,12 @@ function pauseTimer() {
         return;
     }
     if (timerInterval || answerCountdownInterval || onlineAnswerCountdownInterval) {
-        pausedTimerData = {
-            hadTimerInterval: Boolean(timerInterval),
-            hadAnswerCountdown: Boolean(answerCountdownInterval),
-            timeLeft: timeLeft,
-            isAnswerTimerActive: isAnswerTimerActive,
-            isReadingTime: isReadingTime
-        };
         if (timerInterval) {
             clearInterval(timerInterval);
             timerInterval = null;
         }
-        if (answerCountdownInterval) {
-            clearInterval(answerCountdownInterval);
-            answerCountdownInterval = null;
-        }
         isGlobalTimerPaused = true;
+        renderLocalTimerControls(true);
         const hintElem = document.getElementById('timer-hint');
         if (hintElem) {
             hintElem.textContent = !isOnlineGame || isLocalHostEnabled ? '⏸️ Пауза (нажмите P для продолжения)' : '⏸️ Пауза';
@@ -909,25 +916,21 @@ function resumeTimer() {
 
     const hintElem = document.getElementById('timer-hint');
     if (hintElem) {
-        hintElem.textContent = onlineAnswerCountdownInterval
-            ? 'Отвечает игрок'
-            : (isReadingTime ? '📖 Чтение вопроса...' : '🔥 Время пошло! Обсуждение');
-        hintElem.style.color = isReadingTime ? '#81ecec' : '#ff7675';
-    }
-
-    if (!onlineAnswerCountdownInterval) {
-        if (pausedTimerData && pausedTimerData.hadAnswerCountdown) {
-            isAnswerTimerActive = false;
-            toggleAnswerPause();
+        if (answerCountdownInterval || onlineAnswerCountdownInterval) {
+            hintElem.textContent = answerCountdownInterval ? '🎙️ Ответ команды!' : 'Отвечает игрок';
+            hintElem.style.color = '#f1c40f';
         } else {
-            startTimer();
+            hintElem.textContent = isReadingTime ? '📖 Чтение вопроса...' : '🔥 Время пошло! Обсуждение';
+            hintElem.style.color = isReadingTime ? '#81ecec' : '#ff7675';
         }
     }
+
+    if (!answerCountdownInterval && !onlineAnswerCountdownInterval) startTimer();
+    renderLocalTimerControls(true);
 
     if (window.gamepadManager) {
         window.gamepadManager.showToast('▶️ Таймер возобновлен');
     }
-    pausedTimerData = null;
 }
 
 function toggleTimerPause() {
@@ -1076,7 +1079,7 @@ function startOnlineAnswerCountdown(seconds) {
 
 function stopTimer() {
     isGlobalTimerPaused = false;
-    pausedTimerData = null;
+    renderLocalTimerControls(false);
     stopOnlineAnswerCountdown();
     if (timerInterval) {
         clearInterval(timerInterval);
@@ -1258,6 +1261,7 @@ function resolveMediaPath(url) {
 }
 
 let waitingForQuestionMedia = false;
+let waitingForManualReading = false;
 let questionMediaGeneration = 0;
 
 function retryQuestionMedia() {
@@ -1304,11 +1308,12 @@ function finishQuestionMedia() {
         const media = document.getElementById(id);
         return media && media.getAttribute('src') && !media.ended;
     });
-    if (!stillPlaying) startTimerAfterVideo();
+    if (!stillPlaying && !waitingForManualReading) startTimerAfterVideo();
 }
 
 function stopQuestionAudio() {
     waitingForQuestionMedia = false;
+    waitingForManualReading = false;
     questionMediaGeneration++;
     const visualizer = document.getElementById('question-audio-visualizer');
     if (visualizer) { visualizer.hidden = true; visualizer.classList.remove('is-playing'); }
@@ -1388,12 +1393,51 @@ function handleQuestionVideo(question, isAnswer = false) {
 }
 
 function startTimerAfterVideo() {
-    if (!waitingForQuestionMedia || isGlobalTimerPaused) return;
+    if (!waitingForQuestionMedia || waitingForManualReading || isGlobalTimerPaused) return;
     if (isOnlineGame && hostNetworkClient) {
         if (!hostNetworkClient.isConnected) return;
         if (lastServerRoomState === 'QUESTION_READING') hostNetworkClient.activateBuzzer();
         return;
     }
+    startThinkingCountdown();
+}
+
+function showManualReading(hasMedia) {
+    stopTimer();
+    isReadingTime = true;
+    waitingForManualReading = true;
+    waitingForQuestionMedia = hasMedia;
+    const timer = document.getElementById('timer');
+    if (timer) {
+        timer.style.display = 'none';
+        timer.textContent = '';
+    }
+    const hint = document.getElementById('timer-hint');
+    if (hint) {
+        hint.textContent = 'Чтение вопроса. Таймер запустит ведущий';
+        hint.style.color = '#81ecec';
+    }
+    const buttons = document.getElementById('modal-buttons-area');
+    if (buttons) {
+        buttons.innerHTML = '<button type="button" class="btn btn-success" id="btn-start-thinking" onclick="startManualThinking()">Запустить таймер</button>';
+    }
+    updateManualReadingButton();
+}
+
+function startManualThinking() {
+    if (!waitingForManualReading || isGlobalTimerPaused) return;
+    if (isOnlineGame) {
+        const button = document.getElementById('btn-start-thinking');
+        if (button && !button.hidden && !button.disabled && hostNetworkClient?.isConnected
+            && lastServerRoomState === 'QUESTION_READING') {
+            hostNetworkClient.startThinking(onlineManualReadingId);
+        }
+        return;
+    }
+    startThinkingCountdown();
+}
+
+function startThinkingCountdown() {
     stopQuestionAudio();
     const timerElem = document.getElementById('timer');
     const hintElem = document.getElementById('timer-hint');
@@ -1796,17 +1840,38 @@ function testInitQuickGame() {
     finalizeGameStartWithFirstTurn(0);
 }
 
-function saveSettings() {
-    const rTime = parseInt(document.getElementById('setting-reading-time').value, 10);
-    const tTime = parseInt(document.getElementById('setting-thinking-time').value, 10);
-    const aTime = parseInt(document.getElementById('setting-answer-time').value, 10);
+function toggleReadingTimeInput(prefix) {
+    const mode = document.getElementById(prefix + '-reading-mode');
+    const time = document.getElementById(prefix + '-reading-time');
+    if (mode && time) time.disabled = mode.value === 'manual';
+}
 
-    if (isNaN(rTime) || isNaN(tTime) || isNaN(aTime) || rTime < 0 || tTime < 1 || aTime < 1) {
-        showSystemModal("❌ Ошибка!", "Введите корректные числа времени!");
+function setReadingModeInput(prefix, readingMode) {
+    const mode = document.getElementById(prefix + '-reading-mode');
+    if (mode) mode.value = readingMode;
+    toggleReadingTimeInput(prefix);
+}
+
+function saveSettings() {
+    const manualReading = document.getElementById('setting-reading-mode')?.value === 'manual';
+    const readSeconds = id => {
+        const input = document.getElementById(id);
+        return input && input.checkValidity() ? input.valueAsNumber : NaN;
+    };
+    const rTime = manualReading ? configReadingTime : readSeconds('setting-reading-time');
+    const tTime = readSeconds('setting-thinking-time');
+    const aTime = readSeconds('setting-answer-time');
+
+    if (![rTime, tTime, aTime].every(Number.isInteger)) {
+        showSystemModal("❌ Ошибка!", "Введите целое число секунд в допустимом диапазоне.");
         return;
     }
 
     configReadingTime = rTime;
+    configReadingMode = manualReading ? 'manual' : 'fixed';
+    currentLobbySettings.readingMode = configReadingMode;
+    currentLobbySettings.readingTime = rTime;
+    QuizStorage.setItem('cfg_reading_mode', configReadingMode);
     configThinkingTime = tTime;
     configAnswerTime = aTime;
     QuizStorage.setItem('cfg_reading_time', rTime);
@@ -2391,6 +2456,7 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
     auctionBets = {};
 
     if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
+        if (!isFromNetwork) onlineManualReadingId = null;
         activeOnlineBuzzer = null;
         const banner = document.getElementById('online-buzzer-banner');
         if (banner) {
@@ -2590,7 +2656,10 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
             btnArea.innerHTML = '<button class="btn btn-success" onclick="confirmAllAuctionBets()">💰 Подтвердить ставки и открыть вопрос</button>';
         }
     } else {
-        if (hasVideoInQuestion) {
+        const manualReading = isOnlineGame && isFromNetwork ? Boolean(onlineManualReadingId) : configReadingMode === 'manual';
+        if (manualReading) {
+            showManualReading(hasVideoInQuestion);
+        } else if (hasVideoInQuestion) {
             waitingForQuestionMedia = true;
             stopTimer();
             if (timerElem) {
@@ -2728,8 +2797,8 @@ function confirmAllAuctionBets() {
             if (!input) return;
             const minBet = parseInt(input.getAttribute('data-min'), 10) || 0,
                 maxBet = parseInt(input.getAttribute('data-max'), 10) || minBet;
-            let val = parseInt(input.value, 10);
-            if (isNaN(val) || val < minBet || val > maxBet) {
+            const val = input.valueAsNumber;
+            if (!Number.isInteger(val) || val < minBet || val > maxBet) {
                 hasErrors = true;
                 input.style.borderColor = "var(--error-red)";
                 input.style.boxShadow = "0 0 10px rgba(214, 48, 49, 0.8)";
@@ -2742,7 +2811,11 @@ function confirmAllAuctionBets() {
     });
 
     if (hasErrors) {
-        showSystemModal("❌ Недопустимая ставка!", "Некоторые команды превысили свой лимит очков.");
+        if (hint) hint.textContent = 'Недопустимая ставка. Проверьте диапазон команды.';
+        return;
+    }
+    if (!isOnlineGame && !Object.values(auctionBets).some(bet => !bet.isPassed)) {
+        if (hint) hint.textContent = 'Нет ставок. Сделайте хотя бы одну ставку.';
         return;
     }
     const currentQuestionObj = currentActiveQuestion || (gameData[currentRoundIndex]?.themes?.[currentThemeIdx]?.questions?.[currentQuestionIdx]);
@@ -2766,8 +2839,8 @@ function confirmAllAuctionBets() {
         if (leaders.length > 1) {
             if (isOnlineGame) {
                 if (hint) hint.textContent = 'Ничья в торгах. Дождитесь новых ставок.';
-            } else {
-                showSystemModal("⚖️ НИЧЬЯ В ТОРГАХ!", `Команды ${leaders.map(i => `"${escapeHtml(teams[i].name)}"`).join(' и ')} поставили одинаковую сумму (<b>${maxBet}</b>)!`);
+            } else if (hint) {
+                hint.textContent = `Ничья: ${leaders.map(i => teams[i].name).join(', ')} поставили по ${maxBet}. Измените одну из ставок.`;
             }
             return;
         }
@@ -2835,6 +2908,10 @@ function onlineAuctionLeaderChosen(idx, bet) {
     const hintElem = document.getElementById('timer-hint');
     if (hintElem) hintElem.textContent = `Отвечает «${teams[idx].name}» · ставка ${currentCost}`;
     const btnArea = document.getElementById('modal-buttons-area');
+    if (onlineManualReadingId) {
+        startPausedSpecialTimer();
+        return;
+    }
     if (isLocalHostEnabled && btnArea) {
         btnArea.innerHTML = '<button class="btn btn-success" id="btn-start-paused-timer" onclick="startPausedSpecialTimer()">⏱️ Открыть вопрос и запустить таймер</button>';
         return;
@@ -2864,7 +2941,8 @@ function onlineAuctionAnswersStarted(payload) {
     if (badge) badge.innerHTML = '💰 Ставки приняты<span>Команды вводят ответы на телефонах</span>';
     const btnArea = document.getElementById('modal-buttons-area');
     if (btnArea) btnArea.innerHTML = '';
-    scheduleOnlineSpecialReveal(1000, true);
+    cancelOnlineSpecialReveal();
+    startPausedSpecialTimer(true);
 }
 
 function selectTeamForCatInBag(teamIdx, fromServer = false) {
@@ -2957,6 +3035,11 @@ function startPausedSpecialTimer(auctionAlreadyStarted = false) {
 
     const hasAudio = handleQuestionAudio(question);
 
+    if (isOnlineGame ? Boolean(onlineManualReadingId) : configReadingMode === 'manual') {
+        showManualReading(hasVideo || hasAudio);
+        return;
+    }
+
     if ((hasVideo || hasAudio) && (!isOnlineGame || !['auction', 'auction_all'].includes(question.type))) {
         waitingForQuestionMedia = true;
         stopTimer();
@@ -3037,6 +3120,7 @@ function startTimer() {
                     hintElemInner.style.color = "#ff7675";
                 }
                 playStartThinkingSound();
+                renderLocalTimerControls(true);
                 if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
                     const currentQ = currentActiveQuestion || (gameData[currentRoundIndex]?.themes?.[currentThemeIdx]?.questions?.[currentQuestionIdx]);
                     if (currentQ && currentQ.type === 'cat' && teams[activeTeamIdxForQuestion]) {
@@ -3060,6 +3144,7 @@ function startTimer() {
                 }
             } else {
                 stopTimer();
+                renderLocalTimerControls(true);
                 playTimeUpSound();
                 const timerElemInner = document.getElementById('timer');
                 if (timerElemInner) timerElemInner.textContent = 0;
@@ -3071,9 +3156,11 @@ function startTimer() {
             }
         }
     }, 1000);
+    renderLocalTimerControls(true);
 }
 
 function toggleAnswerPause() {
+    if (waitingForManualReading || waitingForQuestionMedia || isGlobalTimerPaused || isReadingTime) return;
     const modalElem = document.getElementById('question-modal');
     if (!modalElem || !modalElem.classList.contains('active')) return;
 
@@ -3134,6 +3221,7 @@ function toggleAnswerPause() {
         }
 
         answerCountdownInterval = setInterval(() => {
+            if (isGlobalTimerPaused) return;
             currentAnswerSec--;
             if (timerElem) {
                 timerElem.textContent = currentAnswerSec;
@@ -3159,11 +3247,13 @@ function toggleAnswerPause() {
                     hintElem.textContent = "⏰ Время на ответ вышло!";
                     hintElem.style.color = "#ff7675";
                 }
+                renderLocalTimerControls(true);
             }
         }, 1000);
-
+        renderLocalTimerControls(true);
     } else {
         unfreezeQuestionTimer();
+        renderLocalTimerControls(true);
     }
 }
 
@@ -3262,6 +3352,7 @@ window.addEventListener('keydown', function (event) {
     }
 
     if (event.code === 'Space' || event.key === ' ' || event.keyCode === 32) {
+        if (waitingForManualReading || activeTag === 'button' || activeTag === 'select') return;
         const modalElem = document.getElementById('question-modal');
         if (modalElem && modalElem.classList.contains('active')) {
             event.preventDefault();
@@ -3989,7 +4080,19 @@ let currentOnlineRoomCode = '';
 let isLocalHostEnabled = false;
 let activeOnlineBuzzer = null;
 
+let onlineManualReadingId = null;
+let onlineManualReadingPaused = false;
+
+function updateManualReadingButton() {
+    const button = document.getElementById('btn-start-thinking');
+    if (!button || !isOnlineGame) return;
+    const host = isLocalHostEnabled ? hostNetworkClient?.getHost() : null;
+    button.hidden = !isLocalHostEnabled || Boolean(host?.isConnected && host.id !== 'host_pc');
+    button.disabled = !onlineManualReadingId || onlineManualReadingPaused;
+}
+
 let currentLobbySettings = {
+    readingMode: configReadingMode,
     readingTime: parseInt(QuizStorage.getItem('cfg_reading_time'), 10) >= 0 ? parseInt(QuizStorage.getItem('cfg_reading_time'), 10) : 7,
     thinkingTime: parseInt(QuizStorage.getItem('cfg_thinking_time'), 10) >= 5 ? parseInt(QuizStorage.getItem('cfg_thinking_time'), 10) : 30,
     answerTime: parseInt(QuizStorage.getItem('cfg_answer_time'), 10) >= 1 ? parseInt(QuizStorage.getItem('cfg_answer_time'), 10) : 5,
@@ -4022,7 +4125,9 @@ function updateLobbySettingsChips() {
     }
 
     if (readingChip) {
-        if (currentLobbySettings.readingTime === 0) {
+        if (currentLobbySettings.readingMode === 'manual') {
+            readingChip.textContent = 'По кнопке ведущего';
+        } else if (currentLobbySettings.readingTime === 0) {
             readingChip.textContent = '0 сек (без задержки)';
         } else {
             readingChip.textContent = `${currentLobbySettings.readingTime} сек`;
@@ -4078,6 +4183,7 @@ function openLobbySettingsModal(event) {
     const penaltyFixedInput = document.getElementById('lobby-setting-penalty-fixed-amount');
 
     if (readingInput) readingInput.value = currentLobbySettings.readingTime;
+    setReadingModeInput('lobby-setting', currentLobbySettings.readingMode);
     if (thinkingInput) thinkingInput.value = currentLobbySettings.thinkingTime;
     if (answerInput) answerInput.value = currentLobbySettings.answerTime;
     if (penaltyCheckbox) penaltyCheckbox.checked = Boolean(currentLobbySettings.penaltyEnabled);
@@ -4125,7 +4231,8 @@ function saveLobbySettings() {
     const penaltyModeSelect = document.getElementById('lobby-setting-penalty-mode');
     const penaltyFixedInput = document.getElementById('lobby-setting-penalty-fixed-amount');
 
-    const readingTime = readingInput ? Math.max(0, parseInt(readingInput.value, 10) || 0) : currentLobbySettings.readingTime;
+    const readingMode = document.getElementById('lobby-setting-reading-mode')?.value === 'manual' ? 'manual' : 'fixed';
+    const readingTime = readingMode === 'fixed' && readingInput ? Math.max(0, parseInt(readingInput.value, 10) || 0) : currentLobbySettings.readingTime;
     const thinkingTime = thinkingInput ? Math.max(5, parseInt(thinkingInput.value, 10) || 30) : currentLobbySettings.thinkingTime;
     const answerTime = answerInput ? Math.max(1, parseInt(answerInput.value, 10) || 5) : currentLobbySettings.answerTime;
     const penaltyEnabled = penaltyCheckbox ? Boolean(penaltyCheckbox.checked) : currentLobbySettings.penaltyEnabled;
@@ -4136,6 +4243,7 @@ function saveLobbySettings() {
     if (turnOrderInput) saveTurnOrderSetting(turnOrderInput.value);
 
     currentLobbySettings = {
+        readingMode,
         readingTime,
         thinkingTime,
         answerTime,
@@ -4145,11 +4253,13 @@ function saveLobbySettings() {
         turnOrderMode: configTurnOrderMode
     };
 
+    configReadingMode = readingMode;
     configReadingTime = readingTime;
     configThinkingTime = thinkingTime;
     configAnswerTime = answerTime;
 
     try {
+        QuizStorage.setItem('cfg_reading_mode', readingMode);
         QuizStorage.setItem('cfg_reading_time', readingTime);
         QuizStorage.setItem('cfg_thinking_time', thinkingTime);
         QuizStorage.setItem('cfg_answer_time', answerTime);
@@ -4170,6 +4280,7 @@ function saveLobbySettings() {
 
 function syncLobbySettings(options) {
     if (!options || typeof options !== 'object') return;
+    if (typeof options.readingMode !== 'undefined') currentLobbySettings.readingMode = options.readingMode === 'manual' ? 'manual' : 'fixed';
     if (typeof options.readingTime !== 'undefined') currentLobbySettings.readingTime = Math.max(0, parseInt(options.readingTime, 10));
     if (typeof options.thinkingTime !== 'undefined') currentLobbySettings.thinkingTime = Math.max(5, parseInt(options.thinkingTime, 10));
     if (typeof options.answerTime !== 'undefined') currentLobbySettings.answerTime = Math.max(1, parseInt(options.answerTime, 10));
@@ -4181,6 +4292,7 @@ function syncLobbySettings(options) {
         configTurnOrderMode = currentLobbySettings.turnOrderMode;
     }
 
+    configReadingMode = currentLobbySettings.readingMode;
     configReadingTime = currentLobbySettings.readingTime;
     configThinkingTime = currentLobbySettings.thinkingTime;
     configAnswerTime = currentLobbySettings.answerTime;
@@ -4217,6 +4329,7 @@ function openPreGameSettings() {
     const auc = document.getElementById('setting-type-auction');
     const lead = document.getElementById('setting-type-auction-leader');
     if (r) r.value = configReadingTime;
+    setReadingModeInput('setting', configReadingMode);
     if (t) t.value = configThinkingTime;
     if (a) a.value = configAnswerTime;
     if (cat) cat.checked = configAllowCat;
@@ -4673,14 +4786,21 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('buzzer_ready', (payload) => {
+            if (onlineManualReadingId && !specialQuestionRevealed && activeTeamIdxForQuestion !== null
+                && ['cat', 'auction_leader'].includes(currentActiveQuestion?.type)) {
+                cancelOnlineSpecialReveal();
+                startPausedSpecialTimer();
+            }
             lastServerRoomState = 'BUZZ_ACTIVE';
-            if (waitingForQuestionMedia) {
+            const manualStart = waitingForManualReading;
+            if (waitingForQuestionMedia || manualStart) {
                 stopQuestionAudio();
                 isReadingTime = false;
                 isAnswerTimerActive = true;
                 savedThinkingTime = payload.remainingThinkingTime ?? configThinkingTime;
                 const buttons = document.getElementById('modal-buttons-area');
                 if (buttons) buttons.innerHTML = '<button class="btn btn-check" id="btn-show-answer" onclick="requestShowAnswer()">Проверить ответ</button>';
+                if (manualStart) playStartThinkingSound();
             }
             activeOnlineBuzzer = null;
             stopOnlineAnswerCountdown();
@@ -4696,6 +4816,7 @@ function initHostNetwork(overrideUrl = null) {
                 }
                 timeLeft = Math.max(0, savedThinkingTime);
                 if (timerElem) {
+                    timerElem.style.display = 'flex';
                     timerElem.className = isReadingTime ? 'timer reading' : 'timer thinking';
                     timerElem.classList.remove('frozen');
                     timerElem.classList.remove('paused');
@@ -4898,6 +5019,8 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('game_paused', (payload) => {
+            onlineManualReadingPaused = Boolean(payload?.isPaused);
+            updateManualReadingButton();
             if (window.FinalRound) window.FinalRound.onPause(payload && payload.isPaused);
             const banner = document.getElementById('disconnect-pause-banner');
             const desc = document.getElementById('disconnect-pause-desc');
@@ -4939,6 +5062,8 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('question_active', (payload) => {
+            onlineManualReadingId = payload?.manualReadingId || null;
+            updateManualReadingButton();
             if (payload && payload.state) lastServerRoomState = payload.state;
             if (!isGameStarted && typeof startOnlineGame === 'function') {
                 startOnlineGame(true);
@@ -4960,11 +5085,14 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('room_state', (payload) => {
+            onlineManualReadingId = payload?.manualReadingId || null;
+            onlineManualReadingPaused = Boolean(payload?.isPaused);
             syncOnlineRoster(payload && payload.players);
             if (payload && payload.isHostOnPC !== undefined) {
                 isLocalHostEnabled = Boolean(payload.isHostOnPC);
             }
             syncHostChrome();
+            updateManualReadingButton();
             if (payload && payload.options) {
                 syncLobbySettings(payload.options);
             }
@@ -5077,12 +5205,12 @@ function cancelOnlineSpecialReveal() {
     onlineSpecialRevealTimer = null;
 }
 
-function scheduleOnlineSpecialReveal(delay, auctionAlreadyStarted = false) {
+function scheduleOnlineSpecialReveal(delay) {
     cancelOnlineSpecialReveal();
     const timer = setTimeout(() => {
         if (onlineSpecialRevealTimer !== timer) return;
         onlineSpecialRevealTimer = null;
-        startPausedSpecialTimer(auctionAlreadyStarted);
+        startPausedSpecialTimer();
     }, delay);
     onlineSpecialRevealTimer = timer;
 }

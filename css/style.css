@@ -7250,6 +7250,21 @@ body.light-theme .gamepad-toast {
     z-index: 10;
 }
 
+.local-question-timer-controls:not([hidden]) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.local-question-timer-controls .btn {
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+    padding: 8px 14px;
+}
+
 .answering-player-modal.hidden {
     display: none !important;
 }
@@ -7576,7 +7591,8 @@ body.light-theme .gamepad-toast {
 body.pc-judges .answering-controls-row { display: flex; }
 
 /* "Проверить ответ" and an empty button area are not needed on a pure display */
-body.phone-host-online #modal-buttons-area:has(#btn-show-answer:only-child) { display: none; }
+body.phone-host-online #modal-buttons-area:has(#btn-show-answer:only-child),
+#btn-start-thinking[hidden] { display: none; }
 body.phone-host-online #teams-modal-list:empty { display: none; }
 body.phone-host-online #btn-score-for-all { display: none; }
 

@@ -467,6 +467,18 @@
 
                             <div class="settings-row-box">
                                 <div class="setting-info">
+                                    <label class="settings-label" for="setting-reading-mode">Запуск таймера</label>
+                                    <div class="settings-subtext">Когда начинать обсуждение</div>
+                                </div>
+                                <select class="catalog-sort-dropdown setting-dropdown-field" id="setting-reading-mode"
+                                        onchange="toggleReadingTimeInput('setting')">
+                                    <option value="fixed">По таймеру чтения</option>
+                                    <option value="manual">По кнопке ведущего</option>
+                                </select>
+                            </div>
+
+                            <div class="settings-row-box">
+                                <div class="setting-info">
                                     <label class="settings-label" for="setting-reading-time">⏱️ Время на чтение
                                         ведущим</label>
                                     <div class="settings-subtext">Пауза для зачитывания вопроса перед активацией
@@ -1010,6 +1022,14 @@
         <div class="modal-card">
             <div class="timer-hint" id="timer-hint">Чтение вопроса</div>
             <div class="timer reading" id="timer">7</div>
+            <div class="local-question-timer-controls" id="local-question-timer-controls" hidden>
+                <button class="btn btn-check" id="btn-start-local-answer" type="button" onclick="toggleAnswerPause()">
+                    Ответ команды
+                </button>
+                <button class="btn btn-check" id="btn-local-timer-pause" type="button" onclick="toggleTimerPause()">
+                    Пауза
+                </button>
+            </div>
             <div class="modal-text" id="modal-question-text">Текст вопроса</div>
 
             <img alt="Иллюстрация" id="modal-question-img"
@@ -1290,6 +1310,18 @@
         <div class="lobby-settings-modal-body">
             <div class="settings-group-box">
                 <label class="settings-group-title">⏱️ Тайминги раунда и вопросов</label>
+
+                <div class="settings-row-box">
+                    <div class="setting-info">
+                        <label class="settings-label" for="lobby-setting-reading-mode">Запуск таймера</label>
+                        <div class="settings-subtext">Когда открывать баззеры и начинать обсуждение</div>
+                    </div>
+                    <select class="catalog-sort-dropdown setting-dropdown-field" id="lobby-setting-reading-mode"
+                            onchange="toggleReadingTimeInput('lobby-setting')">
+                        <option value="fixed">По таймеру чтения</option>
+                        <option value="manual">По кнопке ведущего</option>
+                    </select>
+                </div>
 
                 <div class="settings-row-box">
                     <div class="setting-info">

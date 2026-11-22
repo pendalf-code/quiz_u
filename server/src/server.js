@@ -498,9 +498,16 @@ function handleClientMessage(ws, message) {
             break;
         }
 
+        case MSG_TYPES.HOST_START_THINKING: {
+            if (!isCurrentMobileHost && !(attachedRoom.hostWs === ws && attachedRoom.isHostOnPC
+                && !attachedHost?.isConnected)) return;
+            attachedRoom.startThinking(payload?.manualReadingId);
+            break;
+        }
+
         case MSG_TYPES.HOST_ACTIVATE_BUZZER: {
             const room = roomManager.getRoom(ws.roomCode);
-            if (!room || !ws.isHost) return;
+            if (!room || !ws.isHost || room.manualReadingId) return;
             // The room opens the buzzer itself when reading time ends; a late duplicate from the PC
             // screen is harmless while the buzzer is open, but must not reset a buzz race in progress.
             const canActivate = ['QUESTION_READING', 'CAT_CHOOSING', 'AUCTION_BETTING', 'BUZZ_ACTIVE']
