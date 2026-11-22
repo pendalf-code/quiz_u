@@ -8,6 +8,18 @@ const rootDir = path.resolve(__dirname, '..');
 describe('Host Lobby & Network Client Integration Tests', () => {
     const htmlContent = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
 
+    test('снимок лобби удаляет исключённого игрока и сохраняет отключённого участника', () => {
+        const NetworkClient = require('../js/net/NetworkClient.js');
+        const client = new NetworkClient({ isHost: true });
+        const host = { id: 'host_pc', role: 'host', isConnected: true };
+        const kicked = { id: 'kicked', role: 'player', isConnected: true };
+        const disconnected = { id: 'disconnected', role: 'player', isConnected: false };
+        client._syncPlayersFromState({ isHostOnPC: true, host, players: [kicked, disconnected] });
+        client._syncPlayersFromState({ isHostOnPC: true, host, players: [disconnected] });
+        assert.deepEqual(client.getPlayersList().map(player => player.id), ['disconnected']);
+        assert.equal(client.getHost().id, host.id);
+    });
+
     test('TASK-06, 07, 08, 10, 11, 12: main menu mode buttons and navigation cleanup', () => {
         // TASK-06: Local game without "(один экран)"
         assert.ok(

@@ -180,6 +180,7 @@
         selectedCatTargetId: null,
         toastTimeout: null,
         activeQuestion: null,
+        awaitingSpecialIntro: false,
         activeAnsweringPlayer: null,
         isPaused: false,
         roomState: 'LOBBY',
@@ -632,7 +633,9 @@
                 'QUESTION_CLOSED': 'Вопрос завершён',
                 'GAME_OVER': 'Игра завершена'
             };
-            elements.hostStateBadge.textContent = stateLabels[currentRoomState] || currentRoomState;
+            elements.hostStateBadge.textContent = state.awaitingSpecialIntro
+                ? 'Заставка на общем экране'
+                : (stateLabels[currentRoomState] || currentRoomState);
         }
 
         // Meta (Theme & Cost)
@@ -694,16 +697,13 @@
             }
         }
         if (elements.hostQuestionCard) {
-            if (isBoardState && state.boardData) {
-                elements.hostQuestionCard.classList.add('hidden');
-            } else {
-                elements.hostQuestionCard.classList.remove('hidden');
-            }
+            elements.hostQuestionCard.classList.toggle('hidden', state.awaitingSpecialIntro || (isBoardState && Boolean(state.boardData)));
         }
 
         // Screen phase drives which controls the dock shows (see `#screen-host[data-phase]` in mobile.css)
         let hostPhase = 'board';
         if (currentRoomState === 'LOBBY' || currentRoomState === 'INIT') hostPhase = 'lobby';
+        else if (state.awaitingSpecialIntro) hostPhase = 'intro';
         else if ((currentRoomState === 'CAT_CHOOSING' || currentRoomState === 'AUCTION_BETTING') && isQuestionActive) hostPhase = 'special';
         else if (currentRoomState === 'GAME_OVER') hostPhase = 'game_over';
         else if (currentRoomState === 'ROUND_END') hostPhase = 'round_end';
@@ -821,7 +821,7 @@
         const panel = elements.hostSpecialPanel;
         if (!panel) return;
         const roomState = state.roomState;
-        const isSpecial = (roomState === 'CAT_CHOOSING' || roomState === 'AUCTION_BETTING') && Boolean(state.activeQuestion);
+        const isSpecial = !state.awaitingSpecialIntro && (roomState === 'CAT_CHOOSING' || roomState === 'AUCTION_BETTING') && Boolean(state.activeQuestion);
         panel.classList.toggle('hidden', !isSpecial);
         if (!isSpecial) return;
 
@@ -962,6 +962,7 @@
         }
 
         const initialN = state.hostCustomN || state.currentCost || 100;
+        const inLobby = state.roomState === 'INIT' || state.roomState === 'LOBBY';
         playerList.forEach((p) => {
             const qCost = state.currentCost || 100;
             const row = document.createElement('div');
@@ -972,7 +973,7 @@
                     <span class="host-player-name">${escapeHtml(p.name)}</span>
                     <span class="host-player-score">${p.score || 0}</span>
                 </div>
-                <div class="host-player-actions">
+                ${inLobby ? '<button type="button" class="btn btn-danger btn-host-remove-player">Удалить</button>' : `<div class="host-player-actions">
                     <button type="button" class="score-step-btn minus-cost" data-id="${p.id}" title="Снять ${qCost}">-${qCost}</button>
                     <button type="button" class="score-step-btn plus-cost" data-id="${p.id}" title="Начислить ${qCost}">+${qCost}</button>
                     <div class="host-score-n-wrap">
@@ -980,8 +981,18 @@
                         <button type="button" class="score-step-btn minus btn-score-sub" data-id="${p.id}" title="Вычесть N очков">-N</button>
                         <button type="button" class="score-step-btn plus btn-score-add" data-id="${p.id}" title="Прибавить N очков">+N</button>
                     </div>
-                </div>
+                </div>`}
             `;
+            elements.hostPlayersList.appendChild(row);
+
+            if (inLobby) {
+                const kick = row.querySelector('.btn-host-remove-player');
+                kick.setAttribute('aria-label', `Удалить игрока ${p.name}`);
+                kick.addEventListener('click', () => {
+                    if ((state.roomState === 'INIT' || state.roomState === 'LOBBY') && netClient?.kickPlayer(p.id)) kick.disabled = true;
+                });
+                return;
+            }
 
             const btnMinusCost = row.querySelector('.minus-cost');
             if (btnMinusCost) {
@@ -1028,7 +1039,6 @@
                 showToast(`-${delta} очков (${p.name})`, 'info');
             });
 
-            elements.hostPlayersList.appendChild(row);
         });
     }
 
@@ -1323,6 +1333,7 @@
             }
 
             if (state.selectedRole === 'host') {
+                state.awaitingSpecialIntro = Number.isInteger(payload.specialIntroId);
                 if (payload.state === 'QUESTION_CLOSED') state.activeAnsweringPlayer = null;
                 if (payload.auctionBets) {
                     state.liveBets = Object.assign({}, payload.auctionBets);
@@ -1515,6 +1526,7 @@
             state.currentCost = payload.cost || 100;
             state.isEligibleForBuzzer = true;
             state.activeQuestion = payload.question || null;
+            state.awaitingSpecialIntro = Number.isInteger(payload.specialIntroId);
             state.activeThemeName = payload.themeName || (payload.question && (payload.question.theme || payload.question.themeName)) || null;
             state.activeAnsweringPlayer = null;
             state.auctionBiddingPlayers = [];
@@ -1897,7 +1909,8 @@
                 const isMe = state.selfPlayer && payload.playerId === state.selfPlayer.id;
                 const isHostKicked = (payload.role === 'host' || (state.selfPlayer && payload.playerId === state.selfPlayer.id)) && state.selectedRole === 'host';
                 if (isMe || (payload.kicked && isHostKicked)) {
-                    leaveToMainMenu(payload.kicked ? 'Ведущий был отключен' : 'Вы покинули комнату', 'warning');
+                    const message = payload.kicked ? 'Вы были отключены от комнаты' : 'Вы покинули комнату';
+                    leaveToMainMenu(message, 'warning');
                     return;
                 }
             }
@@ -1919,6 +1932,7 @@
 
         netClient.on('round_changed', (payload) => {
             stopAnswerTimer();
+            state.awaitingSpecialIntro = false;
             state.activeQuestion = null;
             state.activeAnsweringPlayer = null;
             showToast(`🏁 ${payload.roundName || ('Раунд ' + ((payload.roundIndex || 0) + 1))}`, 'info', 3000);
@@ -2019,6 +2033,7 @@
 
         netClient.on('question_closed', () => {
             stopAnswerTimer();
+            state.awaitingSpecialIntro = false;
             state.mustAnswer = false;
             state.isPassed = false;
             state.betSubmitted = false;
@@ -2101,6 +2116,7 @@
         state.sessionToken = null;
         state.selfPlayer = null;
         state.activeQuestion = null;
+        state.awaitingSpecialIntro = false;
         state.activeAnsweringPlayer = null;
         state.isPaused = false;
         state.roomState = 'LOBBY';

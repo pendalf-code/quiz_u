@@ -77,6 +77,56 @@ test('LAN fixes: pause / disconnect / scoring / rounds', async (t) => {
         room.destroy();
     });
 
+    await t.test('исключение из лобби удаляет игрока из списка и освобождает его место', () => {
+        const { room } = makeRoom({ maxPlayers: 1 });
+        try {
+            const ws = mockWs();
+            const player = room.addPlayer('Алиса', '🦊', ws).player;
+            const previousToken = player.sessionToken;
+            room.removePlayer(player.id);
+            assert.ok(ws.messages.some(m => m.type === MSG_TYPES.PLAYER_KICKED));
+            assert.deepEqual(room.getStateSnapshot().players, []);
+            const newSeat = room.addPlayer('Алиса', '🦊', mockWs(), previousToken);
+            assert.equal(newSeat.success, true);
+            assert.notEqual(newSeat.player.id, player.id);
+            assert.notEqual(newSeat.player.sessionToken, previousToken);
+            assert.equal(room.isPaused, false);
+        } finally {
+            room.destroy();
+        }
+    });
+
+    await t.test('подтверждение заставки разблокирует только выбранный спецвопрос', () => {
+        const { room, hostWs } = makeRoom({ requireMobileHost: true });
+        try {
+            const remote = mockWs();
+            room.addPlayer('Ведущий', '🎙️', remote, null, 'host');
+            room.addPlayer('Алиса', '🦊', mockWs());
+            room.startGame();
+
+            room.selectQuestion(0, 0, { q: 'Кот', a: 'Ответ', cost: 100, type: 'cat' }, true);
+            const first = hostWs.messages.findLast(m => m.type === MSG_TYPES.QUESTION_ACTIVE).payload.specialIntroId;
+            assert.ok(Number.isInteger(first));
+            assert.equal(room.getStateSnapshot().specialIntroId, first);
+            assert.equal(room.getStateSnapshot(true).specialIntroId, undefined);
+
+            room.closeQuestion();
+            room.selectQuestion(0, 1, { q: 'Аукцион', a: 'Ответ', cost: 200, type: 'auction' }, true);
+            const second = room.getStateSnapshot().specialIntroId;
+            assert.notEqual(second, first);
+            room.completeSpecialIntro(first);
+            assert.equal(room.getStateSnapshot().specialIntroId, second);
+            room.completeSpecialIntro(second);
+            assert.equal(room.getStateSnapshot().specialIntroId, null);
+            const latest = remote.messages.findLast(m => m.type === MSG_TYPES.ROOM_STATE).payload;
+            assert.equal(latest.specialIntroId, null);
+            assert.equal(latest.currentQuestion.q, 'Аукцион');
+            assert.equal(room.thinkingTimer, null);
+        } finally {
+            room.destroy();
+        }
+    });
+
     await t.test('buzzer is not reopened for disconnected players only', () => {
         const { room } = makeRoom();
         const ws1 = mockWs();

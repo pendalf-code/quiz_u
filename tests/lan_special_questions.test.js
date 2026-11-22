@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
+const vm = require('node:vm');
 
 const root = path.join(__dirname, '..');
 const read = (...p) => fs.readFileSync(path.join(root, ...p), 'utf8').replace(/\r\n/g, '\n');
@@ -56,6 +57,36 @@ test('LAN special questions: host phone', async (t) => {
 test('LAN special questions: PC screen', async (t) => {
     const game = read('js', 'game.js');
 
+    await t.test('суммы скрыты при обновлении общего экрана во время торгов', () => {
+        const rows = [];
+        const list = { style: {}, appendChild(row) { rows.push(row); } };
+        const context = vm.createContext({
+            document: { getElementById: () => list, createElement: () => ({ style: {} }) },
+            isOnlineGame: true,
+            lastServerRoomState: 'AUCTION_BETTING',
+            currentActiveQuestion: { type: 'auction' },
+            activeTeamIdxForQuestion: null,
+            currentCost: 100,
+            teams: ['Анна', 'Борис', 'Вера'].map(name => ({ name, score: 300 })),
+            auctionBets: { 0: { val: 157, isPassed: false }, 1: { val: 0, isPassed: true } },
+            escapeHtml: text => text
+        });
+        const start = game.indexOf('function isOnlineAuctionBetting()');
+        const render = game.indexOf('function renderModalTeamsList()');
+        vm.runInContext(game.slice(start >= 0 ? start : render, game.indexOf('function requestShowAnswer()')), context);
+        context.renderModalTeamsList();
+        const html = () => rows.map(row => row.innerHTML).join(' ');
+        assert.doesNotMatch(html(), /157/);
+        assert.match(html(), /Ставка сделана/);
+        assert.match(html(), /Пас/);
+        assert.match(html(), /Думает/);
+
+        rows.length = 0;
+        context.lastServerRoomState = 'AUCTION_ANSWERING';
+        context.renderModalTeamsList();
+        assert.match(html(), /Ставка: 157/);
+    });
+
     await t.test('cat_transferred uses the fields the server really sends', () => {
         const body = game.slice(game.indexOf("hostNetworkClient.on('cat_transferred'"), game.indexOf("hostNetworkClient.on('auction_leader_set'"));
         assert.ok(body.includes('payload.toPlayerId'));
@@ -65,7 +96,8 @@ test('LAN special questions: PC screen', async (t) => {
 
     await t.test('auction bets mirror pass state instead of toggling it blindly', () => {
         const body = game.slice(game.indexOf("hostNetworkClient.on('auction_bet_made'"), game.indexOf("hostNetworkClient.on('answer_timeout'"));
-        assert.ok(body.includes('isPassedNow'));
+        assert.ok(body.includes('isPassed: amount === 0'));
+        assert.ok(body.includes('renderModalTeamsList()'));
     });
 
     await t.test('LAN banner has no duplicated icon / wordy text', () => {

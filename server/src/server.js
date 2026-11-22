@@ -480,7 +480,8 @@ function handleClientMessage(ws, message) {
                 }));
             }
             try {
-                room.selectQuestion(payload.themeIdx, payload.questionIdx, question);
+                const waitForIntro = ws !== room.hostWs && room.options.syncSpecialIntro === true && room.hostWs?.readyState === 1;
+                room.selectQuestion(payload.themeIdx, payload.questionIdx, question, waitForIntro);
             } catch (err) {
                 console.error('Error selecting question:', err);
                 ws.send(createMessage(MSG_TYPES.ERROR, {
@@ -488,6 +489,12 @@ function handleClientMessage(ws, message) {
                     message: 'Не удалось выбрать вопрос: ' + err.message
                 }));
             }
+            break;
+        }
+
+        case MSG_TYPES.HOST_SPECIAL_INTRO_SHOWN: {
+            const room = roomManager.getRoom(ws.roomCode);
+            if (room && ws === room.hostWs) room.completeSpecialIntro(payload?.specialIntroId);
             break;
         }
 

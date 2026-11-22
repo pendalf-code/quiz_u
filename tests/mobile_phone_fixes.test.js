@@ -89,7 +89,7 @@ test('Mobile Phone Bugs Verification Suite', async (t) => {
         const normGameJs = gameJs.replace(/\r\n/g, '\n');
         assert.ok(normGameJs.includes('function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overrideQuestion = null, isFromNetwork = false)'), 'openQuestion must accept isFromNetwork parameter');
         assert.ok(normGameJs.includes('if (!isFromNetwork) {\n            hostNetworkClient.selectQuestion(currentThemeIdx, currentQuestionIdx, question);\n        }'), 'selectQuestion must only be sent when !isFromNetwork');
-        assert.ok(normGameJs.includes('openQuestionFromHostPhone(themeIdx, questionIdx, targetCell, payload.question);'), 'Network listener opens the question through the blink animation');
+        assert.ok(normGameJs.includes('openQuestionFromHostPhone(themeIdx, questionIdx, targetCell, payload.question, payload.specialIntroId);'), 'Network listener opens the question through the blink animation and keeps the intro ID');
         assert.ok(normGameJs.includes("openQuestion(themeIdx, questionIdx, cell || document.createElement('div'), null, false, question, true);"), 'Network open must pass isFromNetwork = true');
     });
 });

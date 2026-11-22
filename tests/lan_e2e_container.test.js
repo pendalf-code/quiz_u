@@ -1536,6 +1536,33 @@ describe('LAN Mode Containerized Integration Test Suite (Testcontainers-style)',
         };
     }
 
+    test('мобильный ведущий ждёт подтверждения заставки от общего экрана', async () => {
+        const { desktopWs, hostWs, players } = await setupMultiPlayerRoom(2, {
+            syncSpecialIntro: true,
+            pack: [{ roundName: 'Раунд 1', themes: [{ name: 'Тема', questions: [{ q: 'Кот', a: 'Ответ', cost: 100, type: 'cat' }] }] }]
+        });
+        const started = container.waitForMessage(hostWs, MSG_TYPES.ROOM_STATE, m => m.payload.state === 'BOARD');
+        container.sendMessage(hostWs, MSG_TYPES.HOST_START_GAME);
+        await started;
+
+        const active = [desktopWs, hostWs, players[0].ws].map(ws => container.waitForMessage(ws, MSG_TYPES.QUESTION_ACTIVE));
+        container.sendMessage(hostWs, MSG_TYPES.HOST_SELECT_QUESTION, { themeIdx: 0, questionIdx: 0 });
+        const [desktop, host, player] = await Promise.all(active);
+        const id = desktop.payload.specialIntroId;
+        assert.ok(Number.isInteger(id));
+        assert.equal(host.payload.specialIntroId, id);
+        assert.equal(player.payload.specialIntroId, undefined);
+
+        const snapshot = container.waitForMessage(hostWs, MSG_TYPES.ROOM_STATE);
+        container.sendMessage(hostWs, MSG_TYPES.HOST_SPECIAL_INTRO_SHOWN, { specialIntroId: id });
+        container.sendMessage(hostWs, MSG_TYPES.HOST_UPDATE_ROOM_SETTINGS, { settings: { answerTime: 6 } });
+        assert.equal((await snapshot).payload.specialIntroId, id);
+
+        const ready = container.waitForMessage(hostWs, MSG_TYPES.ROOM_STATE, m => m.payload.specialIntroId === null);
+        container.sendMessage(desktopWs, MSG_TYPES.HOST_SPECIAL_INTRO_SHOWN, { specialIntroId: id });
+        assert.equal((await ready).payload.currentQuestion.q, 'Кот');
+    });
+
     test('3P+ Flow 29: Scale & Room Capacity - 4 players join, 5th rejected when maxPlayers=4', async () => {
         const { roomCode, hostWs, players } = await setupMultiPlayerRoom(4, { maxPlayers: 4 });
         assert.equal(players.length, 4);

@@ -18,6 +18,7 @@ const DEFAULT_MSG_TYPES = {
     HOST_SET_PACK: 'HOST_SET_PACK',
     HOST_START_GAME: 'HOST_START_GAME',
     HOST_SELECT_QUESTION: 'HOST_SELECT_QUESTION',
+    HOST_SPECIAL_INTRO_SHOWN: 'HOST_SPECIAL_INTRO_SHOWN',
     HOST_ACTIVATE_BUZZER: 'HOST_ACTIVATE_BUZZER',
     HOST_JUDGE_ANSWER: 'HOST_JUDGE_ANSWER',
     HOST_SHOW_ANSWER: 'HOST_SHOW_ANSWER',
@@ -454,6 +455,10 @@ class NetworkClient {
         }
 
         if (Array.isArray(state.players)) {
+            const present = new Set(state.players.map(player => player.id));
+            for (const [id, player] of this.connectedPlayers) {
+                if (player.role !== 'host' && !present.has(id)) this.connectedPlayers.delete(id);
+            }
             for (const p of state.players) {
                 this.connectedPlayers.set(p.id, p);
             }
@@ -532,6 +537,10 @@ class NetworkClient {
             questionIdx,
             question
         });
+    }
+
+    confirmSpecialIntro(specialIntroId) {
+        return this.send(MSG.HOST_SPECIAL_INTRO_SHOWN, { specialIntroId });
     }
 
     activateBuzzer(allowedPlayerIds = null) {

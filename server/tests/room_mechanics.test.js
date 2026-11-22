@@ -351,7 +351,8 @@ test('Server: Room Mechanics & Anti-Cheat Tests', async (t) => {
         assert.equal(room.players.get(p1Id).isConnected, false);
         assert.equal(room.players.get(p1Id).ws, null);
 
-        // Player 2 disconnects by ID
+        // During play, removing player 2 by ID keeps the score row for the current match.
+        room.stateMachine.state = 'BOARD';
         room.removePlayer(p2Id);
         assert.equal(room.players.get(p2Id).isConnected, false);
         assert.equal(room.players.get(p2Id).ws, null);

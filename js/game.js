@@ -2582,39 +2582,13 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
         }
         if (btnArea) btnArea.innerHTML = '';
     } else if (['auction', 'auction_leader'].includes(question.type)) {
-        let auctionListContainer = document.createElement('div');
-        auctionListContainer.style.width = '100%';
-        auctionListContainer.style.display = 'flex';
-        auctionListContainer.style.flexDirection = 'column';
-        auctionListContainer.style.gap = '14px';
-
-        teams.forEach((t, idx) => {
-            let minBet = currentCost, maxBet = Math.max(currentCost, t.score);
-            auctionBets[idx] = {val: minBet, isPassed: false};
-
-            const card = document.createElement('div');
-            card.className = 'auction-team-card';
-            card.id = `auction-card-team-${idx}`;
-            card.innerHTML = `
-                    <div class="auction-team-header">
-                        <span>⭐ ${escapeHtml(t.name)} (Очки: ${t.score})</span>
-                        <span style="color: var(--gold-accent); font-size: 15px; font-weight: 800;">Диапазон: ${minBet} - ${maxBet}</span>
-                    </div>
-                    <div class="auction-controls-row">
-                        <div class="auction-quick-btns">
-                            <button class="btn-mini btn-check" type="button" onclick="setAuctionFieldValue(${idx}, ${minBet})">Мин (${minBet})</button>
-                            <button class="btn-mini btn-success" type="button" onclick="setAuctionFieldValue(${idx}, ${maxBet})">Ва-банк (${maxBet})</button>
-                            <button class="btn-mini btn-danger" type="button" onclick="toggleAuctionPass(${idx})">🚫 Пас</button>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 16px; font-weight: 800; color: #fff;">Ставка:</span>
-                            <input type="number" id="auction-input-${idx}" class="modal-auction-input" value="${minBet}" data-min="${minBet}" data-max="${maxBet}" oninput="handleAuctionInput(${idx})">
-                        </div>
-                    </div>`;
-            auctionListContainer.appendChild(card);
-        });
-        if (listContainer) listContainer.appendChild(auctionListContainer);
-        if (btnArea) btnArea.innerHTML = '<button class="btn btn-success" onclick="confirmAllAuctionBets()">💰 Подтвердить ставки и открыть вопрос</button>';
+        if (listContainer) {
+            if (isOnlineGame) renderOnlineAuctionBets(listContainer);
+            else renderLocalAuctionBets(listContainer);
+        }
+        if (btnArea && (!isOnlineGame || isLocalHostEnabled)) {
+            btnArea.innerHTML = '<button class="btn btn-success" onclick="confirmAllAuctionBets()">💰 Подтвердить ставки и открыть вопрос</button>';
+        }
     } else {
         if (hasVideoInQuestion) {
             waitingForQuestionMedia = true;
@@ -2660,7 +2634,42 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
         modalElem.classList.add('active');
         setTimeout(() => cardElem.classList.add('zoom-in'), 10);
     }
-    if (isFromNetwork) finishNetworkQuestionOpen();
+    if (isFromNetwork) finishNetworkQuestionOpen(networkQuestionOpenGeneration, Boolean(modalElem && cardElem));
+}
+
+function renderLocalAuctionBets(listContainer) {
+    const auctionList = document.createElement('div');
+    auctionList.style.width = '100%';
+    auctionList.style.display = 'flex';
+    auctionList.style.flexDirection = 'column';
+    auctionList.style.gap = '14px';
+
+    teams.forEach((team, idx) => {
+        const minBet = currentCost;
+        const maxBet = Math.max(currentCost, team.score);
+        auctionBets[idx] = {val: minBet, isPassed: false};
+        const card = document.createElement('div');
+        card.className = 'auction-team-card';
+        card.id = `auction-card-team-${idx}`;
+        card.innerHTML = `
+            <div class="auction-team-header">
+                <span>⭐ ${escapeHtml(team.name)} (Очки: ${team.score})</span>
+                <span style="color: var(--gold-accent); font-size: 15px; font-weight: 800;">Диапазон: ${minBet} - ${maxBet}</span>
+            </div>
+            <div class="auction-controls-row">
+                <div class="auction-quick-btns">
+                    <button class="btn-mini btn-check" type="button" onclick="setAuctionFieldValue(${idx}, ${minBet})">Мин (${minBet})</button>
+                    <button class="btn-mini btn-success" type="button" onclick="setAuctionFieldValue(${idx}, ${maxBet})">Ва-банк (${maxBet})</button>
+                    <button class="btn-mini btn-danger" type="button" onclick="toggleAuctionPass(${idx})">🚫 Пас</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 16px; font-weight: 800; color: #fff;">Ставка:</span>
+                    <input type="number" id="auction-input-${idx}" class="modal-auction-input" value="${minBet}" data-min="${minBet}" data-max="${maxBet}" oninput="handleAuctionInput(${idx})">
+                </div>
+            </div>`;
+        auctionList.appendChild(card);
+    });
+    listContainer.appendChild(auctionList);
 }
 
 function setAuctionFieldValue(teamIdx, val) {
@@ -2698,7 +2707,20 @@ function toggleAuctionPass(teamIdx) {
     }
 }
 
+function recordAuctionPasses() {
+    teams.forEach((_, idx) => {
+        if (!auctionBets[idx]?.isPassed) return;
+        if (!gameStats[idx]) gameStats[idx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
+        gameStats[idx].passes++;
+    });
+}
+
 function confirmAllAuctionBets() {
+    const hint = document.getElementById('timer-hint');
+    if (isOnlineGame && (!isLocalHostEnabled || !Object.values(auctionBets).some(bet => !bet.isPassed && bet.val > 0))) {
+        if (isLocalHostEnabled && hint) hint.textContent = 'Дождитесь хотя бы одной ставки.';
+        return;
+    }
     let hasErrors = false;
     teams.forEach((t, idx) => {
         if (auctionBets[idx] && !auctionBets[idx].isPassed) {
@@ -2716,9 +2738,6 @@ function confirmAllAuctionBets() {
                 input.style.boxShadow = "none";
                 auctionBets[idx].val = val;
             }
-        } else if (auctionBets[idx] && auctionBets[idx].isPassed) {
-            if (!gameStats[idx]) gameStats[idx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
-            gameStats[idx].passes++;
         }
     });
 
@@ -2745,22 +2764,24 @@ function confirmAllAuctionBets() {
             return;
         }
         if (leaders.length > 1) {
-            showSystemModal("⚖️ НИЧЬЯ В ТОРГАХ!", `Команды ${leaders.map(i => `"${escapeHtml(teams[i].name)}"`).join(' и ')} поставили одинаковую сумму (<b>${maxBet}</b>)!`);
+            if (isOnlineGame) {
+                if (hint) hint.textContent = 'Ничья в торгах. Дождитесь новых ставок.';
+            } else {
+                showSystemModal("⚖️ НИЧЬЯ В ТОРГАХ!", `Команды ${leaders.map(i => `"${escapeHtml(teams[i].name)}"`).join(' и ')} поставили одинаковую сумму (<b>${maxBet}</b>)!`);
+            }
             return;
         }
 
         const winnerIdx = leaders[0];
+        if (isOnlineGame) {
+            const leaderId = teams[winnerIdx]?.id;
+            if (leaderId && hostNetworkClient?.isConnected) hostNetworkClient.setAuctionLeader(leaderId, maxBet);
+            return;
+        }
         activeTeamIdxForQuestion = winnerIdx;
 
         if (!gameStats[winnerIdx]) gameStats[winnerIdx] = {correct: 0, wrong: 0, passes: 0, cats: 0, auctions: 0};
         gameStats[winnerIdx].auctions++;
-
-        if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
-            const leaderTeam = teams[winnerIdx];
-            if (leaderTeam && leaderTeam.id) {
-                hostNetworkClient.setAuctionLeader(leaderTeam.id, maxBet);
-            }
-        }
 
         const listContainer = document.getElementById('teams-modal-list');
         if (listContainer) listContainer.innerHTML = '';
@@ -2775,16 +2796,6 @@ function confirmAllAuctionBets() {
             }
         });
 
-        if (isOnlineGame && hostNetworkClient && hostNetworkClient.isConnected) {
-            const mappedBets = {};
-            teams.forEach((t, idx) => {
-                if (t.id && auctionBets[idx] && !auctionBets[idx].isPassed && auctionBets[idx].val > 0) {
-                    mappedBets[t.id] = auctionBets[idx].val;
-                }
-            });
-            hostNetworkClient.setAuctionBets(mappedBets);
-        }
-
         const listContainer = document.getElementById('teams-modal-list');
         if (listContainer) listContainer.innerHTML = '';
         const badge = document.getElementById('modal-special-badge');
@@ -2792,6 +2803,7 @@ function confirmAllAuctionBets() {
         document.getElementById('timer-hint').textContent = "⏳ Все ставки зафиксированы! Нажмите кнопку ниже...";
     }
 
+    recordAuctionPasses();
     const btnArea = document.getElementById('modal-buttons-area');
     if (btnArea) {
         btnArea.style.flexDirection = 'row';
@@ -2800,10 +2812,11 @@ function confirmAllAuctionBets() {
 }
 
 /**
- * LAN: the host (phone) named the leader of the "auction for the right to answer".
+ * В LAN победитель и сумма отображаются после подтверждения сервера.
  */
 function onlineAuctionLeaderChosen(idx, bet) {
     if (specialQuestionRevealed) return;
+    if (isLocalHostEnabled) recordAuctionPasses();
     activeTeamIdxForQuestion = idx;
     currentCost = bet || currentCost;
     teams.forEach((t, i) => {
@@ -2822,6 +2835,10 @@ function onlineAuctionLeaderChosen(idx, bet) {
     const hintElem = document.getElementById('timer-hint');
     if (hintElem) hintElem.textContent = `Отвечает «${teams[idx].name}» · ставка ${currentCost}`;
     const btnArea = document.getElementById('modal-buttons-area');
+    if (isLocalHostEnabled && btnArea) {
+        btnArea.innerHTML = '<button class="btn btn-success" id="btn-start-paused-timer" onclick="startPausedSpecialTimer()">⏱️ Открыть вопрос и запустить таймер</button>';
+        return;
+    }
     if (btnArea) btnArea.innerHTML = '';
     scheduleOnlineSpecialReveal(1500);
 }
@@ -3253,6 +3270,22 @@ window.addEventListener('keydown', function (event) {
     }
 });
 
+function isOnlineAuctionBetting() {
+    return isOnlineGame && lastServerRoomState === 'AUCTION_BETTING'
+        && ['auction', 'auction_all', 'auction_leader'].includes(currentActiveQuestion?.type);
+}
+
+function renderOnlineAuctionBets(listContainer) {
+    teams.forEach((team, idx) => {
+        const bet = auctionBets[idx];
+        const status = !bet ? 'Думает…' : (bet.isPassed ? 'Пас' : 'Ставка сделана');
+        const row = document.createElement('div');
+        row.className = 'modal-team-row';
+        row.innerHTML = `<span class="modal-team-title">⭐ ${escapeHtml(team.name)}</span><span>${status}</span>`;
+        listContainer.appendChild(row);
+    });
+}
+
 function renderModalTeamsList() {
     const listContainer = document.getElementById('teams-modal-list');
     if (!listContainer) return;
@@ -3262,6 +3295,11 @@ function renderModalTeamsList() {
     listContainer.style.flexDirection = 'column';
     listContainer.style.alignItems = 'center';
     listContainer.style.gap = '12px';
+
+    if (isOnlineAuctionBetting()) {
+        renderOnlineAuctionBets(listContainer);
+        return;
+    }
 
     const currentQuestionObj = currentActiveQuestion || (gameData[currentRoundIndex]?.themes?.[currentThemeIdx]?.questions?.[currentQuestionIdx]);
     const qType = currentQuestionObj ? currentQuestionObj.type : 'normal';
@@ -3937,6 +3975,7 @@ let lastServerRoomState = 'LOBBY';
 let pendingNetworkQuestionOpen = false;
 let networkQuestionOpenGeneration = 0;
 let networkQuestionOpenTimer = null;
+let networkSpecialIntroId = null;
 let onlineSpecialRevealTimer = null;
 let networkQuestionOpenSafetyTimer = null;
 let networkQuestionOpenCell = null;
@@ -4446,6 +4485,7 @@ function initHostNetwork(overrideUrl = null) {
             if (statusText) statusText.textContent = 'Подключено к серверу';
             hostNetworkClient.createRoom({
                 isHostOnPC: isLocalHostEnabled,
+                syncSpecialIntro: true,
                 requireMobileHost: true, ...getLobbySettings()
             });
         });
@@ -4715,6 +4755,7 @@ function initHostNetwork(overrideUrl = null) {
         });
 
         hostNetworkClient.on('auction_answer_start', (payload) => {
+            lastServerRoomState = 'AUCTION_ANSWERING';
             if (payload && payload.isFinal && window.FinalRound) {
                 window.FinalRound.onAnswersStart(payload);
                 return;
@@ -4728,14 +4769,10 @@ function initHostNetwork(overrideUrl = null) {
                 return;
             }
             const teamIdx = teams.findIndex(t => t.id === payload.playerId);
-            if (teamIdx !== -1) {
-                const card = document.getElementById(`auction-card-team-${teamIdx}`);
-                const isPassedNow = Boolean(card && card.classList.contains('passed'));
-                if (payload.amount === 0) {
-                    if (!isPassedNow) toggleAuctionPass(teamIdx);
-                } else {
-                    setAuctionFieldValue(teamIdx, payload.amount);
-                }
+            if (teamIdx !== -1 && isOnlineAuctionBetting()) {
+                const amount = Number(payload.amount) || 0;
+                auctionBets[teamIdx] = { val: amount, isPassed: amount === 0 };
+                renderModalTeamsList();
             }
         });
 
@@ -4918,7 +4955,7 @@ function initHostNetwork(overrideUrl = null) {
                 const questionIdx = payload.questionIdx !== undefined ? payload.questionIdx : 0;
                 const targetRow = document.getElementById(`theme-row-${themeIdx}`);
                 const targetCell = targetRow ? targetRow.querySelectorAll('.question-cost')[questionIdx] : null;
-                openQuestionFromHostPhone(themeIdx, questionIdx, targetCell, payload.question);
+                openQuestionFromHostPhone(themeIdx, questionIdx, targetCell, payload.question, payload.specialIntroId);
             }
         });
 
@@ -4947,6 +4984,14 @@ function initHostNetwork(overrideUrl = null) {
                 }
             }
             lastServerRoomState = payload.state;
+            if (payload.auctionBets && isOnlineAuctionBetting()) {
+                teams.forEach((team, idx) => {
+                    if (!Object.prototype.hasOwnProperty.call(payload.auctionBets, team.id)) return;
+                    const amount = Number(payload.auctionBets[team.id]) || 0;
+                    auctionBets[idx] = { val: amount, isPassed: amount === 0 };
+                });
+                renderModalTeamsList();
+            }
             if (isGameStarted && payload.turnPlayerId) syncTurnFromServer(payload.turnPlayerId);
             if (payload.state === 'BOARD') onlineRoundEndShown = false;
             if (payload.state === 'LOBBY') {
@@ -5050,6 +5095,7 @@ function cancelPendingNetworkQuestionOpen() {
     if (networkQuestionOpenSafetyTimer) clearTimeout(networkQuestionOpenSafetyTimer);
     networkQuestionOpenTimer = null;
     networkQuestionOpenSafetyTimer = null;
+    networkSpecialIntroId = null;
     if (networkQuestionOpenCell) networkQuestionOpenCell.classList.remove('cell-flash');
     networkQuestionOpenCell = null;
     pendingNetworkQuestionOpen = false;
@@ -5072,7 +5118,7 @@ function cancelPendingNetworkQuestionOpen() {
     }
 }
 
-function finishNetworkQuestionOpen(generation = networkQuestionOpenGeneration) {
+function finishNetworkQuestionOpen(generation = networkQuestionOpenGeneration, rendered = false) {
     if (!pendingNetworkQuestionOpen || generation !== networkQuestionOpenGeneration) return;
     if (networkQuestionOpenTimer) clearTimeout(networkQuestionOpenTimer);
     if (networkQuestionOpenSafetyTimer) clearTimeout(networkQuestionOpenSafetyTimer);
@@ -5080,6 +5126,9 @@ function finishNetworkQuestionOpen(generation = networkQuestionOpenGeneration) {
     networkQuestionOpenSafetyTimer = null;
     networkQuestionOpenCell = null;
     pendingNetworkQuestionOpen = false;
+    const introId = networkSpecialIntroId;
+    networkSpecialIntroId = null;
+    if (rendered && Number.isInteger(introId)) hostNetworkClient?.confirmSpecialIntro(introId);
     if (hostNetworkClient && typeof hostNetworkClient.replayQueuedEvents === 'function') {
         hostNetworkClient.replayQueuedEvents();
     }
@@ -5088,8 +5137,11 @@ function finishNetworkQuestionOpen(generation = networkQuestionOpenGeneration) {
 /**
  * The host picked a question on the phone: blink the cell on the big board, then open the modal.
  */
-function openQuestionFromHostPhone(themeIdx, questionIdx, cell, question) {
+function openQuestionFromHostPhone(themeIdx, questionIdx, cell, question, specialIntroId) {
     cancelPendingNetworkQuestionOpen();
+    networkSpecialIntroId = specialIntroId;
+    if (question?.type === 'secret') question = { ...question, type: 'cat' };
+    if (question?.type === 'auction_all') question = { ...question, type: 'auction' };
     const generation = networkQuestionOpenGeneration;
     currentThemeIdx = themeIdx;
     currentQuestionIdx = questionIdx;
