@@ -3160,7 +3160,7 @@ function startTimer() {
 }
 
 function toggleAnswerPause() {
-    if (waitingForManualReading || waitingForQuestionMedia || isGlobalTimerPaused || isReadingTime) return;
+    if (isOnlineGame || waitingForManualReading || waitingForQuestionMedia || isGlobalTimerPaused || isReadingTime) return;
     const modalElem = document.getElementById('question-modal');
     if (!modalElem || !modalElem.classList.contains('active')) return;
 
@@ -3192,26 +3192,11 @@ function toggleAnswerPause() {
 
         // Show answering side modal
         const answeringModal = document.getElementById('answering-player-modal');
-        const playerNumElem = document.getElementById('answering-player-num');
-        const avatarElem = document.getElementById('answering-modal-avatar');
-        const nameElem = document.getElementById('answering-modal-name');
-        const subElem = document.getElementById('answering-modal-sub');
         const modalRingSecs = document.getElementById('answering-ring-seconds');
         const modalRingProgress = document.getElementById('answering-ring-progress');
 
-        const answeringIdx = (activeTeamIdxForQuestion !== null && teams[activeTeamIdxForQuestion])
-            ? activeTeamIdxForQuestion : currentTurnTeamIdx;
-        const activeTeam = teams[answeringIdx] || teams[0];
-        const activeTeamNum = (answeringIdx >= 0 ? answeringIdx + 1 : 1);
-
-        if (answeringModal) {
-            answeringModal.classList.remove('hidden');
-            if (playerNumElem) playerNumElem.textContent = 'Отвечает игрок';
-            if (avatarElem) avatarElem.textContent = (activeTeam && activeTeam.avatar) || '🐱';
-            if (nameElem) nameElem.textContent = (activeTeam && activeTeam.name) || 'Команда';
-            if (subElem) subElem.textContent = activeTeam ? `${activeTeam.score} очков` : `Команда ${activeTeamNum}`;
-            if (modalRingSecs) modalRingSecs.textContent = currentAnswerSec;
-        }
+        if (answeringModal) answeringModal.classList.remove('hidden');
+        if (modalRingSecs) modalRingSecs.textContent = currentAnswerSec;
 
         const circumference = 2 * Math.PI * 42;
         if (modalRingProgress) {

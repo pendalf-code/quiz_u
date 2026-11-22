@@ -7265,6 +7265,12 @@ body.light-theme .gamepad-toast {
     padding: 8px 14px;
 }
 
+@media not (pointer: coarse) {
+    #btn-start-local-answer {
+        display: none;
+    }
+}
+
 .answering-player-modal.hidden {
     display: none !important;
 }
@@ -7278,6 +7284,12 @@ body.light-theme .gamepad-toast {
         opacity: 1;
         transform: translateX(0) scale(1);
     }
+}
+
+body:not(.pc-judges, .phone-host-online) .answering-player-modal :is(
+    .answering-status-badge, .answering-avatar-box, .answering-name-box
+) {
+    display: none;
 }
 
 .answering-card-header {
