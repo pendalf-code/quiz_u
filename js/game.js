@@ -2701,6 +2701,9 @@ function openQuestion(themeIdx, qIdx, element, event, skipSplash = false, overri
         cardElem.classList.remove('zoom-in');
         modalElem.style.opacity = '1';
         modalElem.classList.add('active');
+        const layoutElem = document.getElementById('question-modal-layout');
+        if (layoutElem) layoutElem.scrollTop = 0;
+        cardElem.scrollTop = 0;
         setTimeout(() => cardElem.classList.add('zoom-in'), 10);
     }
     if (isFromNetwork) finishNetworkQuestionOpen(networkQuestionOpenGeneration, Boolean(modalElem && cardElem));
@@ -3481,7 +3484,9 @@ function showAnswer() {
     if (timerElem) timerElem.style.display = 'none';
     if (hintElem) hintElem.style.display = 'none';
 
-    document.getElementById('modal-answer-text').style.display = 'block';
+    const answerText = document.getElementById('modal-answer-text');
+    const answerWasHidden = answerText && answerText.style.display !== 'block';
+    if (answerText) answerText.style.display = 'block';
 
     const currentQuestionObj = currentActiveQuestion || (gameData[currentRoundIndex]?.themes?.[currentThemeIdx]?.questions?.[currentQuestionIdx]);
     if (!specialQuestionRevealed && ['cat', 'auction', 'auction_all', 'auction_leader'].includes(currentQuestionObj?.type)) {
@@ -3540,6 +3545,8 @@ function showAnswer() {
         const phoneHostsOnline = isOnlineGame && !isLocalHostEnabled;
         if (!phoneHostsOnline) btnArea.appendChild(closeBtn);
     }
+
+    if (answerWasHidden) answerText.scrollIntoView({ block: 'start', inline: 'nearest' });
 }
 
 function changeTeamScore(teamIdx, amount, syncToServer = true) {
@@ -3956,6 +3963,9 @@ function showSystemModal(titleText, descText, customButtons = null) {
         cardElem.classList.remove('zoom-in');
         modalElem.style.opacity = '1';
         modalElem.classList.add('active');
+        const layoutElem = document.getElementById('question-modal-layout');
+        if (layoutElem) layoutElem.scrollTop = 0;
+        cardElem.scrollTop = 0;
         setTimeout(() => cardElem.classList.add('zoom-in'), 10);
     }
 }

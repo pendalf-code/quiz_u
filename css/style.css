@@ -2202,6 +2202,7 @@ body.light-theme #modal-answer-img {
 }
 
 .modal-answer {
+    scroll-margin-top: 12px;
     font-size: clamp(16px, 2.5vw, 28px);
     font-weight: 700;
     color: var(--gold-accent);
@@ -7912,6 +7913,7 @@ body.phone-host-online #btn-score-for-all { display: none; }
 
 /* Correct answer reveal */
 .final-answer {
+    scroll-margin-top: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;

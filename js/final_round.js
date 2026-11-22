@@ -233,10 +233,10 @@
         renderThemes(round);
         renderThemeBanner();
         renderQuestion();
-        renderAnswer();
         renderPlayers();
         renderStatus();
         renderActions();
+        renderAnswer();
         if (window.gamepadManager) {
             setTimeout(() => window.gamepadManager.ensureInitialFocus(), 60);
         }
@@ -292,6 +292,7 @@
         const img = $('final-answer-img');
         // The host on this PC needs the answer to judge; the public screen gets it at the end
         const visible = Boolean(st.question) && (st.answerShown || (st.stage === 'judging' && pcControls()) || st.stage === 'results');
+        const answerWasHidden = box?.hidden;
         if (box) box.hidden = !visible;
         if (!visible) return;
         if (text) text.innerHTML = math(st.question.a || '—');
@@ -300,6 +301,7 @@
             img.hidden = !src;
             if (src) img.src = media(src);
         }
+        if (answerWasHidden) box.scrollIntoView({ block: 'start', inline: 'nearest' });
     }
 
     function previewLimits() {
